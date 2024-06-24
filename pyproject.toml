@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ilp_nlp"
+version = "2024.0.1"
+authors = [
+    {name = "Oleh Shkalikov", email = "Oleh.Shkalikov@mailbox.tu-dresden.de"},
+]
+description = "Formulation of NLP tasks as an ILP problems"
+requires-python = ">=3.11"
+dependencies = [
+    "torch==2.3.1",
+    "networkx==3.2.1",
+    "transformers==4.41.2",
+    "datasets==2.20.0"
+]
+license = {file = "LICENSE"}
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+namespaces = false
+
+[project.urls]
+Repository = "https://github.com/ShkalikovOleh/master-thesis"
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "isort"
+]
+
+[tool.isort]
+profile = "black"
