@@ -1,0 +1,10 @@
+defaults:
+  - _self_
+  - pipeline: ???
+  - experiment: null
+
+log_to_wandb: true
+wandb_project: nlp_ilp
+wandb_tags: null
+
+cached_step_paths: null

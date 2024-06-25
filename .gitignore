@@ -462,3 +462,12 @@ TSWLatexianTemp*
 
 # xwatermark package
 *.xwm
+
+# hydra out path
+outputs
+
+# wandb
+wandb
+
+#VS Code
+.vscode
