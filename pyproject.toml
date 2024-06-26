@@ -15,7 +15,10 @@ dependencies = [
     "networkx==3.2.1",
     "transformers==4.41.2",
     "datasets==2.20.0",
-    "hydra-core==1.3.2"
+    "hydra-core==1.3.2",
+    "awesome_align @ git+https://github.com/neulab/awesome-align@5f150d45bbe51e167daf0a84abebaeb07c3323d1",
+    "simalign @ git+https://github.com/ShkalikovOleh/simalign@b4e991b81790d08b27ae80449c80341645a6cbe2",
+    "nltk==3.8.1"
 ]
 license = {file = "LICENSE"}
 readme = "README.md"

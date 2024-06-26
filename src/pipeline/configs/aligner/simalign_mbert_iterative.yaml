@@ -1,0 +1,5 @@
+_target_: src.pipeline.alignment.SimAlignAligner
+model: bert
+token_type: bpe
+matching_methods: i
+device: 0

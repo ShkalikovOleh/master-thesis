@@ -1,6 +1,7 @@
 defaults:
   - _self_
   - pipeline: ???
+  - aligner: simalign_mbert_iterative
   - experiment: null
 
 hydra:
