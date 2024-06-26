@@ -3,7 +3,6 @@ configs directory"""
 
 import logging
 from collections import namedtuple
-from pathlib import Path
 
 import hydra
 import networkx as nx
@@ -64,8 +63,9 @@ def main(cfg: DictConfig) -> None:
                 cfg["cached_step_paths"],
             )
 
-            run.log_artifact(Path.cwd() / ".hydra/config.yaml")
-            run.log_artifact(Path.cwd() / ".hydra/overrides.yaml")
+            out_dir = hydra.runtime.output_dir
+            run.log_artifact(f"{out_dir}/.hydra/config.yaml")
+            run.log_artifact(f"{out_dir}/.hydra/overrides.yaml")
     else:
         execute_pipeline(transforms, cfg["cached_step_paths"])
 

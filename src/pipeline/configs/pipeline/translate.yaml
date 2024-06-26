@@ -1,0 +1,34 @@
+load_ds:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+make_sentence:
+  deps: [load_ds]
+  transform:
+    _target_: src.pipeline.split.MergeSentence
+    in_column: tokens
+    out_column: sentence
+    word_merger:
+      _target_: src.pipeline.split.NLTKMerger
+translate:
+  deps: [make_sentence]
+  transform:
+    _target_: src.pipeline.translation.TranslationTransform
+    src_lang: ???
+    tgt_lang: ???
+    batch_size: 32
+    in_column: ${pipeline.make_sentence.transform.out_column}
+    out_column: src_translation
+    model_path: facebook/nllb-200-distilled-600M
+    src_lang_code: ${pipeline.translate.transform.src_lang}_Latn
+    tgt_lang_code: ${pipeline.translate.transform.tgt_lang}_Latn
+save_translation:
+  deps: [translate]
+  transform:
+    _target_: src.pipeline.data.WriteDataset
+    save_path: ${pipeline.translate.transform.src_lang}_${pipeline.translate.transform.tgt_lang}_translation
+    columns: ${pipeline.translate.transform.out_column}

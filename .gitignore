@@ -471,3 +471,6 @@ wandb
 
 #VS Code
 .vscode
+
+# Local test files
+test_data
