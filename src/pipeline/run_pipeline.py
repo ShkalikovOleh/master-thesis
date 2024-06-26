@@ -46,7 +46,7 @@ def execute_pipeline(
 
 @hydra.main(config_path="configs", config_name="default", version_base="1.3")
 def main(cfg: DictConfig) -> None:
-    logging.info("Instantiate pipeline and runner")
+    logging.info("Instantiate the pipeline")
     transforms = instantiate_transforms(cfg.pipeline)
 
     if cfg["log_to_wandb"]:

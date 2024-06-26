@@ -6,6 +6,7 @@ load_ds:
     cfg_name: null
     split: null
     streaming: false
+    local: false
 make_sentence:
   deps: [load_ds]
   transform:

@@ -5,7 +5,11 @@ from contextlib import contextmanager
 from typing import Any
 
 import torch
-from transformers import AutoModel, AutoTokenizer, pipeline
+from transformers import (
+    AutoModel,
+    AutoTokenizer,
+    pipeline,
+)
 
 
 @contextmanager

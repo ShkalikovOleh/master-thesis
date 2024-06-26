@@ -1,0 +1,34 @@
+load_translation:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: true
+split_sentence:
+  deps: [load_translation]
+  transform:
+    _target_: src.pipeline.split.SplitSentence
+    in_column: src_translation
+    out_column: src_words
+    word_splitter:
+      _target_: src.pipeline.split.NLTKSplitter
+apply_ner:
+  deps: [split_sentence]
+  transform:
+    _target_: src.pipeline.ner.NERTransform
+    model_path: ???
+    batch_size: 32
+    device: 0
+    in_column: ${pipeline.split_sentence.transform.out_column}
+    out_column: src_entities
+write_entities:
+  deps: [apply_ner]
+  transform:
+    _target_: src.pipeline.data.WriteDataset
+    save_path: ???
+    columns:
+      - ${pipeline.apply_ner.transform.out_column}
+      - ${pipeline.split_sentence.transform.out_column}

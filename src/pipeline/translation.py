@@ -3,7 +3,7 @@
 from transformers import AutoModelForSeq2SeqLM
 from datasets import Dataset
 
-from src.utils.transformers import use_hf_pipeline
+from src.utils.model_context import use_hf_pipeline
 
 
 class TranslationTransform:

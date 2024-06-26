@@ -13,11 +13,13 @@ class LoadDataset:
         cfg_name: str | None = None,
         split: str | None = None,
         streaming: bool = False,
+        local: bool = False,
     ) -> None:
         self.ds_path = dataset_path
         self.cfg_name = cfg_name
         self.split = split
         self.streaming = streaming
+        self.local = local
 
     def __call__(self) -> datasets.Dataset:
         if self.split == "MERGE_ALL":
@@ -25,14 +27,14 @@ class LoadDataset:
         else:
             asked_split = self.split
 
-        try:  # assume HF Hub dataset by default
+        if not self.local:
             ds = datasets.load_dataset(
                 self.ds_path,
                 name=self.cfg_name,
                 split=asked_split,
                 streaming=self.streaming,
             )
-        except ValueError:  # local dataset
+        else:
             if os.path.isfile(self.ds_path):
                 ds = datasets.Dataset.from_file(self.ds_path)
             else:

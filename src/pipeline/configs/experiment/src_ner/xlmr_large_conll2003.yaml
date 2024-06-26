@@ -1,0 +1,25 @@
+# @package _global_
+
+defaults:
+  - override /pipeline: src_ner
+
+log_to_wandb: false
+hydra:
+  job:
+    chdir: false
+
+pipeline:
+  load_translation:
+    transform:
+      dataset_path: ${dataset_path}
+  apply_ner:
+    transform:
+      model_path: FacebookAI/xlm-roberta-large-finetuned-conll03-english
+      batch_size: ${batch_size}
+  write_entities:
+    transform:
+      save_path: ${out_dir}
+
+dataset_path: ???
+batch_size: 32
+out_dir: src_entities
