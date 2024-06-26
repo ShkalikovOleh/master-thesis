@@ -6,7 +6,7 @@ defaults:
 log_to_wandb: false
 hydra:
   job:
-    chdir: True
+    chdir: false
 
 pipeline:
   load_ds:
