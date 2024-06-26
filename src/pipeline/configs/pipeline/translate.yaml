@@ -23,12 +23,12 @@ translate:
     batch_size: 32
     in_column: ${pipeline.make_sentence.transform.out_column}
     out_column: src_translation
-    model_path: facebook/nllb-200-distilled-600M
-    src_lang_code: ${pipeline.translate.transform.src_lang}_Latn
-    tgt_lang_code: ${pipeline.translate.transform.tgt_lang}_Latn
+    model_path: ???
+    src_lang_code: ???
+    tgt_lang_code: ???
 save_translation:
   deps: [translate]
   transform:
     _target_: src.pipeline.data.WriteDataset
-    save_path: ${pipeline.translate.transform.src_lang}_${pipeline.translate.transform.tgt_lang}_translation
+    save_path: ???
     columns: ${pipeline.translate.transform.out_column}
