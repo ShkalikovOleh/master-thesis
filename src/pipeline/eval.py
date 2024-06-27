@@ -12,6 +12,7 @@ class IntrinsicEvaluation:
         self,
         orig_column: str = "ner_tags",
         gen_column: str = "gen_ner_tags",
+        gen_as_tags: bool = False,
         log_to_wandb: bool = True,
         batch_size: int = 1000,
         labels_to_ignore: list[str] | None = None,
@@ -22,6 +23,7 @@ class IntrinsicEvaluation:
         self.log_to_wandb = log_to_wandb
         self.labels_to_ignore = labels_to_ignore
         self.batch_size = batch_size
+        self.gen_as_tags = gen_as_tags
 
     def __call__(self, ds: Dataset) -> Dataset:
         if isinstance(ds, DatasetDict):
@@ -41,7 +43,10 @@ class IntrinsicEvaluation:
 
         def accumulate_metric(refs, preds):
             ref_labels = [[label_list[tag] for tag in gt] for gt in refs]
-            pred_labels = [[label_list[tag] for tag in pred] for pred in preds]
+            if self.gen_as_tags:
+                pred_labels = [[label_list[tag] for tag in pred] for pred in preds]
+            else:
+                pred_labels = preds
             metric.add_batch(references=ref_labels, predictions=pred_labels)
 
         ds.map(
