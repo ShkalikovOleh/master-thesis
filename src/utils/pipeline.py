@@ -14,7 +14,7 @@ from src.pipeline.data import LoadDataset
 Transform = namedtuple("Transform", ["name", "deps", "transform"])
 
 
-def instantiate_transforms(transforms_cfg: DictConfig) -> list[Transform]:
+def instantiate_transforms(transforms_cfg: DictConfig | dict) -> list[Transform]:
     result = []
     for name, transform in transforms_cfg.items():
         trans = instantiate(transform["transform"])

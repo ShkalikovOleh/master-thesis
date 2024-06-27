@@ -47,7 +47,10 @@ def execute_pipeline(
 @hydra.main(config_path="configs", config_name="default", version_base="1.3")
 def main(cfg: DictConfig) -> None:
     logging.info("Instantiate the pipeline")
-    transforms = instantiate_transforms(cfg.pipeline)
+
+    # filter out empty transforms ans instantiate real ones
+    steps = dict(filter(lambda step: step[1] is not None, cfg.pipeline.items()))
+    transforms = instantiate_transforms(steps)
 
     if cfg["log_to_wandb"]:
         import wandb
@@ -63,7 +66,7 @@ def main(cfg: DictConfig) -> None:
                 cfg["cached_step_paths"],
             )
 
-            out_dir = hydra.runtime.output_dir
+            out_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
             run.log_artifact(f"{out_dir}/.hydra/config.yaml")
             run.log_artifact(f"{out_dir}/.hydra/overrides.yaml")
     else:
