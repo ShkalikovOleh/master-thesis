@@ -7,6 +7,14 @@ from typing import Any
 from datasets import Dataset
 from abc import ABC
 
+from src.ilp.ranges import (
+    ProjectionContraint,
+    get_relative_lenght_cost,
+    construct_ilp_problem,
+    solve_ilp_problem,
+)
+from src.utils.entities import get_entities_spans
+
 
 class Word2WordAlignmentsBasedProjection(ABC):
     def __init__(
@@ -14,13 +22,13 @@ class Word2WordAlignmentsBasedProjection(ABC):
         tgt_words_column: str = "tokens",
         src_words_column: str = "src_words",
         src_entities_column: str = "src_entities",
-        alignments_colums: str = "word_alignments",
+        alignments_column: str = "word_alignments",
         out_column: str = "labels",
     ) -> None:
         self.tgt_words_column = tgt_words_column
         self.src_words_column = src_words_column
         self.src_entities_column = src_entities_column
-        self.alignments_colums = alignments_colums
+        self.alignments_column = alignments_column
         self.out_column = out_column
 
     @staticmethod
@@ -68,7 +76,7 @@ class HeuriticsProjection(Word2WordAlignmentsBasedProjection):
         tgt_words_column: str = "tokens",
         src_words_column: str = "src_words",
         src_entities_column: str = "src_entities",
-        alignments_colums: str = "word_alignments",
+        alignments_column: str = "word_alignments",
         out_column: str = "labels",
         project_top_k: int | None = 1,
         length_ratio_threshold: float | None = None,
@@ -79,7 +87,7 @@ class HeuriticsProjection(Word2WordAlignmentsBasedProjection):
             tgt_words_column,
             src_words_column,
             src_entities_column,
-            alignments_colums,
+            alignments_column,
             out_column,
         )
         self.length_ratio_threshold = length_ratio_threshold
@@ -239,9 +247,105 @@ class HeuriticsProjection(Word2WordAlignmentsBasedProjection):
                 self.tgt_words_column,
                 self.src_words_column,
                 self.src_entities_column,
-                self.alignments_colums,
+                self.alignments_column,
             ],
             batched=False,
+        )
+
+        return ds
+
+
+class RangeILPProjection(Word2WordAlignmentsBasedProjection):
+    """Projection by solving weighted bipartite matching ILP problem"""
+
+    def __init__(
+        self,
+        tgt_words_column: str = "tokens",
+        src_words_column: str = "src_words",
+        src_entities_column: str = "src_entities",
+        alignments_column: str = "word_alignments",
+        tgt_cand_column: str = "tgt_candidates",
+        out_column: str = "labels",
+        n_projected: int = 1,
+        proj_constraint: str = "EQUAL",
+        solver: str = "GUROBI",
+        num_proc: int = 16,
+    ) -> None:
+        super().__init__(
+            tgt_words_column,
+            src_words_column,
+            src_entities_column,
+            alignments_column,
+            out_column,
+        )
+        self.n_projected = n_projected
+        self.tgt_cand_column = tgt_cand_column
+        self.proj_constraint = ProjectionContraint[proj_constraint]
+        self.solver = solver
+        self.num_proc = num_proc
+
+    def project(
+        self,
+        tgt_words: list[str],
+        src_words: list[str],
+        src_entities: list[dict[str, Any]],
+        alignments: list[tuple[int, int]],
+        tgt_candidates: list[tuple[int, int]],
+    ) -> list[str]:
+        labels = ["O"] * len(tgt_words)
+        if len(src_entities) == 0 or len(tgt_candidates) == 0:
+            return labels
+
+        aligns_by_src_words = self.gather_aligned_words(
+            alignments, len(src_words), to_tgt=False
+        )
+        src_entities_spans = get_entities_spans(src_entities)
+
+        # Calculate matching costs
+        costs = get_relative_lenght_cost(
+            aligns_by_src_words, src_entities_spans, tgt_candidates
+        )
+        n_src_ent, n_tgt_cand = costs.shape
+
+        # Construct and solve ILP problem
+        problem = construct_ilp_problem(
+            costs, tgt_candidates, self.n_projected, self.proj_constraint
+        )
+        ent_inds, cand_inds = solve_ilp_problem(
+            problem, n_src_ent, n_tgt_cand, self.solver
+        )
+
+        # Labelling
+        for r, c in zip(ent_inds, cand_inds):
+            label = src_entities[r]["label"]
+            tgt_s, tgt_e = tgt_candidates[c]
+
+            labels[tgt_s] = "B-" + label
+            for idx in range(tgt_s + 1, tgt_e):
+                labels[idx] = "I-" + label
+
+        return labels
+
+    def __call__(self, ds: Dataset) -> Dataset:
+        def project_func(
+            tgt_words, src_words, src_entities, alignments, tgt_candidates
+        ):
+            labels = self.project(
+                tgt_words, src_words, src_entities, alignments, tgt_candidates
+            )
+            return {self.out_column: labels}
+
+        ds = ds.map(
+            project_func,
+            input_columns=[
+                self.tgt_words_column,
+                self.src_words_column,
+                self.src_entities_column,
+                self.alignments_column,
+                self.tgt_cand_column,
+            ],
+            batched=False,
+            num_proc=self.num_proc,
         )
 
         return ds

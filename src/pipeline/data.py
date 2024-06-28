@@ -39,6 +39,8 @@ class LoadDataset:
                 ds = datasets.Dataset.from_file(self.ds_path)
             else:
                 ds = datasets.load_from_disk(self.ds_path)
+            if asked_split is not None:
+                ds = ds[asked_split]
 
         if self.split == "MERGE_ALL" and isinstance(ds, datasets.DatasetDict):
             ds = datasets.concatenate_datasets([ds[key] for key in ds.keys()])
