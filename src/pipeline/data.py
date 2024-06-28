@@ -56,3 +56,12 @@ class WriteDataset:
             ds = ds.select_columns(self.columns)
         ds.save_to_disk(self.path)
         return ds
+
+
+class ConcatDatasets:
+    def __init__(self, axis=1) -> None:
+        self.axis = axis
+
+    def __call__(self, *dses: datasets.Dataset) -> datasets.Dataset:
+        ds = datasets.concatenate_datasets(list(dses), axis=self.axis)
+        return ds
