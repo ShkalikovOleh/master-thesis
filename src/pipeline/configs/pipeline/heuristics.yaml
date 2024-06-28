@@ -1,0 +1,78 @@
+load_ds:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: false
+make_sentence:
+  deps: [load_ds]
+  transform:
+    _target_: src.pipeline.split.MergeSentence
+    in_column: tokens
+    out_column: sentence
+    word_merger:
+      _target_: src.pipeline.split.NLTKMerger
+translate:
+  deps: [make_sentence]
+  transform:
+    _target_: src.pipeline.translation.TranslationTransform
+    src_lang: ???
+    tgt_lang: ???
+    batch_size: 32
+    in_column: ${pipeline.make_sentence.transform.out_column}
+    out_column: src_translation
+    model_path: ???
+    src_lang_code: ???
+    tgt_lang_code: ???
+split_sentence:
+  deps: [translate]
+  transform:
+    _target_: src.pipeline.split.SplitSentence
+    in_column: ${pipeline.translate.transform.out_column}
+    out_column: src_words
+    word_splitter:
+      _target_: src.pipeline.split.NLTKSplitter
+apply_ner:
+  deps: [split_sentence]
+  transform:
+    _target_: src.pipeline.ner.NERTransform
+    model_path: ???
+    batch_size: 32
+    device: 0
+    in_column: ${pipeline.split_sentence.transform.out_column}
+    out_column: src_entities
+align_words:
+  deps: [apply_ner]
+  transform:
+    _target_: src.pipeline.alignment.WordAlignTransform
+    word_aligner: ${aligner}
+    tgt_column: ${pipeline.make_sentence.transform.in_column}
+    src_column: ${pipeline.split_sentence.transform.out_column}
+    batch_size: 32
+    out_column: word_alignments
+project:
+  deps: [align_words]
+  transform:
+    _target_: src.pipeline.projection.HeuriticsProjection
+    tgt_words_column: ${pipeline.make_sentence.transform.in_column}
+    src_words_column: ${pipeline.split_sentence.transform.out_column}
+    src_entities_column: ${pipeline.apply_ner.transform.out_column}
+    alignments_colums: ${pipeline.align_words.transform.out_column}
+    out_column: labels
+    length_ratio_threshold: null
+    project_top_k: 1
+    merge_distance: 1
+    merge_only_i_labels: true
+intrinsic_eval:
+  deps: [project]
+  transform:
+    _target_: src.pipeline.eval.IntrinsicEvaluation
+    orig_column: ner_tags
+    gen_column: ${pipeline.project.transform.out_column}
+    gen_as_tags: False
+    log_to_wandb: ${log_to_wandb}
+    batch_size: 1000
+    labels_to_ignore: null
