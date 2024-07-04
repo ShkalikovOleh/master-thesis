@@ -37,7 +37,7 @@ class Word2WordAlignmentsBasedProjection(ABC):
 
     @staticmethod
     def gather_aligned_words(
-        alignments: list[tuple[int, int]], n_words: int, to_tgt: bool = True
+        alignments: list[tuple[int, int]], n_words: int, to_tgt: bool = False
     ) -> list[list[int]]:
         """Make a list of tgt/src aligned words that are aligned to every src/tgt words.
 
@@ -46,7 +46,7 @@ class Word2WordAlignmentsBasedProjection(ABC):
                 tgt words
             n_words (int): number of tgt/src words (depends on to_tgt parameter)
             to_tgt (bool, optional): Whether return list for target words.
-                Defaults to True.
+                Defaults to False.
 
         Returns:
             list[list[int]]: list where on every i position there is a list of
@@ -64,6 +64,8 @@ class Word2WordAlignmentsBasedProjection(ABC):
                 indices = map(lambda a: a[0 if to_tgt else 1], g)
                 alignments_by_words[i].extend(indices)
             i += 1
+            if i == n_words:
+                break
         return alignments_by_words
 
 
@@ -269,7 +271,7 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         n_projected: int = 1,
         proj_constraint: str = "EQUAL",
         solver: str = "GUROBI",
-        num_proc: int = 16,
+        num_proc: int | None = None,
     ) -> None:
         super().__init__(
             tgt_words_column,
