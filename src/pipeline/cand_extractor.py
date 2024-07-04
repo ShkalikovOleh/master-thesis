@@ -2,13 +2,16 @@
 extract entity candidates in the target sentence
 """
 
-from itertools import chain
+from itertools import chain, combinations
 import logging
 from typing import Any
 
 from datasets import Dataset
 
-from src.pipeline.projection import Word2WordAlignmentsBasedProjection
+from src.pipeline.projection import (
+    HeuriticsProjection,
+    Word2WordAlignmentsBasedProjection,
+)
 from src.utils.iterators import min_max
 
 
@@ -73,7 +76,7 @@ class ContiniousSubrangeExtractor:
         return ds
 
 
-class AlignedSubrangeExtractor(ContiniousSubrangeExtractor):
+class AlignedContiniousSubrangeExtractor(ContiniousSubrangeExtractor):
     """Returns as candidates all subranges of ranges where the first and the last words
     are aligned to source entities. The lenght of the surbranges can be controlled
     by min_words (default 1) and max_words (default number of input words) parameters.
@@ -126,6 +129,68 @@ class AlignedSubrangeExtractor(ContiniousSubrangeExtractor):
             )
             for cand in entity_cands:
                 candidates.add(cand)
+
+        return list(candidates)
+
+    def __call__(self, ds: Dataset) -> Dataset:
+        def extract_func(tgt_words, src_entities, alignments):
+            candidates = self.extract(tgt_words, src_entities, alignments)
+            return {self.out_column: candidates}
+
+        ds = ds.map(
+            extract_func,
+            input_columns=[
+                self.tgt_words_column,
+                self.src_entities_column,
+                self.alignment_column,
+            ],
+            batched=False,
+        )
+        return ds
+
+
+class AlignedSubrangeMergingExtractor:
+    """Similar to AlignedContiniousSubrangeExtractor but if"""
+
+    def __init__(
+        self,
+        tgt_words_column: str = "tokens",
+        out_column: str = "tgt_candidates",
+        src_entities_column: str = "src_entities",
+        alignments_column: str = "word_alignments",
+    ) -> None:
+        self.tgt_words_column = tgt_words_column
+        self.out_column = out_column
+        self.alignment_column = alignments_column
+        self.src_entities_column = src_entities_column
+
+    def extract(
+        self,
+        tgt_words: list[str],
+        src_entities: list[dict[str, Any]],
+        alignments: list[tuple[int, int]],
+    ) -> list[tuple[int, int]]:
+        if len(src_entities) == 0:
+            return []
+
+        candidates = set()
+
+        n_src_words = max(src_entities, key=lambda ent: ent["end_idx"])["end_idx"]
+        aligned_by_src_words = Word2WordAlignmentsBasedProjection.gather_aligned_words(
+            alignments, n_src_words, to_tgt=False
+        )
+
+        for src_entity in src_entities:
+            s_idx, e_idx = src_entity["start_idx"], src_entity["end_idx"]
+
+            entity_cands = HeuriticsProjection.generate_candidates_from_alignment(
+                len(tgt_words), s_idx, e_idx, aligned_by_src_words
+            )
+            for cand1, cand2 in combinations(entity_cands, r=2):
+                merged_cand = (cand1[0], cand2[1])
+                candidates.add(merged_cand)
+                candidates.add(cand1)
+                candidates.add(cand2)
 
         return list(candidates)
 

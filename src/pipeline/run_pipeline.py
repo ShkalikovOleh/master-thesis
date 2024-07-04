@@ -8,6 +8,8 @@ import hydra
 import networkx as nx
 from omegaconf import DictConfig, OmegaConf
 
+from datasets import disable_caching
+
 
 from src.utils.pipeline import (
     create_pipeline_graph,
@@ -51,6 +53,9 @@ def main(cfg: DictConfig) -> None:
     # filter out empty transforms ans instantiate real ones
     steps = dict(filter(lambda step: step[1] is not None, cfg.pipeline.items()))
     transforms = instantiate_transforms(steps)
+
+    if cfg["disable_hf_caching"]:
+        disable_caching()
 
     if cfg["log_to_wandb"]:
         import wandb

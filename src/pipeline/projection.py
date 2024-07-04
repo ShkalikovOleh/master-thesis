@@ -3,6 +3,7 @@ steps of the XLNER pipeline. Labels produced by these steps are returned
 in IOB2 format."""
 
 from itertools import groupby
+import logging
 from typing import Any
 from datasets import Dataset
 from abc import ABC
@@ -14,6 +15,9 @@ from src.ilp.ranges import (
     solve_ilp_problem,
 )
 from src.utils.entities import get_entities_spans
+
+
+logger = logging.getLogger("Pipeline")
 
 
 class Word2WordAlignmentsBasedProjection(ABC):
@@ -273,6 +277,8 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         solver: str = "GUROBI",
         num_proc: int | None = None,
     ) -> None:
+        assert n_projected >= 0
+
         super().__init__(
             tgt_words_column,
             src_words_column,
@@ -316,6 +322,13 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         ent_inds, cand_inds = solve_ilp_problem(
             problem, n_src_ent, n_tgt_cand, self.solver
         )
+
+        if len(ent_inds) < len(src_entities) and (
+            self.proj_constraint is not ProjectionContraint.LESS
+            or self.proj_constraint is not ProjectionContraint.LESS_OR_EQUAL
+            or self.n_projected == 0
+        ):
+            logger.warn("Not every entity has been matched")
 
         # Labelling
         for r, c in zip(ent_inds, cand_inds):
