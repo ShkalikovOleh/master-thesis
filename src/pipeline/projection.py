@@ -320,10 +320,11 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
             problem, n_src_ent, n_tgt_cand, self.solver
         )
 
-        if len(ent_inds) < len(src_entities) and (
-            self.proj_constraint is not ProjectionContraint.LESS
-            or self.proj_constraint is not ProjectionContraint.LESS_OR_EQUAL
-            or self.n_projected == 0
+        if (
+            len(ent_inds) < len(src_entities)
+            and self.proj_constraint
+            not in [ProjectionContraint.LESS, ProjectionContraint.LESS_OR_EQUAL]
+            and self.n_projected != 0
         ):
             logger.warn("Not every entity has been matched")
 
