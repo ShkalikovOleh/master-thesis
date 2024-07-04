@@ -2,6 +2,7 @@
 an ILP problem based of word/token ranges and give function to solve it"""
 
 from enum import Enum
+from itertools import combinations_with_replacement
 
 import numpy as np
 import cvxpy as cp
@@ -123,10 +124,12 @@ def construct_ilp_problem(
 
     # Constraint: don't project enitities to overlapped candidates
     overlapped_cands = get_overlapped_candidates_idxs(tgt_candidates)
-    for i in range(0, n_ent * n_cand, n_cand):
-        # do it for every entity
+    for src_ent1, src_ent2 in combinations_with_replacement(range(n_ent), 2):
+        off1 = src_ent1 * n_cand
+        off2 = src_ent2 * n_cand
+        # do it for every entity pair
         for a_idx, b_idx in overlapped_cands:
-            constraints.append(x[i + a_idx] + x[i + b_idx] <= 1)
+            constraints.append(x[off1 + a_idx] + x[off2 + b_idx] <= 1)
 
     problem = cp.Problem(objective=objective, constraints=constraints)
     return problem
@@ -154,5 +157,8 @@ def solve_ilp_problem(
 
     idxs = np.argwhere(x == 1)[:, 0]
     src_idxs, cand_idxs = np.unravel_index(idxs, (n_src_entities, n_tgt_cands))
+
+    if problem.status != cp.OPTIMAL:
+        fsd = 4
 
     return src_idxs.tolist(), cand_idxs.tolist()
