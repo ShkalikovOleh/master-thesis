@@ -2,13 +2,16 @@
 an ILP problem based of word/token ranges and give function to solve it"""
 
 from enum import Enum
-from itertools import combinations_with_replacement
+from itertools import combinations, combinations_with_replacement
+import logging
 
 import numpy as np
 import cvxpy as cp
 from scipy.sparse import csr_matrix
 
 from src.utils.entities import get_overlapped_candidates_idxs
+
+logger = logging.getLogger("Pipeline")
 
 
 def get_relative_lenght_cost(
@@ -124,12 +127,20 @@ def construct_ilp_problem(
 
     # Constraint: don't project enitities to overlapped candidates
     overlapped_cands = get_overlapped_candidates_idxs(tgt_candidates)
+    # don't project different entities to the same candidate
+    for src_ent1, src_ent2 in combinations(range(n_ent), 2):
+        off1 = src_ent1 * n_cand
+        off2 = src_ent2 * n_cand
+        for idx in range(n_cand):
+            constraints.append(x[off1 + idx] + x[off2 + idx] <= 1)
+    # don't project to overlapped
     for src_ent1, src_ent2 in combinations_with_replacement(range(n_ent), 2):
         off1 = src_ent1 * n_cand
         off2 = src_ent2 * n_cand
         # do it for every entity pair
         for a_idx, b_idx in overlapped_cands:
             constraints.append(x[off1 + a_idx] + x[off2 + b_idx] <= 1)
+            constraints.append(x[off1 + b_idx] + x[off2 + a_idx] <= 1)
 
     problem = cp.Problem(objective=objective, constraints=constraints)
     return problem
@@ -153,7 +164,11 @@ def solve_ilp_problem(
             target candidates
     """
     problem.solve(solver=solver)
+
     x = problem.variables()[0].value
+    if x is None:
+        logger.warn(f"ILP solver failed. Status: {problem.status}")
+        return [], []
 
     idxs = np.argwhere(x == 1)[:, 0]
     src_idxs, cand_idxs = np.unravel_index(idxs, (n_src_entities, n_tgt_cands))
