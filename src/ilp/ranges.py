@@ -158,7 +158,4 @@ def solve_ilp_problem(
     idxs = np.argwhere(x == 1)[:, 0]
     src_idxs, cand_idxs = np.unravel_index(idxs, (n_src_entities, n_tgt_cands))
 
-    if problem.status != cp.OPTIMAL:
-        fsd = 4
-
     return src_idxs.tolist(), cand_idxs.tolist()
