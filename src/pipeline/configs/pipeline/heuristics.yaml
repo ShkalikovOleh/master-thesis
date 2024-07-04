@@ -60,7 +60,7 @@ project:
     tgt_words_column: ${pipeline.make_sentence.transform.in_column}
     src_words_column: ${pipeline.split_sentence.transform.out_column}
     src_entities_column: ${pipeline.apply_ner.transform.out_column}
-    alignments_colums: ${pipeline.align_words.transform.out_column}
+    alignments_column: ${pipeline.align_words.transform.out_column}
     out_column: labels
     length_ratio_threshold: null
     project_top_k: 1
