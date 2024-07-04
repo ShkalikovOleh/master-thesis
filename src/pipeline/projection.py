@@ -60,16 +60,13 @@ class Word2WordAlignmentsBasedProjection(ABC):
         def key_func(a):
             return a[1 if to_tgt else 0]
 
-        i = 0
         alignments_by_words = [[] for _ in range(n_words)]
         alignments = sorted(alignments, key=key_func)
         for k, g in groupby(alignments, key=key_func):
-            if i == k:
-                indices = map(lambda a: a[0 if to_tgt else 1], g)
-                alignments_by_words[i].extend(indices)
-            i += 1
-            if i == n_words:
+            if k >= n_words:
                 break
+            indices = map(lambda a: a[0 if to_tgt else 1], g)
+            alignments_by_words[k].extend(indices)
         return alignments_by_words
 
 
@@ -207,7 +204,7 @@ class HeuriticsProjection(Word2WordAlignmentsBasedProjection):
             )
 
             # Handle split annotations via merging
-            if self.merge_distance > 0 and len(candidates) > 0:
+            if self.merge_distance > 0 and len(candidates) > 1:
                 candidates = self.merge_adjacent_candidates(
                     candidates,
                     max_distance=self.merge_distance,
