@@ -273,6 +273,8 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         proj_constraint: str = "EQUAL",
         solver: str = "GUROBI",
         num_proc: int | None = None,
+        remove_entities_with_zero_cost: bool = True,
+        remove_candidates_with_zero_cost: bool = True,
     ) -> None:
         assert n_projected >= 0
 
@@ -288,6 +290,8 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         self.proj_constraint = ProjectionContraint[proj_constraint]
         self.solver = solver
         self.num_proc = num_proc
+        self.remove_entities_with_zero_cost = remove_entities_with_zero_cost
+        self.remove_candidates_with_zero_cost = remove_candidates_with_zero_cost
 
     def project(
         self,
@@ -310,14 +314,18 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         costs = get_relative_lenght_cost(
             aligns_by_src_words, src_entities_spans, tgt_candidates
         )
-        n_src_ent, n_tgt_cand = costs.shape
 
         # Construct and solve ILP problem
-        problem = construct_ilp_problem(
-            costs, tgt_candidates, self.n_projected, self.proj_constraint
+        problem, nnz_rows, nnz_cols = construct_ilp_problem(
+            costs,
+            tgt_candidates,
+            self.n_projected,
+            self.proj_constraint,
+            self.remove_entities_with_zero_cost,
+            self.remove_candidates_with_zero_cost,
         )
         ent_inds, cand_inds = solve_ilp_problem(
-            problem, n_src_ent, n_tgt_cand, self.solver
+            problem, nnz_rows, nnz_cols, self.solver
         )
 
         if (
