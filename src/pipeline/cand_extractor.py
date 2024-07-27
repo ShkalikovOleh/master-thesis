@@ -150,7 +150,9 @@ class AlignedContiniousSubrangeExtractor(ContiniousSubrangeExtractor):
 
 
 class AlignedSubrangeMergingExtractor:
-    """Similar to AlignedContiniousSubrangeExtractor but if"""
+    """Consider as candidates only continious ranges of aligned words (ignoring
+    their subranges) and their concatenation. Continiuous subranges are generated
+    with use the same logic as candidates in the heuristic-based projection approach"""
 
     def __init__(
         self,
@@ -186,11 +188,15 @@ class AlignedSubrangeMergingExtractor:
             entity_cands = HeuriticsProjection.generate_candidates_from_alignment(
                 len(tgt_words), s_idx, e_idx, aligned_by_src_words
             )
+
+            # add candidates itself
+            for cand in entity_cands:
+                candidates.add(cand)
+
+            # add merged candidates
             for cand1, cand2 in combinations(entity_cands, r=2):
                 merged_cand = (cand1[0], cand2[1])
                 candidates.add(merged_cand)
-                candidates.add(cand1)
-                candidates.add(cand2)
 
         return list(candidates)
 
