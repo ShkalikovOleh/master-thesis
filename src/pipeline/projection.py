@@ -12,6 +12,7 @@ from src.ilp.ranges import (
     ProjectionContraint,
     get_relative_lenght_cost,
     construct_ilp_problem,
+    greedy_solve_from_costs,
     solve_ilp_problem,
 )
 from src.utils.entities import get_entities_spans
@@ -315,18 +316,23 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
             aligns_by_src_words, src_entities_spans, tgt_candidates
         )
 
-        # Construct and solve ILP problem
-        problem, nnz_rows, nnz_cols = construct_ilp_problem(
-            costs,
-            tgt_candidates,
-            self.n_projected,
-            self.proj_constraint,
-            self.remove_entities_with_zero_cost,
-            self.remove_candidates_with_zero_cost,
-        )
-        ent_inds, cand_inds = solve_ilp_problem(
-            problem, nnz_rows, nnz_cols, self.solver
-        )
+        if self.solver != "GREEDY":
+            # Construct and solve ILP problem
+            problem, nnz_rows, nnz_cols = construct_ilp_problem(
+                costs,
+                tgt_candidates,
+                self.n_projected,
+                self.proj_constraint,
+                self.remove_entities_with_zero_cost,
+                self.remove_candidates_with_zero_cost,
+            )
+            ent_inds, cand_inds = solve_ilp_problem(
+                problem, nnz_rows, nnz_cols, self.solver
+            )
+        else:
+            ent_inds, cand_inds = greedy_solve_from_costs(
+                costs, tgt_candidates, self.n_projected, self.proj_constraint
+            )
 
         if (
             len(ent_inds) < len(src_entities)

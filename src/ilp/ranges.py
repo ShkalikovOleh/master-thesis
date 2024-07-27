@@ -10,7 +10,10 @@ import numpy as np
 import cvxpy as cp
 from scipy.sparse import csr_matrix
 
-from src.utils.entities import get_overlapped_candidates_idxs
+from src.utils.entities import (
+    get_overlapped_by_candidates,
+    get_overlapped_candidates_idxs,
+)
 
 logger = logging.getLogger("Pipeline")
 
@@ -86,6 +89,52 @@ def get_constraint_operation(proj_constraint: ProjectionContraint):
             return lambda a, b: a > b
         case ProjectionContraint.GREATER_OR_EQUAL:
             return lambda a, b: a >= b
+
+
+def greedy_solve_from_costs(
+    costs: csr_matrix,
+    tgt_candidates: list[tuple[int, int]],
+    n_projected: int = 1,
+    proj_constraint: ProjectionContraint = ProjectionContraint.EQUAL,
+) -> Tuple[list[int], list[int]]:
+    n_ent, n_cand = costs.shape
+    C = costs.toarray()
+
+    num_projected_by_entity = [0 for _ in range(n_ent)]
+    overlapped_by_cands = get_overlapped_by_candidates(tgt_candidates)
+
+    ineq_constr = get_constraint_operation(proj_constraint)
+
+    src_idxs, cand_idxs = [], []
+    while abs(np.sum(C)) > 10e-6:
+        # take item with maximum cost and add it to solution
+        ent_idx, cand_idx = np.unravel_index(
+            np.argmax(C.reshape(1, -1)), (n_ent, n_cand)
+        )
+        src_idxs.append(ent_idx.item())
+        cand_idxs.append(cand_idx.item())
+
+        # check whether constraints are fulfilled for entity
+        num_projected_by_entity[ent_idx] += 1
+        curr_n_proj = num_projected_by_entity[ent_idx]
+        if proj_constraint in [
+            ProjectionContraint.EQUAL,
+            ProjectionContraint.LESS_OR_EQUAL,
+        ]:
+            # entity reach projection limit
+            if ineq_constr(curr_n_proj, n_projected):
+                C[ent_idx] = 0
+        elif proj_constraint in [ProjectionContraint.LESS]:
+            # next projection for this entity will violate constraints
+            if not ineq_constr(curr_n_proj + 1, n_projected):
+                C[ent_idx] = 0
+
+        # remove overlapped candidates from possible solution
+        overlapped = overlapped_by_cands[cand_idx]
+        overlapped.append(cand_idx)
+        C[:, overlapped] = 0
+
+    return src_idxs, cand_idxs
 
 
 def construct_ilp_problem(
@@ -176,7 +225,7 @@ def solve_ilp_problem(
     nnz_rows: np.ndarray,
     nnz_cols: np.ndarray,
     solver: str = cp.GUROBI,
-) -> tuple[list[int], list[int]]:
+) -> Tuple[list[int], list[int]]:
     """Solve weighted bipartite matching problem and return indices of mathed source
     entities and target candidates
 

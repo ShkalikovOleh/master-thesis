@@ -27,3 +27,25 @@ def get_overlapped_candidates_idxs(
                 overlapped.add((a, b))
 
     return list(overlapped)
+
+
+def get_overlapped_by_candidates(
+    tgt_candidates: list[tuple[int, int]]
+) -> list[tuple[int, int]]:
+    max_pos = max(tgt_candidates, key=lambda span: span[1])[1]
+
+    overlapped = [set() for _ in range(len(tgt_candidates))]
+    # for every position store all candidates thah hit it
+    pos_hit_list = [[] for _ in range(max_pos)]
+
+    for cand_idx, (start_idx, end_idx) in enumerate(tgt_candidates):
+        for i in range(start_idx, end_idx):
+            pos_hit_list[i].append(cand_idx)
+
+    for pos_hits in pos_hit_list:
+        if len(pos_hits) > 1:  # several cand hit this position
+            for a, b in combinations(pos_hits, 2):
+                overlapped[a].add(b)
+                overlapped[b].add(a)
+
+    return [list(s) for s in overlapped]
