@@ -106,7 +106,7 @@ def greedy_solve_from_costs(
     ineq_constr = get_constraint_operation(proj_constraint)
 
     src_idxs, cand_idxs = [], []
-    while abs(np.sum(C)) > 10e-6:
+    while C.max() > 0:
         # take item with maximum cost and add it to solution
         ent_idx, cand_idx = np.unravel_index(
             np.argmax(C.reshape(1, -1)), (n_ent, n_cand)
@@ -225,6 +225,7 @@ def solve_ilp_problem(
     nnz_rows: np.ndarray,
     nnz_cols: np.ndarray,
     solver: str = cp.GUROBI,
+    **solver_params,
 ) -> Tuple[list[int], list[int]]:
     """Solve weighted bipartite matching problem and return indices of mathed source
     entities and target candidates
@@ -242,7 +243,7 @@ def solve_ilp_problem(
             matched source entities whereas the second - indices of matched
             target candidates
     """
-    problem.solve(solver=solver)
+    problem.solve(solver=solver, **solver_params)
 
     x = problem.variables()[0].value
     if x is None:
