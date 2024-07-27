@@ -474,3 +474,5 @@ wandb
 
 # Local test files
 test_data
+temp*
+test*
