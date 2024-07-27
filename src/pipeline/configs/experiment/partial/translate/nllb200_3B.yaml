@@ -1,7 +1,7 @@
 # @package _global_
 
 defaults:
-  - override /pipeline: translate
+  - override /pipeline: partial/translate
 
 log_to_wandb: false
 hydra:
@@ -14,7 +14,7 @@ pipeline:
       dataset_path: ${dataset_path}
   translate:
     transform:
-      model_path: facebook/nllb-200-distilled-600M
+      model_path: facebook/nllb-200-3.3B
       src_lang: ${src_lang}
       tgt_lang: ${tgt_lang}
       batch_size: ${batch_size}

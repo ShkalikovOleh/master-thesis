@@ -1,0 +1,38 @@
+load_ds:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: false
+load_entities:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: true
+merge_datasets:
+  deps: [load_entities, load_ds]
+  transform:
+    _target_: src.pipeline.data.ConcatDatasets
+align_words:
+  deps: [merge_datasets]
+  transform:
+    _target_: src.pipeline.alignment.WordAlignTransform
+    word_aligner: ${aligner}
+    tgt_column: tokens
+    src_column: src_words
+    batch_size: 64
+    out_column: word_alignments
+save_alignments:
+  deps: [align_words]
+  transform:
+    _target_: src.pipeline.data.WriteDataset
+    save_path: ???
+    columns:
+      - word_alignments
