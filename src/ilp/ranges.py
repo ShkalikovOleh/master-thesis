@@ -199,9 +199,6 @@ def construct_ilp_problem(
 
     # Constraint: don't project enitities to overlapped candidates
     overlapped_cands = get_overlapped_candidates_idxs(tgt_candidates)
-    # don't project different entities to the same candidate
-    for j in range(n_cand):
-        constraints.append(sum(x[j:n_total:n_cand]) <= 1)
     # don't project to overlapped
     for a_idx, b_idx in overlapped_cands:
         n_proj_a = sum(x[a_idx:n_total:n_cand])
@@ -302,11 +299,6 @@ def solve_ilp_with_gurobi(
         m.addConstrs(
             (proj_const_op(x.sum(i, "*"), n_projected) for i in range(n_ent)),
             name="num_projection",
-        )
-
-        # don't project to candidate more than once
-        m.addConstrs(
-            (x.sum("*", j) <= 1 for j in range(n_cand)), name="project_to_cand_once"
         )
 
         # don't project to overlapped candidates
