@@ -318,9 +318,21 @@ def solve_ilp_with_gurobi(
 
         m.optimize()
 
-        for i, j in np.ndindex(n_ent, n_cand):
-            if x[i, j].X > 0:
-                src_idxs.append(i)
-                cand_idxs.append(j)
+        if m.Status in [
+            grp.GRB.OPTIMAL,
+            grp.GRB.SUBOPTIMAL,
+            grp.GRB.ITERATION_LIMIT,
+            grp.GRB.NODE_LIMIT,
+            grp.GRB.TIME_LIMIT,
+            grp.GRB.SOLUTION_LIMIT,
+            grp.GRB.USER_OBJ_LIMIT,
+            grp.GRB.WORK_LIMIT,
+            grp.GRB.MEM_LIMIT,
+            grp.GRB.NUMERIC,
+        ]:
+            for i, j in np.ndindex(n_ent, n_cand):
+                if x[i, j].X > 0:
+                    src_idxs.append(i)
+                    cand_idxs.append(j)
 
     return src_idxs, cand_idxs
