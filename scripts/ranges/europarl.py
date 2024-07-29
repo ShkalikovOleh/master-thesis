@@ -54,7 +54,6 @@ def main(cfg: argparse.Namespace):
                 "-m",
                 "src.pipeline.run_pipeline",
                 f"tgt_lang={lang}",
-                "dataset=europarl",
                 *orig_ds_params,
                 align_ds_param,
                 src_ds_param,
