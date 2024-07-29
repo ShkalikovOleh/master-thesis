@@ -13,7 +13,10 @@ from src.ilp.ranges import (
     get_relative_lenght_cost,
     construct_ilp_problem,
     greedy_solve_from_costs,
+    remove_candidates_with_zero_costs,
+    remove_entities_with_zero_cost,
     solve_ilp_problem,
+    solve_ilp_with_gurobi,
 )
 from src.utils.entities import get_entities_spans
 
@@ -295,17 +298,7 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         self.remove_entities_with_zero_cost = remove_entities_with_zero_cost
         self.remove_candidates_with_zero_cost = remove_candidates_with_zero_cost
 
-        if solver_params is not None:
-            if solver == "GUROBI":
-                import gurobipy
-
-                env = gurobipy.Env()
-                for key, value in solver_params.items():
-                    env.setParam(key, value)
-                self.solver_params = {"env": env}
-            else:
-                self.solver_params = solver_params
-        else:
+        if solver_params is None:
             self.solver_params = {}
 
     def project(
@@ -330,23 +323,35 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
             aligns_by_src_words, src_entities_spans, tgt_candidates
         )
 
-        if self.solver != "GREEDY":
-            # Construct and solve ILP problem
-            problem, nnz_rows, nnz_cols = construct_ilp_problem(
-                costs,
-                tgt_candidates,
-                self.n_projected,
-                self.proj_constraint,
-                self.remove_entities_with_zero_cost,
-                self.remove_candidates_with_zero_cost,
-            )
-            ent_inds, cand_inds = solve_ilp_problem(
-                problem, nnz_rows, nnz_cols, self.solver, **self.solver_params
-            )
-        else:
-            ent_inds, cand_inds = greedy_solve_from_costs(
-                costs, tgt_candidates, self.n_projected, self.proj_constraint
-            )
+        # Don't consider entites and candidates that have zero costs
+        if self.remove_entities_with_zero_cost:
+            costs, nnz_rows = remove_entities_with_zero_cost(costs)
+
+        if self.remove_candidates_with_zero_cost:
+            costs, nnz_cols = remove_candidates_with_zero_costs(costs)
+            tgt_candidates = list(map(tgt_candidates.__getitem__, nnz_cols))
+
+        # Construct and solve ILP problem
+        match self.solver:
+            case "GREEDY":
+                ent_inds, cand_inds = greedy_solve_from_costs(
+                    costs, tgt_candidates, self.n_projected, self.proj_constraint
+                )
+            case "GUROBI":
+                ent_inds, cand_inds = solve_ilp_with_gurobi(
+                    costs, tgt_candidates, self.n_projected, self.proj_constraint
+                )
+            case _:  # other solvers (via CVXPY)
+                n_ent, n_cand = costs.shape
+                problem, nnz_rows, nnz_cols = construct_ilp_problem(
+                    costs,
+                    tgt_candidates,
+                    self.n_projected,
+                    self.proj_constraint,
+                )
+                ent_inds, cand_inds = solve_ilp_problem(
+                    problem, n_ent, n_cand, self.solver, **self.solver_params
+                )
 
         if (
             len(ent_inds) < len(src_entities)
@@ -357,6 +362,9 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
             logger.warn("Not every entity has been matched")
 
         # Labelling
+        if remove_entities_with_zero_cost:
+            ent_inds = nnz_rows[ent_inds]
+            
         for r, c in zip(ent_inds, cand_inds):
             label = src_entities[r]["label"]
             tgt_s, tgt_e = tgt_candidates[c]
