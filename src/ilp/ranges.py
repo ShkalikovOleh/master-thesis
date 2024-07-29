@@ -2,7 +2,6 @@
 an ILP problem based of word/token ranges and give function to solve it"""
 
 from enum import Enum
-from itertools import combinations, combinations_with_replacement
 import logging
 from typing import Tuple
 
@@ -184,6 +183,7 @@ def construct_ilp_problem(
         cp.Problem: weighted bipartite matching problem with additional constratints
     """
     n_ent, n_cand = costs.shape
+    n_total = n_ent * n_cand
 
     C = costs.toarray().reshape((1, -1))
     x = cp.Variable(C.shape[1], boolean=True)
@@ -200,19 +200,13 @@ def construct_ilp_problem(
     # Constraint: don't project enitities to overlapped candidates
     overlapped_cands = get_overlapped_candidates_idxs(tgt_candidates)
     # don't project different entities to the same candidate
-    for src_ent1, src_ent2 in combinations(range(n_ent), 2):
-        off1 = src_ent1 * n_cand
-        off2 = src_ent2 * n_cand
-        for idx in range(n_cand):
-            constraints.append(x[off1 + idx] + x[off2 + idx] <= 1)
+    for j in range(n_cand):
+        constraints.append(sum(x[j:n_total:n_cand]) <= 1)
     # don't project to overlapped
-    for src_ent1, src_ent2 in combinations_with_replacement(range(n_ent), 2):
-        off1 = src_ent1 * n_cand
-        off2 = src_ent2 * n_cand
-        # do it for every entity pair
-        for a_idx, b_idx in overlapped_cands:
-            constraints.append(x[off1 + a_idx] + x[off2 + b_idx] <= 1)
-            constraints.append(x[off1 + b_idx] + x[off2 + a_idx] <= 1)
+    for a_idx, b_idx in overlapped_cands:
+        n_proj_a = sum(x[a_idx:n_total:n_cand])
+        n_proj_b = sum(x[b_idx:n_total:n_cand])
+        constraints.append(n_proj_a + n_proj_b <= 1)
 
     problem = cp.Problem(objective=objective, constraints=constraints)
     return problem

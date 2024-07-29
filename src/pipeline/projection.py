@@ -343,7 +343,7 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
                 )
             case _:  # other solvers (via CVXPY)
                 n_ent, n_cand = costs.shape
-                problem, nnz_rows, nnz_cols = construct_ilp_problem(
+                problem = construct_ilp_problem(
                     costs,
                     tgt_candidates,
                     self.n_projected,
@@ -364,7 +364,7 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         # Labelling
         if remove_entities_with_zero_cost:
             ent_inds = nnz_rows[ent_inds]
-            
+
         for r, c in zip(ent_inds, cand_inds):
             label = src_entities[r]["label"]
             tgt_s, tgt_e = tgt_candidates[c]
