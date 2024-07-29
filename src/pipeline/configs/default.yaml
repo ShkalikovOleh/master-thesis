@@ -11,6 +11,8 @@ hydra:
 log_to_wandb: true
 wandb_project: nlp_ilp
 
+tgt_lang: ???
+
 cached_step_paths: null
 
 disable_hf_caching: true

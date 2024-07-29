@@ -1,0 +1,63 @@
+load_ds:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: false
+load_entities:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: true
+load_alignments:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: true
+merge_datasets:
+  deps: [load_entities, load_ds, load_alignments]
+  transform:
+    _target_: src.pipeline.data.ConcatDatasets
+cand_extraction:
+  deps: [merge_datasets]
+  transform:
+    _target_: src.pipeline.cand_extractor.AlignedContiniousSubrangeExtractor
+    tgt_words_column: tokens
+    out_column: tgt_candidates
+    min_words: 1
+    max_words: 25
+    # stop_words: set[str] | list[str] | None = {"!", "?"}
+project:
+  deps: [cand_extraction]
+  transform:
+    _target_: src.pipeline.projection.RangeILPProjection
+    tgt_words_column: tokens
+    src_words_column: src_words
+    src_entities_column: src_entities
+    tgt_cand_column: ${pipeline.cand_extraction.transform.out_column}
+    out_column: labels
+    n_projected: 1
+    proj_constraint: EQUAL
+    solver: GUROBI
+    num_proc: 16
+intrinsic_eval:
+  deps: [project]
+  transform:
+    _target_: src.pipeline.eval.IntrinsicEvaluation
+    orig_column: ner_tags
+    gen_column: ${pipeline.project.transform.out_column}
+    gen_as_tags: False
+    log_to_wandb: ${log_to_wandb}
+    batch_size: 1000
+    labels_to_ignore: null
