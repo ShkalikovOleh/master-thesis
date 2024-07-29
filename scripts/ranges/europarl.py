@@ -65,7 +65,6 @@ def main(cfg: argparse.Namespace):
 
             match cfg.executor:
                 case "python":
-                    print(python_call)
                     subprocess.run(python_call)
 
 

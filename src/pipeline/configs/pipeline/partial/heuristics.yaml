@@ -1,0 +1,50 @@
+load_ds:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: false
+load_entities:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: true
+load_alignments:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: true
+merge_datasets:
+  deps: [load_entities, load_ds, load_alignments]
+  transform:
+    _target_: src.pipeline.data.ConcatDatasets
+project:
+  deps: [merge_datasets]
+  transform:
+    _target_: src.pipeline.projection.HeuriticsProjection
+    out_column: labels
+    length_ratio_threshold: 0.8
+    project_top_k: null
+    merge_distance: 1
+    merge_only_i_labels: true
+intrinsic_eval:
+  deps: [project]
+  transform:
+    _target_: src.pipeline.eval.IntrinsicEvaluation
+    orig_column: ner_tags
+    gen_column: ${pipeline.project.transform.out_column}
+    gen_as_tags: False
+    log_to_wandb: ${log_to_wandb}
+    batch_size: 1000
+    labels_to_ignore: null
