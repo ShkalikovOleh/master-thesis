@@ -1,10 +1,13 @@
 """This module implements a source NER labelling step of the XLNER pipeline"""
 
+from functools import partial
+from itertools import groupby
 from typing import Any
 from datasets import Dataset
+import torch
 from transformers import AutoModelForTokenClassification
 
-from src.utils.model_context import use_hf_pipeline
+from src.utils.model_context import use_hf_model, use_hf_pipeline
 from src.utils.tokenwise_pipeline import register_pipeline
 
 
@@ -66,3 +69,112 @@ class NERTransform:
             )
 
             return ds
+
+
+class SubwordEmbeddingExtractor:
+    """Extractor which generates source entities spans and target candidates for
+    word-to-word alignment task, i.e. for the given source and target words compute
+    subword-level embeddings and spans (on token level) of every word. As an output
+    returns embeddings as well as token-wise spans of words.
+    """
+
+    def __init__(
+        self,
+        model_path: str,
+        batch_size: int,
+        device: int = 0,
+        in_src_words_column: str = "src_words",
+        in_tgt_words_column: str = "tokens",
+        out_src_emb_column: str = "src_emb",
+        out_tgt_emb_column: str = "tgt_emb",
+        out_src_spans_column: str = "src_spans",
+        out_tgt_spans_column: str = "tgt_spans",
+    ) -> None:
+        self.model_path = model_path
+        self.batch_size = batch_size
+        self.device = device
+
+        self.in_src_words_column = in_src_words_column
+        self.in_tgt_words_column = in_tgt_words_column
+        self.out_src_emb_column = out_src_emb_column
+        self.out_tgt_emb_column = out_tgt_emb_column
+        self.out_src_spans_column = out_src_spans_column
+        self.out_tgt_spans_column = out_tgt_spans_column
+
+    @staticmethod
+    def tokenize(tokenizer, words: list[str]):
+        tokens = tokenizer(
+            words,
+            return_tensors="pt",
+            truncation=True,
+            padding=True,
+            is_split_into_words=True,
+        )
+        return tokens
+
+    @staticmethod
+    def clean_emb_and_extract_spans(tokens, embs):
+        embeddings = []
+        spans = []
+        for i in range(tokens["input_ids"].shape[0]):
+            emb = embs[i]
+            word_ids = tokens.word_ids(i)
+            mask = torch.BoolTensor([True] * len(word_ids))
+
+            row_spans = []
+            curr_pos = 0
+            for key, group in groupby(word_ids):
+                length = len(list(group))
+                if key is not None:
+                    row_spans.append((curr_pos, curr_pos + length))
+                else:
+                    mask[curr_pos : curr_pos + length] = False
+                curr_pos += length
+
+            spans.append(row_spans)
+            embeddings.append(emb[mask])
+
+        return spans, embeddings
+
+    def extract_subwords_emb_and_spans(
+        self, src_words: list[list[str]], tgt_words: list[list[str]], model, tokenizer
+    ):
+        src_tokens = self.tokenize(tokenizer, src_words)
+        tgt_tokens = self.tokenize(tokenizer, tgt_words)
+
+        with torch.inference_mode():
+            src_embs = model(**src_tokens)["last_hidden_state"].cpu()
+            tgt_embs = model(**tgt_tokens)["last_hidden_state"].cpu()
+
+        src_spans, src_embeddings = self.clean_emb_and_extract_spans(
+            src_tokens, src_embs
+        )
+        tgt_spans, tgt_embeddings = self.clean_emb_and_extract_spans(
+            tgt_tokens, tgt_embs
+        )
+
+        return {
+            self.out_src_spans_column: src_spans,
+            self.out_src_emb_column: src_embeddings,
+            self.out_tgt_spans_column: tgt_spans,
+            self.out_tgt_emb_column: tgt_embeddings,
+        }
+
+    def __call__(self, ds: Dataset) -> Dataset:
+        with use_hf_model(
+            self.model_path,
+        ) as (model, tokenizer):
+            map_func = partial(
+                self.extract_subwords_emb_and_spans,
+                model=model,
+                tokenizer=tokenizer,
+            )
+
+            ds = ds.map(
+                map_func,
+                input_columns=[self.in_src_words_column, self.in_tgt_words_column],
+                batched=True,
+                batch_size=self.batch_size,
+            )
+
+        return ds

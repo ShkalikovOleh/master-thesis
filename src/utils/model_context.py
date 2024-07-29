@@ -55,3 +55,27 @@ def use_hf_pipeline(
 
         gc.collect()
         torch.cuda.empty_cache()
+
+
+@contextmanager
+def use_hf_model(
+    model_name: str,
+    model_kwargs: dict[str, Any] = {},
+    tokenizer_kwargs: dict[str, Any] = {},
+    AutoModelClass: Any | None = None,
+):
+    tokenizer = AutoTokenizer.from_pretrained(model_name, **tokenizer_kwargs)
+    if AutoModelClass is not None:
+        model = AutoModelClass.from_pretrained(model_name, **model_kwargs)
+    else:
+        model = AutoModel.from_pretrained(model_name, **model_kwargs)
+    model.eval()
+
+    try:
+        yield model, tokenizer
+    finally:
+        del tokenizer
+        del model
+
+        gc.collect()
+        torch.cuda.empty_cache()
