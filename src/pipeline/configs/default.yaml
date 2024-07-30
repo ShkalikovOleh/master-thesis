@@ -10,6 +10,7 @@ hydra:
 
 log_to_wandb: true
 wandb_project: nlp_ilp
+problem: annotation_projection
 
 tgt_lang: ???
 
