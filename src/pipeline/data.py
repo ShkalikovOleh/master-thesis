@@ -72,10 +72,10 @@ class LoadGoldAlignments:
             for str_align in str_aligns:
                 if "p" in str_align:
                     i, j = str_align.split("p")
-                    aligns.append((int(i), int(j), 0))
+                    aligns.append((int(i) - 1, int(j) - 1, 0))
                 else:
                     i, j = str_align.split("-")
-                    aligns.append((int(i), int(j), 1))
+                    aligns.append((int(i) - 1, int(j) - 1, 1))
 
             yield {self.out_column: aligns}
 
