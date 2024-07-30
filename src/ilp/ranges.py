@@ -1,13 +1,15 @@
-"""This module transforms the annotation projection/word alignment problem to
-an ILP problem based of word/token ranges and give function to solve it"""
+"""This module transforms the annotation projection/word alignment problems to
+ILP problems based of word/token ranges and provide functions to solve them"""
 
 from enum import Enum
+from itertools import product
 import logging
-from typing import Tuple
+from typing import Callable, Tuple
 
 import numpy as np
 import cvxpy as cp
 from scipy.sparse import csr_matrix
+from scipy.spatial.distance import cdist
 
 from src.utils.entities import (
     get_overlapped_by_candidates,
@@ -22,6 +24,54 @@ except ImportError:
     logger.warn("If you want to use GUROBI please install gurobipy")
 
 
+def get_cosine_similarity_based_cost(
+    src_emb: list[list[float]] | np.ndarray,
+    tgt_emb: list[list[float]] | np.ndarray,
+    src_spans: list[tuple[int, int]],
+    tgt_spans: list[tuple[int, int]],
+    threshold: float = 0.65,
+    max_reduction: Callable[[np.ndarray], np.dtype] = np.mean,
+) -> csr_matrix:
+    """Compute matching costs between words based on cosine similarity between
+    token-level embeddings. The calculation is performed in the following manner:
+    for every pair of words it takes all token-level embeddings, for every source/
+    target word token the maximum cosine similarity is computed among all target/source
+    tokens. Them it reduce all maximum for word with a given reduction function.
+    The cost of matching between words is computed by taking maximum of cost for target
+    and source words and substracting a given threshold.
+
+    Args:
+        src_emb (list[list[float]] | np.ndarray): token-level source words embeddings
+        tgt_emb (list[list[float]] | np.ndarray): token-level target words embeddings
+        src_spans (list[tuple[int, int]]): token-level spans of source words
+        tgt_spans (list[tuple[int, int]]): token-level spans of target words
+        threshold (float, optional): minimum word-level similarity score to consider
+            word can be aligned. Defaults to 0.8.
+        max_reduction (Callable[[np.ndarray], np.dtype], optional): Operation to reduce
+            maximums of cosine similarities among all tokens of the word.
+            Defaults to np.mean.
+
+    Returns:
+        csr_matrix: matrix of costs between source words and target words
+    """
+    cos_dist = cdist(src_emb, tgt_emb, "cosine")
+    cos_sim = 1 - cos_dist
+
+    costs = np.empty((len(src_spans), len(tgt_spans)))
+    for (i, src_span), (j, tgt_span) in product(
+        enumerate(src_spans), enumerate(tgt_spans)
+    ):
+        sim_st = cos_sim[src_span[0] : src_span[1], tgt_span[0] : tgt_span[1]]
+
+        cs = max_reduction(sim_st.max(axis=1))
+        ct = max_reduction(sim_st.max(axis=0))
+        cost = max(cs, ct) - threshold
+
+        costs[i, j] = cost
+
+    return csr_matrix(costs)
+
+
 def get_relative_lenght_cost(
     alignments_by_src_words: list[list[int]],
     src_entity_spans: list[tuple[int, int]],
@@ -32,7 +82,7 @@ def get_relative_lenght_cost(
     a number of aligned word pairs between a source entity and candidate
     divided by sum of number of words in a source entity and a candidate.
     The main idea is that if all entity/candidates words are aligned that
-    it is probably a coorrect matching
+    it is probably a correct matching
 
     Args:
         alignments_by_src_words (list[list[int]]): list of list of word aligned to

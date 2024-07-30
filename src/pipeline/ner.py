@@ -123,12 +123,16 @@ class SubwordEmbeddingExtractor:
 
             row_spans = []
             curr_pos = 0
+            num_skipped = 0
             for key, group in groupby(word_ids):
                 length = len(list(group))
                 if key is not None:
-                    row_spans.append((curr_pos, curr_pos + length))
+                    row_spans.append(
+                        (curr_pos - num_skipped, curr_pos + length - num_skipped)
+                    )
                 else:
                     mask[curr_pos : curr_pos + length] = False
+                    num_skipped += 1
                 curr_pos += length
 
             spans.append(row_spans)
