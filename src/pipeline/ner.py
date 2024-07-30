@@ -89,6 +89,7 @@ class SubwordEmbeddingExtractor:
         out_tgt_emb_column: str = "tgt_emb",
         out_src_spans_column: str = "src_spans",
         out_tgt_spans_column: str = "tgt_spans",
+        emb_layer: int = 8,
     ) -> None:
         self.model_path = model_path
         self.batch_size = batch_size
@@ -100,6 +101,8 @@ class SubwordEmbeddingExtractor:
         self.out_tgt_emb_column = out_tgt_emb_column
         self.out_src_spans_column = out_src_spans_column
         self.out_tgt_spans_column = out_tgt_spans_column
+
+        self.emb_layer = emb_layer
 
     @staticmethod
     def tokenize(tokenizer, words: list[str]):
@@ -147,8 +150,8 @@ class SubwordEmbeddingExtractor:
         tgt_tokens = self.tokenize(tokenizer, tgt_words)
 
         with torch.inference_mode():
-            src_embs = model(**src_tokens)["last_hidden_state"].cpu()
-            tgt_embs = model(**tgt_tokens)["last_hidden_state"].cpu()
+            src_embs = model(**src_tokens)["hidden_states"][self.emb_layer].cpu()
+            tgt_embs = model(**tgt_tokens)["hidden_states"][self.emb_layer].cpu()
 
         src_spans, src_embeddings = self.clean_emb_and_extract_spans(
             src_tokens, src_embs
@@ -166,7 +169,7 @@ class SubwordEmbeddingExtractor:
 
     def __call__(self, ds: Dataset) -> Dataset:
         with use_hf_model(
-            self.model_path,
+            self.model_path, model_kwargs={"output_hidden_states": True}
         ) as (model, tokenizer):
             map_func = partial(
                 self.extract_subwords_emb_and_spans,
