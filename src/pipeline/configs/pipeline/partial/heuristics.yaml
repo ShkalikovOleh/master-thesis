@@ -41,7 +41,7 @@ project:
 intrinsic_eval:
   deps: [project]
   transform:
-    _target_: src.pipeline.eval.IntrinsicEvaluation
+    _target_: src.pipeline.eval.SeqEvalIntrinsicEvaluation
     orig_column: ner_tags
     gen_column: ${pipeline.project.transform.out_column}
     gen_as_tags: False

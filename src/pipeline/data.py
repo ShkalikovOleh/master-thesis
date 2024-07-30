@@ -60,6 +60,60 @@ class WriteDataset:
         return ds
 
 
+class LoadGoldAlignments:
+    def __init__(self, path: str, out_column: str = "gold_alignments") -> None:
+        self.path = path
+        self.out_column = out_column
+
+    def load_gold_alignments(self, fh):
+        for line in fh:
+            str_aligns = line.strip().split()
+            aligns = []
+            for str_align in str_aligns:
+                if "p" in str_align:
+                    i, j = str_align.split("p")
+                    aligns.append((int(i), int(j), 0))
+                else:
+                    i, j = str_align.split("-")
+                    aligns.append((int(i), int(j), 1))
+
+            yield {self.out_column: aligns}
+
+    def __call__(self) -> datasets.Dataset:
+        with open(self.path, "r", encoding="utf-8") as file:
+            ds = datasets.Dataset.from_generator(
+                self.load_gold_alignments, gen_kwargs={"fh": file}
+            )
+        return ds
+
+
+class LoadAlignmentDataset:
+    def __init__(
+        self,
+        path: str,
+        out_src_column: str = "src_words",
+        out_tgt_column: str = "tgt_words",
+    ) -> None:
+        self.dataset_path = path
+        self.out_src_column = out_src_column
+        self.out_tgt_column = out_tgt_column
+
+    def load_words(self, fh):
+        for line in fh:
+            src_sent, tgt_sent = line.strip().split(" ||| ")
+            src_words = src_sent.strip().split()
+            tgt_words = tgt_sent.strip().split()
+
+            yield {self.out_src_column: src_words, self.out_tgt_column: tgt_words}
+
+    def __call__(self) -> datasets.Dataset:
+        with open(self.dataset_path, "r", encoding="utf-8") as file:
+            ds = datasets.Dataset.from_generator(
+                self.load_words, gen_kwargs={"fh": file}
+            )
+        return ds
+
+
 class ConcatDatasets:
     def __init__(self, axis=1) -> None:
         self.axis = axis
