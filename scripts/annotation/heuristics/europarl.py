@@ -19,7 +19,7 @@ def make_merge_only_i_labels_params(cfg: argparse.Namespace) -> list[Constraint]
 def main(cfg: argparse.Namespace):
     merge_params = make_merge_only_i_labels_params(cfg)
 
-    pipe_param = "pipeline=partial/heuristics"
+    pipe_param = "pipeline=annotation/partial/heuristics"
     for lang in cfg.langs:
         orig_ds_params = [
             "pipeline.load_ds.transform.dataset_path=ShkalikovOleh/europarl-ner",

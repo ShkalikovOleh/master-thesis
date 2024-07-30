@@ -40,7 +40,7 @@ def main(cfg: argparse.Namespace):
         for pipeline, solver, constraint in product(
             cfg.pipelines, cfg.solvers, constraints
         ):
-            pipe_param = f"pipeline=partial/ranges/{pipeline}"
+            pipe_param = f"pipeline=annotation/partial/ranges/{pipeline}"
             solver_param = f"pipeline.project.transform.solver={solver}"
             constr_type_param = (
                 f"pipeline.project.transform.proj_constraint={constraint.type}"

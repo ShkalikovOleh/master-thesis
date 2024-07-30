@@ -13,6 +13,7 @@ wandb_project: nlp_ilp
 problem: annotation_projection
 
 tgt_lang: ???
+src_lang: en
 
 cached_step_paths: null
 

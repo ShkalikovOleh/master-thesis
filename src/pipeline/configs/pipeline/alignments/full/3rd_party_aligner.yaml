@@ -1,0 +1,30 @@
+load_ds:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadAlignmentDataset
+    path: ???
+load_gold:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadGoldAlignments
+    path: ???
+align:
+  deps: [load_ds]
+  transform:
+    _target_: src.pipeline.alignment.WordAlignTransform
+    word_aligner: ${aligner}
+    tgt_column: tgt_words
+    src_column: src_words
+    batch_size: 64
+    out_column: word_alignments
+merge_gold:
+  deps: [align, load_gold]
+  transform:
+    _target_: src.pipeline.data.ConcatDatasets
+eval:
+  deps: [merge_gold]
+  transform:
+    _target_: src.pipeline.eval.W2WAlignmentEvaluation
+    gold_column: gold_alignments
+    pred_column: word_alignments
+    log_to_wandb: ${log_to_wandb}

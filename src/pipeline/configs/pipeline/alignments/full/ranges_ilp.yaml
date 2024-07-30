@@ -1,0 +1,38 @@
+load_ds:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadAlignmentDataset
+    path: ???
+load_gold:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadGoldAlignments
+    path: ???
+embeddings:
+  deps: [load_ds]
+  transform:
+    _target_: src.pipeline.ner.SubwordEmbeddingExtractor
+    model_path: bert-base-multilingual-cased
+    in_tgt_words_column: tgt_words
+    batch_size: 64
+    emb_layer: 8
+align:
+  deps: [embeddings]
+  transform:
+    _target_: src.pipeline.alignment.RangeILPAlignTransform
+    n_projected: 1
+    proj_constraint: EQUAL
+    solver: GUROBI
+    threshold: 0.55
+    max_reduction: max
+merge_gold:
+  deps: [align, load_gold]
+  transform:
+    _target_: src.pipeline.data.ConcatDatasets
+eval:
+  deps: [merge_gold]
+  transform:
+    _target_: src.pipeline.eval.W2WAlignmentEvaluation
+    gold_column: gold_alignments
+    pred_column: word_alignments
+    log_to_wandb: ${log_to_wandb}
