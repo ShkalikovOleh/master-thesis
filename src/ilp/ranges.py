@@ -160,11 +160,13 @@ def greedy_solve_from_costs(
     ineq_constr = get_constraint_operation(proj_constraint)
 
     src_idxs, cand_idxs = [], []
+    total_cost = 0
     while C.max() > 0:
         # take item with maximum cost and add it to solution
         ent_idx, cand_idx = np.unravel_index(
             np.argmax(C.reshape(1, -1)), (n_ent, n_cand)
         )
+        total_cost += C[ent_idx, cand_idx]
         src_idxs.append(ent_idx.item())
         cand_idxs.append(cand_idx.item())
 
@@ -188,7 +190,7 @@ def greedy_solve_from_costs(
         overlapped.append(cand_idx)
         C[:, overlapped] = 0
 
-    return src_idxs, cand_idxs
+    return src_idxs, cand_idxs, total_cost
 
 
 def remove_entities_with_zero_cost(costs: csr_matrix) -> Tuple[csr_matrix, np.ndarray]:
@@ -285,12 +287,12 @@ def solve_ilp_problem(
     x = problem.variables()[0].value
     if x is None:
         logger.warn(f"ILP solver failed. Status: {problem.status}")
-        return [], []
+        return [], [], 0
 
     idxs = np.argwhere(x == 1)[:, 0]
     src_idxs, cand_idxs = np.unravel_index(idxs, (n_ent, n_cand))
 
-    return src_idxs.tolist(), cand_idxs.tolist()
+    return src_idxs.tolist(), cand_idxs.tolist(), problem.objective.value
 
 
 def solve_ilp_with_gurobi(
@@ -376,5 +378,8 @@ def solve_ilp_with_gurobi(
                 if x[i, j].X > 0:
                     src_idxs.append(i)
                     cand_idxs.append(j)
+            total_cost = m.getObjective().getValue()
+        else:
+            total_cost = 0
 
-    return src_idxs, cand_idxs
+    return src_idxs, cand_idxs, total_cost

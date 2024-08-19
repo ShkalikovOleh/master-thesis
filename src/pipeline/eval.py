@@ -73,6 +73,37 @@ class SeqEvalIntrinsicEvaluation:
         return ds
 
 
+class ILPObjectiveEvaluation:
+
+    def __init__(
+        self,
+        log_to_wandb: bool = True,
+        percentiles: list[float] = [0.25, 0.5, 0.75, 0.95],
+    ) -> None:
+        super().__init__()
+        self.log_to_wandb = log_to_wandb
+        self.percentiles = percentiles
+
+    def __call__(self, ds: Dataset) -> Dataset:
+        total_costs = ds["total_cost"]
+        rel_costs = ds["rel_cost"]
+
+        metrics = {}
+        for p in self.percentiles:
+            per_rel_cost = np.percentile(rel_costs, p * 100)
+            per_total_cost = np.percentile(total_costs, p * 100)
+            metrics[f"rel_cost@{round(p, 2)}"] = per_rel_cost
+            metrics[f"total_cost@{round(p, 2)}"] = per_total_cost
+
+        print(metrics)
+
+        if self.log_to_wandb:
+            import wandb
+
+            for key, value in metrics.items():
+                wandb.run.summary[key] = value
+
+
 class W2WAlignmentEvaluation:
     """Computes Recall, Precision, F1 and AER metrics of word-to-word alignments
     given predicted and gold alignemnts"""

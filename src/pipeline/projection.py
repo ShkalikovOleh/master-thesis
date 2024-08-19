@@ -311,7 +311,7 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
     ) -> list[str]:
         labels = ["O"] * len(tgt_words)
         if len(src_entities) == 0 or len(tgt_candidates) == 0:
-            return labels
+            return labels, 0, 0
 
         aligns_by_src_words = self.gather_aligned_words(
             alignments, len(src_words), to_tgt=False
@@ -334,11 +334,11 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         # Construct and solve ILP problem
         match self.solver:
             case "GREEDY":
-                ent_inds, cand_inds = greedy_solve_from_costs(
+                ent_inds, cand_inds, total_cost = greedy_solve_from_costs(
                     costs, tgt_candidates, self.n_projected, self.proj_constraint
                 )
             case "GUROBI":
-                ent_inds, cand_inds = solve_ilp_with_gurobi(
+                ent_inds, cand_inds, total_cost = solve_ilp_with_gurobi(
                     costs, tgt_candidates, self.n_projected, self.proj_constraint
                 )
             case _:  # other solvers (via CVXPY)
@@ -349,9 +349,10 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
                     self.n_projected,
                     self.proj_constraint,
                 )
-                ent_inds, cand_inds = solve_ilp_problem(
+                ent_inds, cand_inds, total_cost = solve_ilp_problem(
                     problem, n_ent, n_cand, self.solver, **self.solver_params
                 )
+        rel_cost = total_cost / costs.shape[0]
 
         if (
             len(ent_inds) < len(src_entities)
@@ -373,16 +374,20 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
             for idx in range(tgt_s + 1, tgt_e):
                 labels[idx] = "I-" + label
 
-        return labels
+        return labels, total_cost, rel_cost
 
     def __call__(self, ds: Dataset) -> Dataset:
         def project_func(
             tgt_words, src_words, src_entities, alignments, tgt_candidates
         ):
-            labels = self.project(
+            labels, total_cost, rel_cost = self.project(
                 tgt_words, src_words, src_entities, alignments, tgt_candidates
             )
-            return {self.out_column: labels}
+            return {
+                self.out_column: labels,
+                "total_cost": total_cost,
+                "rel_cost": rel_cost,
+            }
 
         ds = ds.map(
             project_func,
