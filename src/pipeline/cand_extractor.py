@@ -160,11 +160,13 @@ class AlignedSubrangeMergingExtractor:
         out_column: str = "tgt_candidates",
         src_entities_column: str = "src_entities",
         alignments_column: str = "word_alignments",
+        add_all_candidates_subranges: bool = True,
     ) -> None:
         self.tgt_words_column = tgt_words_column
         self.out_column = out_column
         self.alignment_column = alignments_column
         self.src_entities_column = src_entities_column
+        self.add_all_candidates_subranges = add_all_candidates_subranges
 
     def extract(
         self,
@@ -192,6 +194,11 @@ class AlignedSubrangeMergingExtractor:
             # add candidates itself
             for cand in entity_cands:
                 candidates.add(cand)
+                if self.add_all_candidates_subranges:
+                    start_idx, end_idx = cand
+                    for i in range(start_idx, end_idx):
+                        for j in range(i + 1, end_idx + 1):
+                            candidates.add((i, j))
 
             # add merged candidates
             for cand1, cand2 in combinations(entity_cands, r=2):
