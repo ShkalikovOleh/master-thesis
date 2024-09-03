@@ -1,0 +1,51 @@
+\faculty{Faculty of Computer Science}
+\institute{Institute of Artificial Intelligence \phantom{Push the institute name below the line. Need some more characters.}}
+\chair{Chair of Machine Learning for Computer Vision \phantom{Push the chair name on then next line.}}
+\headlogo{../assets/logo/mlcv_logo.eps}
+
+
+\newcommand*{\Title}{The Title of the work}
+\newcommand*{\Author}{Oleh Shkalikov}
+
+
+\date{\today}
+
+\title{\Title}
+
+
+\author{\Author}
+\dateofbirth{28.2.2001}
+\placeofbirth{Mariupol, Ukraine}
+\matriculationnumber{5102818}
+
+
+% TODO adapt to type of work
+% All possible values can be looked up in the documentation on page 38:
+% https://ftp.tu-chemnitz.de/pub/tex/macros/latex/contrib/tudscr/doc/tudscr.pdf
+
+
+\subject{master}
+\graduation[M.Sc.]{Master of Science}
+
+\supervisor{Jannik Irmai}
+
+\referee{Prof. Dr. Bjoern Andres \and Prof. Dr. Simon Razniewski}
+
+% TODO: Add subject and if needed keywords
+% Add title and author to pdf-meta-data
+\hypersetup{
+	pdftitle    = {\Title},
+	pdfsubject  = {},
+	pdfauthor   = {\Author},
+	pdfkeywords = {Stichwort1, Stichwort2 ...}
+}
+
+%\makecover
+
+\maketitle
+
+% Change properties for all other pages that use a these information. No institute to avoid three lines and a black instead of a blue logo.
+\faculty{Faculty of Computer Science}
+\institute{Institute of Artificial Intelligence}
+\chair{Chair of Machine Learning for Computer Vision}
+\headlogo{../assets/logo/mlcv_logo.eps}

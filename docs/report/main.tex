@@ -1,0 +1,55 @@
+% It is a modified version of the CGV's template taken from
+% https://tu-dresden.de/ing/informatik/smt/cgv/studium/materialien?set_language=en
+
+\documentclass[
+	paper = a4,
+	BCOR=5mm, 			% BCOR je nach Seitenzahl setzen
+	ngerman, english,	% Give every language used in the document, the main one as last
+	twoside,
+	numbers=noenddot,
+	parskip	= half, 	% separate paragraphs with half a line
+	cdgeometry = symmetric,
+	cd = barcolor,
+	chapterpage	= false,
+	cdmath = false,
+	slantedgreek=standard,
+	captions=tableheading
+]{tudscrbook}
+
+\input{frontmatter/0_header}
+
+\begin{document}
+\frontmatter
+\pagenumbering{Roman} 				% needed to capitalize the roman page numbering
+\input{frontmatter/1_title}		% title page
+% \input{frontmatter/2_task}		% task description
+\input{frontmatter/3_declaration}	% declaration of authorship
+\input{frontmatter/4_abstract}
+\tableofcontents
+\input{frontmatter/5_acronyms}
+
+\mainmatter	% Inhaltliche Kapitel
+\input{mainmatter/1_introduction}
+\input{mainmatter/2_background}
+\input{mainmatter/3_related_work}
+\input{mainmatter/4_implementation}
+\input{mainmatter/5_results}
+\input{mainmatter/6_conclusion_and_future_work}
+
+% Bibliography
+{
+    \small % reduces fontsize
+    \printbibliography
+    \normalsize % resets fontsize back to normal
+}
+
+\listoffigures
+\listoftables
+
+\appendix							% (alphabetic numbering)
+\input{appendix/0_appendix}
+
+% \backmatter
+%   \chapter{Acknowledgement}
+\end{document}
+
