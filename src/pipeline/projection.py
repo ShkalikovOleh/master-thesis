@@ -2,15 +2,22 @@
 steps of the XLNER pipeline. Labels produced by these steps are returned
 in IOB2 format."""
 
+from contextlib import ExitStack
 from itertools import groupby
 import logging
 from typing import Any
 from datasets import Dataset
 from abc import ABC
 
+from scipy.sparse import csr_matrix
+
+from src.ilp.costs import (
+    NMTScoreCostEvaluator,
+    compute_alignment_cost,
+    compute_ner_model_cost,
+)
 from src.ilp.ranges import (
     ProjectionContraint,
-    get_relative_lenght_cost,
     construct_ilp_problem,
     greedy_solve_from_costs,
     remove_candidates_with_zero_costs,
@@ -270,7 +277,8 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         tgt_words_column: str = "tokens",
         src_words_column: str = "src_words",
         src_entities_column: str = "src_entities",
-        alignments_column: str = "word_alignments",
+        alignments_column: str | None = "word_alignments",
+        ner_scores_column: str | None = "tgt_cand_cost",
         tgt_cand_column: str = "tgt_candidates",
         out_column: str = "labels",
         n_projected: int = 1,
@@ -280,6 +288,7 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         num_proc: int | None = None,
         remove_entities_with_zero_cost: bool = True,
         remove_candidates_with_zero_cost: bool = True,
+        costs_weights: dict[str, float] = {"alignment": 1},
     ) -> None:
         assert n_projected >= 0
 
@@ -290,6 +299,8 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
             alignments_column,
             out_column,
         )
+        self.ner_scores_column = ner_scores_column
+
         self.n_projected = n_projected
         self.tgt_cand_column = tgt_cand_column
         self.proj_constraint = ProjectionContraint[proj_constraint]
@@ -297,30 +308,23 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         self.num_proc = num_proc
         self.remove_entities_with_zero_cost = remove_entities_with_zero_cost
         self.remove_candidates_with_zero_cost = remove_candidates_with_zero_cost
+        self.costs_weights = costs_weights
 
         if solver_params is None:
             self.solver_params = {}
 
-    def project(
-        self,
-        tgt_words: list[str],
-        src_words: list[str],
-        src_entities: list[dict[str, Any]],
-        alignments: list[tuple[int, int]],
-        tgt_candidates: list[tuple[int, int]],
-    ) -> list[str]:
+    def project(self, row: dict[str, Any]) -> list[str]:
+        tgt_words: list[str] = row[self.tgt_words_column]
+        src_words: list[str] = row[self.src_words_column]
+        src_entities: list[dict[str, Any]] = row[self.src_entities_column]
+        tgt_candidates: list[tuple[int, int]] = row[self.tgt_cand_column]
+
         labels = ["O"] * len(tgt_words)
         if len(src_entities) == 0 or len(tgt_candidates) == 0:
             return labels, 0, 0
 
-        aligns_by_src_words = self.gather_aligned_words(
-            alignments, len(src_words), to_tgt=False
-        )
-        src_entities_spans = get_entities_spans(src_entities)
-
-        # Calculate matching costs
-        costs = get_relative_lenght_cost(
-            aligns_by_src_words, src_entities_spans, tgt_candidates
+        costs = self.compute_cost(
+            src_words, tgt_words, src_entities, tgt_candidates, row
         )
 
         # Don't consider entites and candidates that have zero costs
@@ -332,6 +336,70 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
             tgt_candidates = list(map(tgt_candidates.__getitem__, nnz_cols))
 
         # Construct and solve ILP problem
+        ent_inds, cand_inds, total_cost = self.solve_ilp_problem(tgt_candidates, costs)
+        rel_cost = total_cost / costs.shape[0]
+
+        if (
+            len(ent_inds) < len(src_entities)
+            and self.proj_constraint
+            not in [ProjectionContraint.LESS, ProjectionContraint.LESS_OR_EQUAL]
+            and self.n_projected != 0
+        ):
+            logger.warning("Not every entity has been matched")
+
+        # Labelling
+        if remove_entities_with_zero_cost:
+            ent_inds = nnz_rows[ent_inds]
+
+        for r, c in zip(ent_inds, cand_inds):
+            label = src_entities[r]["label"]
+            tgt_s, tgt_e = tgt_candidates[c]
+
+            labels[tgt_s] = "B-" + label
+            for idx in range(tgt_s + 1, tgt_e):
+                labels[idx] = "I-" + label
+
+        return labels, total_cost, rel_cost
+
+    def compute_cost(
+        self,
+        src_words: list[str],
+        tgt_words: list[str],
+        src_entities: list[dict[str, Any]],
+        tgt_candidates: list[tuple[int, int]],
+        row: dict[str, Any],
+    ) -> csr_matrix:
+        src_entities_spans = get_entities_spans(src_entities)
+
+        costs = csr_matrix((len(src_entities), len(tgt_candidates)))
+        for cost_name, w in self.costs_weights.items():
+            match cost_name:
+                case "alignment":
+                    alignments: list[tuple[int, int]] = row[self.alignments_column]
+                    aligns_by_src_words = self.gather_aligned_words(
+                        alignments, len(src_words), to_tgt=False
+                    )
+
+                    # Calculate matching costs
+                    costs += w * compute_alignment_cost(
+                        aligns_by_src_words, src_entities_spans, tgt_candidates
+                    )
+                case "ner":
+                    ner_scores = row[self.ner_scores_column]
+
+                    costs += w * compute_ner_model_cost(
+                        src_entities, tgt_candidates, ner_scores
+                    )
+                case "nmtscore":
+                    costs += w * self.nmt_cost_evaluator(
+                        src_words, tgt_words, src_entities_spans, tgt_candidates
+                    )
+
+        return costs
+
+    def solve_ilp_problem(
+        self, tgt_candidates: list[tuple[int, int]], costs
+    ) -> tuple[list[int], list[int], float]:
         match self.solver:
             case "GREEDY":
                 ent_inds, cand_inds, total_cost = greedy_solve_from_costs(
@@ -352,54 +420,34 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
                 ent_inds, cand_inds, total_cost = solve_ilp_problem(
                     problem, n_ent, n_cand, self.solver, **self.solver_params
                 )
-        rel_cost = total_cost / costs.shape[0]
 
-        if (
-            len(ent_inds) < len(src_entities)
-            and self.proj_constraint
-            not in [ProjectionContraint.LESS, ProjectionContraint.LESS_OR_EQUAL]
-            and self.n_projected != 0
-        ):
-            logger.warn("Not every entity has been matched")
-
-        # Labelling
-        if remove_entities_with_zero_cost:
-            ent_inds = nnz_rows[ent_inds]
-
-        for r, c in zip(ent_inds, cand_inds):
-            label = src_entities[r]["label"]
-            tgt_s, tgt_e = tgt_candidates[c]
-
-            labels[tgt_s] = "B-" + label
-            for idx in range(tgt_s + 1, tgt_e):
-                labels[idx] = "I-" + label
-
-        return labels, total_cost, rel_cost
+        return ent_inds, cand_inds, total_cost
 
     def __call__(self, ds: Dataset) -> Dataset:
-        def project_func(
-            tgt_words, src_words, src_entities, alignments, tgt_candidates
-        ):
-            labels, total_cost, rel_cost = self.project(
-                tgt_words, src_words, src_entities, alignments, tgt_candidates
-            )
+        def project_func(row: dict[str, Any]):
+            labels, total_cost, rel_cost = self.project(row)
             return {
                 self.out_column: labels,
                 "total_cost": total_cost,
                 "rel_cost": rel_cost,
             }
 
-        ds = ds.map(
-            project_func,
-            input_columns=[
-                self.tgt_words_column,
-                self.src_words_column,
-                self.src_entities_column,
-                self.alignments_column,
-                self.tgt_cand_column,
-            ],
-            batched=False,
-            num_proc=self.num_proc,
-        )
+        with ExitStack() as stack:
+            if "nmtscore" in self.costs_weights:
+                self.nmt_cost_evaluator = NMTScoreCostEvaluator()
+                stack.enter_context(self.nmt_cost_evaluator)
+
+            ds = ds.map(
+                project_func,
+                input_columns=[
+                    self.tgt_words_column,
+                    self.src_words_column,
+                    self.src_entities_column,
+                    self.alignments_column,
+                    self.tgt_cand_column,
+                ],
+                batched=False,
+                num_proc=self.num_proc,
+            )
 
         return ds

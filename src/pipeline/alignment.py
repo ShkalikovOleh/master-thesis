@@ -13,10 +13,10 @@ import simalign
 import torch
 from torch.nn.utils.rnn import pad_sequence
 
+from src.ilp.costs import compute_cosine_similarity_based_cost
 from src.ilp.ranges import (
     ProjectionContraint,
     construct_ilp_problem,
-    get_cosine_similarity_based_cost,
     greedy_solve_from_costs,
     solve_ilp_problem,
     solve_ilp_with_gurobi,
@@ -270,7 +270,7 @@ class RangeILPAlignTransform:
         tgt_spans: list[tuple[int, int]],
     ) -> list[str]:
         # Calculate matching costs
-        costs = get_cosine_similarity_based_cost(
+        costs = compute_cosine_similarity_based_cost(
             src_emb,
             tgt_emb,
             src_spans,
