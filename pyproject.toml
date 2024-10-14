@@ -13,7 +13,7 @@ requires-python = ">=3.11"
 dependencies = [
     "torch==2.3.1",
     "networkx==3.2.1",
-    "transformers==4.41.2",
+    "transformers==4.33.3",
     "datasets==2.20.0",
     "evaluate==0.4.2",
     "seqeval==1.2.2",
@@ -22,6 +22,7 @@ dependencies = [
     "simalign @ git+https://github.com/ShkalikovOleh/simalign@b4e991b81790d08b27ae80449c80341645a6cbe2",
     "nltk==3.8.1",
     "cvxpy @ git+https://github.com/cvxpy/cvxpy@13c10b1a389b88d2d5a589e28e6f2063498b2938",
+    "nmtscore==0.3.3"
 ]
 license = {file = "LICENSE"}
 readme = "README.md"
