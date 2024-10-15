@@ -339,6 +339,9 @@ class RangeILPProjection(BaseProjectionTransform):
             costs, nnz_cols = remove_candidates_with_zero_costs(costs)
             tgt_candidates = list(map(tgt_candidates.__getitem__, nnz_cols))
 
+        if costs.size == 0:
+            return labels, 0, 0
+
         # Construct and solve ILP problem
         ent_inds, cand_inds, total_cost = self.solve_ilp_problem(tgt_candidates, costs)
         rel_cost = total_cost / costs.shape[0]
@@ -404,7 +407,7 @@ class RangeILPProjection(BaseProjectionTransform):
         return costs
 
     def solve_ilp_problem(
-        self, tgt_candidates: list[tuple[int, int]], costs
+        self, tgt_candidates: list[tuple[int, int]], costs: csr_matrix
     ) -> tuple[list[int], list[int], float]:
         match self.solver:
             case "GREEDY":
