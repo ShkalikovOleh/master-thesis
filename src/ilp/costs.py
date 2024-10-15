@@ -165,6 +165,7 @@ class NMTScoreCostEvaluator:
         device: str = "cuda:0",
         batch_size: int = 8,
         src_lang: str = "eng_Latn",
+        score_method: str = "cross_likelihood",
         normalize: bool = True,
         both_directions: bool = True,
         threshold: float = 10e-2,
@@ -176,6 +177,7 @@ class NMTScoreCostEvaluator:
 
         self.tgt_lang = tgt_lang
         self.src_lang = src_lang
+        self.score_method = score_method
         self.normalize = normalize
         self.both_directions = both_directions
         self.threshold = threshold
@@ -215,20 +217,50 @@ class NMTScoreCostEvaluator:
             input_a.append(src_phrase)
             input_b.append(tgt_phrase)
 
-        scores = self.scorer.score_cross_likelihood(
-            input_a,
-            input_b,
-            a_lang=self.src_lang,
-            b_lang=self.tgt_lang,
-            tgt_lang=self.src_lang,
-            normalize=self.normalize,
-            both_directions=self.both_directions,
-            translate_kwargs={
+        nmtscore_params = {
+            "normalize": self.normalize,
+            "both_directions": self.both_directions,
+            "score_kwargs": {
                 "batch_size": self.batch_size,
                 "use_cache": self.use_cache,
             },
-            score_kwargs={"batch_size": self.batch_size, "use_cache": self.use_cache},
-        )
+        }
+
+        match self.score_method:
+            case "direct":
+                scores = self.scorer.score_direct(
+                    input_a,
+                    input_b,
+                    a_lang=self.src_lang,
+                    b_lang=self.tgt_lang,
+                    **nmtscore_params,
+                )
+            case "pivot":
+                scores = self.scorer.score_pivot(
+                    input_a,
+                    input_b,
+                    a_lang=self.src_lang,
+                    b_lang=self.tgt_lang,
+                    pivot_lang=self.src_lang,
+                    translate_kwargs={
+                        "batch_size": self.batch_size,
+                        "use_cache": self.use_cache,
+                    },
+                    **nmtscore_params,
+                )
+            case "cross_likelihood":
+                scores = self.scorer.score_cross_likelihood(
+                    input_a,
+                    input_b,
+                    a_lang=self.src_lang,
+                    b_lang=self.tgt_lang,
+                    tgt_lang=self.src_lang,
+                    translate_kwargs={
+                        "batch_size": self.batch_size,
+                        "use_cache": self.use_cache,
+                    },
+                    **nmtscore_params,
+                )
 
         weights = []
         col_indices = []
