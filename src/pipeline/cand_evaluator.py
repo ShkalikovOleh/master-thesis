@@ -1,8 +1,10 @@
 from functools import partial
 import logging
+
 import numpy as np
 from datasets import Dataset
 import torch
+from transformers import AutoModelForTokenClassification
 
 from src.utils.model_context import use_hf_model
 
@@ -16,6 +18,7 @@ class NERModelLogitsCandidateEvaluator:
         self,
         model_path: str,
         batch_size: int,
+        device: int = 0,
         out_column: str = "tgt_cand_cost",
         tgt_words_column: str = "tokens",
         tgt_cand_column: str = "tgt_candidates",
@@ -25,6 +28,8 @@ class NERModelLogitsCandidateEvaluator:
     ) -> None:
         self.model_path = model_path
         self.batch_size = batch_size
+        self.device = device
+
         self.out_column = out_column
         self.tgt_words_column = tgt_words_column
         self.tgt_cand_column = tgt_cand_column
@@ -57,7 +62,7 @@ class NERModelLogitsCandidateEvaluator:
             output = model(**model_inputs)
         logits = output["logits"] if isinstance(output, dict) else output[0]
 
-        return logits.numpy()
+        return logits.cpu().numpy()
 
     def gather_words_scores(
         self, word_ids: list[int], scores: np.ndarray
@@ -170,7 +175,11 @@ class NERModelLogitsCandidateEvaluator:
         self._i_labels = i_labels
 
     def __call__(self, ds: Dataset) -> Dataset:
-        with use_hf_model(self.model_path) as (model, tokenizer):
+        with use_hf_model(
+            self.model_path,
+            AutoModelClass=AutoModelForTokenClassification,
+        ) as (model, tokenizer):
+            model.to(self.device)
             self._prepare_label_idx_map(model)
 
             map_func = partial(
@@ -185,3 +194,56 @@ class NERModelLogitsCandidateEvaluator:
                 batched=True,
                 batch_size=self.batch_size,
             )
+
+        return ds
+
+
+class FilterCandidates:
+    """Filter out all candidates with cost computed by NERModelLogitsCandidateEvaluator
+    if it is lower than a specified threshold. Allow us to optimize cost calculations
+    which requires heavy computations"""
+
+    def __init__(
+        self,
+        tgt_cand_column: str = "tgt_candidates",
+        tgt_cand_cost_column: str = "tgt_cand_cost",
+        per_class_costs: bool = True,
+        threshold: float = 0.2,
+    ) -> None:
+        self.tgt_cand_column = tgt_cand_column
+        self.tgt_cand_cost_column = tgt_cand_cost_column
+        self.per_class_costs = per_class_costs
+        self.threshold = threshold
+
+    def filter(
+        self, tgt_candidates: list[tuple[int, int]], cand_costs: dict[str, list[float]]
+    ) -> list[tuple[int, int]]:
+        if self.per_class_costs:
+            costs = []
+            for i, _ in enumerate(tgt_candidates):
+                cand_cost = [cand_costs[key][i] for key in cand_costs]
+                costs.append(max(cand_cost))
+        else:
+            costs = cand_costs["all"]
+
+        filtered_cands = []
+        for tgt_cand, cost in zip(tgt_candidates, costs):
+            if cost > self.threshold:
+                filtered_cands.append(tgt_cand)
+
+        return filtered_cands
+
+    def __call__(self, ds: Dataset) -> Dataset:
+        def map_func(
+            tgt_candidates: list[tuple[int, int]], cand_costs: dict[str, list[float]]
+        ):
+            filtered_cands = self.filter(tgt_candidates, cand_costs)
+            return {self.tgt_cand_column: filtered_cands}
+
+        ds = ds.map(
+            map_func,
+            input_columns=[self.tgt_cand_column, self.tgt_cand_cost_column],
+            batched=False,
+        )
+
+        return ds
