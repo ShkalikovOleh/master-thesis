@@ -25,6 +25,7 @@ class NERModelLogitsCandidateEvaluator:
         subword_aggr_straregy: str = "first",
         per_class_costs: bool = True,
         temperature: float = 1.0,
+        use_only_i_labels: bool = False,
     ) -> None:
         self.model_path = model_path
         self.batch_size = batch_size
@@ -36,6 +37,9 @@ class NERModelLogitsCandidateEvaluator:
         self.subword_aggr_straregy = subword_aggr_straregy
         self.per_class_costs = per_class_costs
         self.temperature = temperature
+
+        # to handle FacebookAI/xlm-roberta-large-finetuned-conll03-english issues
+        self.use_only_i_labels = use_only_i_labels
 
     @staticmethod
     def tokenize(tgt_words: list[list[str]], tokenizer):
@@ -163,15 +167,18 @@ class NERModelLogitsCandidateEvaluator:
             elif key.startswith("I-"):
                 i_labels[key[2:]] = idx
 
-        broken_keys = set(b_labels) ^ set(i_labels)
-        for key in b_labels:
-            if key in broken_keys:
-                i_labels[key] = b_labels[key]
-        for key in i_labels:
-            if key in broken_keys:
-                b_labels[key] = i_labels[key]
+        if not self.use_only_i_labels:
+            broken_keys = set(b_labels) ^ set(i_labels)
+            for key in b_labels:
+                if key in broken_keys:
+                    i_labels[key] = b_labels[key]
+            for key in i_labels:
+                if key in broken_keys:
+                    b_labels[key] = i_labels[key]
+            self._b_labels = b_labels
+        else:
+            self._b_labels = i_labels
 
-        self._b_labels = b_labels
         self._i_labels = i_labels
 
     def __call__(self, ds: Dataset) -> Dataset:
@@ -217,7 +224,7 @@ class FilterCandidates:
 
     def filter(
         self, tgt_candidates: list[tuple[int, int]], cand_costs: dict[str, list[float]]
-    ) -> list[tuple[int, int]]:
+    ) -> tuple[list[tuple[int, int]], dict[str, list[float]]]:
         if self.per_class_costs:
             costs = []
             for i, _ in enumerate(tgt_candidates):
@@ -227,18 +234,31 @@ class FilterCandidates:
             costs = cand_costs["all"]
 
         filtered_cands = []
-        for tgt_cand, cost in zip(tgt_candidates, costs):
+        if self.per_class_costs:
+            filtered_costs = {label: [] for label in cand_costs}
+        else:
+            filtered_costs = {"all": []}
+        for i, (tgt_cand, cost) in enumerate(zip(tgt_candidates, costs)):
             if cost > self.threshold:
                 filtered_cands.append(tgt_cand)
 
-        return filtered_cands
+                if self.per_class_costs:
+                    for label in cand_costs:
+                        filtered_costs[label].append(cand_costs[label][i])
+                else:
+                    filtered_costs["all"].append(cost)
+
+        return filtered_cands, filtered_costs
 
     def __call__(self, ds: Dataset) -> Dataset:
         def map_func(
             tgt_candidates: list[tuple[int, int]], cand_costs: dict[str, list[float]]
         ):
-            filtered_cands = self.filter(tgt_candidates, cand_costs)
-            return {self.tgt_cand_column: filtered_cands}
+            filtered_cands, filtered_costs = self.filter(tgt_candidates, cand_costs)
+            return {
+                self.tgt_cand_column: filtered_cands,
+                self.tgt_cand_cost_column: filtered_costs,
+            }
 
         ds = ds.map(
             map_func,
