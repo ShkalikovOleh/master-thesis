@@ -160,22 +160,26 @@ class NMTScoreCostEvaluator:
 
     def __init__(
         self,
+        tgt_lang: str,
         nmt_model: str = "nllb-200-distilled-600M",
         device: str = "cuda:0",
         batch_size: int = 8,
-        tgt_lang="eng_Latn",
+        src_lang: str = "eng_Latn",
         normalize: bool = True,
         both_directions: bool = True,
-        threshold: float = 10e-1,
+        threshold: float = 10e-2,
+        use_cache: bool = True,
     ) -> None:
         self.nmt_model = nmt_model
         self.device = device
         self.batch_size = batch_size
 
         self.tgt_lang = tgt_lang
+        self.src_lang = src_lang
         self.normalize = normalize
         self.both_directions = both_directions
         self.threshold = threshold
+        self.use_cache = use_cache
 
     def __enter__(self):
         self.scorer = NMTScorer(self.nmt_model, device=self.device)
@@ -214,11 +218,16 @@ class NMTScoreCostEvaluator:
         scores = self.scorer.score_cross_likelihood(
             input_a,
             input_b,
-            tgt_lang=self.tgt_lang,
+            a_lang=self.src_lang,
+            b_lang=self.tgt_lang,
+            tgt_lang=self.src_lang,
             normalize=self.normalize,
             both_directions=self.both_directions,
-            translate_kwargs={"batch_size": self.batch_size},
-            score_kwargs={"batch_size": self.batch_size},
+            translate_kwargs={
+                "batch_size": self.batch_size,
+                "use_cache": self.use_cache,
+            },
+            score_kwargs={"batch_size": self.batch_size, "use_cache": self.use_cache},
         )
 
         weights = []

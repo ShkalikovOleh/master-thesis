@@ -10,7 +10,7 @@ from datasets import Dataset
 
 from src.pipeline.projection import (
     HeuriticsProjection,
-    Word2WordAlignmentsBasedProjection,
+    BaseProjectionTransform,
 )
 from src.utils.iterators import min_max
 
@@ -112,7 +112,7 @@ class AlignedContiniousSubrangeExtractor(ContiniousSubrangeExtractor):
         candidates = set()
 
         n_src_words = max(src_entities, key=lambda ent: ent["end_idx"])["end_idx"]
-        aligned_to_src_words = Word2WordAlignmentsBasedProjection.gather_aligned_words(
+        aligned_to_src_words = BaseProjectionTransform.gather_aligned_words(
             alignments, n_src_words, to_tgt=False
         )
 
@@ -180,7 +180,7 @@ class AlignedSubrangeMergingExtractor:
         candidates = set()
 
         n_src_words = max(src_entities, key=lambda ent: ent["end_idx"])["end_idx"]
-        aligned_by_src_words = Word2WordAlignmentsBasedProjection.gather_aligned_words(
+        aligned_by_src_words = BaseProjectionTransform.gather_aligned_words(
             alignments, n_src_words, to_tgt=False
         )
 

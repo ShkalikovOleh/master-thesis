@@ -31,7 +31,7 @@ from src.utils.entities import get_entities_spans
 logger = logging.getLogger("Pipeline")
 
 
-class Word2WordAlignmentsBasedProjection(ABC):
+class BaseProjectionTransform(ABC):
     def __init__(
         self,
         tgt_words_column: str = "tokens",
@@ -81,7 +81,7 @@ class Word2WordAlignmentsBasedProjection(ABC):
         return alignments_by_words
 
 
-class HeuriticsProjection(Word2WordAlignmentsBasedProjection):
+class HeuriticsProjection(BaseProjectionTransform):
     """Based on word-to-word alignments project source entities to target
     sentence using heuristics"""
 
@@ -269,7 +269,7 @@ class HeuriticsProjection(Word2WordAlignmentsBasedProjection):
         return ds
 
 
-class RangeILPProjection(Word2WordAlignmentsBasedProjection):
+class RangeILPProjection(BaseProjectionTransform):
     """Projection by solving weighted bipartite matching ILP problem"""
 
     def __init__(
@@ -288,7 +288,7 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         num_proc: int | None = None,
         remove_entities_with_zero_cost: bool = True,
         remove_candidates_with_zero_cost: bool = True,
-        costs_weights: dict[str, float] = {"alignment": 1},
+        cost_params: dict[str, dict[str, Any]] = {"alignment": {"weight": 1}},
     ) -> None:
         assert n_projected >= 0
 
@@ -308,7 +308,11 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         self.num_proc = num_proc
         self.remove_entities_with_zero_cost = remove_entities_with_zero_cost
         self.remove_candidates_with_zero_cost = remove_candidates_with_zero_cost
-        self.costs_weights = costs_weights
+
+        self.cost_weights = {}
+        for cost_name in cost_params:
+            self.cost_weights[cost_name] = cost_params[cost_name].pop("weight")
+        self.costs_params = cost_params
 
         if solver_params is None:
             self.solver_params = {}
@@ -372,7 +376,8 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
         src_entities_spans = get_entities_spans(src_entities)
 
         costs = csr_matrix((len(src_entities), len(tgt_candidates)))
-        for cost_name, w in self.costs_weights.items():
+        for cost_name, params in self.costs_params.items():
+            w = self.cost_weights[cost_name]
             match cost_name:
                 case "alignment":
                     alignments: list[tuple[int, int]] = row[self.alignments_column]
@@ -380,19 +385,20 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
                         alignments, len(src_words), to_tgt=False
                     )
 
-                    # Calculate matching costs
                     costs += w * compute_alignment_cost(
                         aligns_by_src_words, src_entities_spans, tgt_candidates
                     )
                 case "ner":
                     ner_scores = row[self.ner_scores_column]
-
                     costs += w * compute_ner_model_cost(
-                        src_entities, tgt_candidates, ner_scores
+                        src_entities, tgt_candidates, ner_scores, **params
                     )
                 case "nmtscore":
                     costs += w * self.nmt_cost_evaluator(
-                        src_words, tgt_words, src_entities_spans, tgt_candidates
+                        src_words,
+                        tgt_words,
+                        src_entities_spans,
+                        tgt_candidates,
                     )
 
         return costs
@@ -433,19 +439,13 @@ class RangeILPProjection(Word2WordAlignmentsBasedProjection):
             }
 
         with ExitStack() as stack:
-            if "nmtscore" in self.costs_weights:
-                self.nmt_cost_evaluator = NMTScoreCostEvaluator()
+            if "nmtscore" in self.costs_params:
+                params = self.costs_params["nmtscore"]
+                self.nmt_cost_evaluator = NMTScoreCostEvaluator(**params)
                 stack.enter_context(self.nmt_cost_evaluator)
 
             ds = ds.map(
                 project_func,
-                input_columns=[
-                    self.tgt_words_column,
-                    self.src_words_column,
-                    self.src_entities_column,
-                    self.alignments_column,
-                    self.tgt_cand_column,
-                ],
                 batched=False,
                 num_proc=self.num_proc,
             )

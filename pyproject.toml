@@ -22,7 +22,7 @@ dependencies = [
     "simalign @ git+https://github.com/ShkalikovOleh/simalign@b4e991b81790d08b27ae80449c80341645a6cbe2",
     "nltk==3.8.1",
     "cvxpy @ git+https://github.com/cvxpy/cvxpy@13c10b1a389b88d2d5a589e28e6f2063498b2938",
-    "nmtscore==0.3.3"
+    "nmtscore @ git+https://github.com/ZurichNLP/nmtscore@4bfba48e21382da986650c53e7d5968b61503c06"
 ]
 license = {file = "LICENSE"}
 readme = "README.md"
