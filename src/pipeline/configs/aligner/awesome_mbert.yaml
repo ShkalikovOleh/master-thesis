@@ -1,0 +1,3 @@
+_target_: src.pipeline.alignment.AwesomeAligner
+model_path: bert-base-multilingual-cased
+device: 0
