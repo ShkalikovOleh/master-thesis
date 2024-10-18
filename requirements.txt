@@ -5,7 +5,7 @@ aiosignal==1.3.1
 antlr4-python3-runtime==4.9.3
 asttokens==2.4.1
 attrs==23.2.0
-awesome_align @ git+https://github.com/ShkalikovOleh/simalign@b4e991b81790d08b27ae80449c80341645a6cbe2
+awesome_align @ git+https://github.com/neulab/awesome-align@5f150d45bbe51e167daf0a84abebaeb07c3323d1
 boto3==1.34.133
 botocore==1.34.133
 certifi==2024.6.2
@@ -32,7 +32,6 @@ gurobipy==11.0.2
 huggingface-hub==0.23.4
 hydra-core==1.3.2
 idna==3.7
-ilp_nlp==2024.0.1
 importlib_metadata==8.2.0
 Jinja2==3.1.3
 jmespath==1.0.1
@@ -116,3 +115,5 @@ wheel==0.43.0
 xxhash==3.4.1
 yarl==1.9.4
 zipp==3.19.2
+
+-e .
