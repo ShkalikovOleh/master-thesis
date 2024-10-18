@@ -2,7 +2,7 @@
 
 from functools import partial
 from itertools import groupby
-from typing import Any
+from typing import Any, Iterable
 from datasets import Dataset
 import torch
 from transformers import AutoModelForTokenClassification
@@ -21,14 +21,19 @@ class NERTransform:
         out_column: str = "src_entities",
         aggregation_strategy: str = "first",
         wordwise: bool = True,
+        class_mapping: dict[str, str] | None = None,
     ) -> None:
         self.model_path = model_path
         self.batch_size = batch_size
         self.device = device
+
         self.in_column = in_column
         self.out_column = out_column
+
         self.wordwise = wordwise
         self.agg_straregy = aggregation_strategy
+
+        self.class_mapping = class_mapping
 
         if self.wordwise:
             register_pipeline()
@@ -40,6 +45,19 @@ class NERTransform:
             "end_idx": ner_out["end"],
             "label": ner_out["entity_group"],
         }
+
+    def map_classes(
+        self, entities: Iterable[dict[str, Any]]
+    ) -> Iterable[dict[str, Any]]:
+        for entity in entities:
+            label = entity["label"]
+            if label in self.class_mapping:
+                new_label = self.class_mapping[label]
+                if new_label != "O":
+                    entity["label"] = new_label
+                else:  # skip entity
+                    continue
+            yield entity
 
     def __call__(self, ds: Dataset) -> Dataset:
         with use_hf_pipeline(
@@ -57,7 +75,10 @@ class NERTransform:
                 ner_out_iter = pipe(words)
                 entity_batch = []
                 for ner_out in ner_out_iter:
-                    entities = list(map(self.map_ner_out_to_entity, ner_out))
+                    entities = map(self.map_ner_out_to_entity, ner_out)
+                    if self.class_mapping is not None:
+                        entities = self.map_classes(entities)
+                    entities = list(entities)
                     entity_batch.append(entities)
                 return {self.out_column: entity_batch}
 
