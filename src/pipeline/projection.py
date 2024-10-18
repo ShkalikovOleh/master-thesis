@@ -401,8 +401,8 @@ class RangeILPProjection(BaseProjectionTransform):
                     )
                 case "ner":
                     ner_scores = row[cost_param["ner_scores_column"]]
-                    use_only_spans = cost_param["use_only_spans"]
-                    threshold = cost_param["threshold"]
+                    use_only_spans = cost_param.get(["use_only_spans"], False)
+                    threshold = cost_param.get(["threshold"], 0.01)
 
                     costs += w * compute_ner_model_cost(
                         src_entities,
