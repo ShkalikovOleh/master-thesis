@@ -113,8 +113,6 @@ class NERModelLogitsCandidateEvaluator:
 
             scores = scores_batch[i]
             word_scores = self.gather_words_scores(word_ids, scores)
-            max_word_scores = word_scores.max(axis=1, keepdims=True)
-            word_scores /= max_word_scores
 
             if self.per_class_costs:
                 costs = {key: [] for key in self._b_labels}
@@ -123,21 +121,26 @@ class NERModelLogitsCandidateEvaluator:
             for cand in tgt_candidates:
                 s, e = cand
 
-                # init with scores of B- labels
-                cand_cost = {
-                    key: word_scores[s, idx] for key, idx in self._b_labels.items()
+                # # init with scores of B- labels
+                score_per_classes = {
+                    key: [word_scores[s, idx]] for key, idx in self._b_labels.items()
                 }
 
                 # accumulate scores of I- labels
                 for word_idx in range(s + 1, e):
                     for key, label_idx in self._i_labels.items():
-                        cand_cost[key] *= word_scores[word_idx, label_idx]
+                        score_per_classes[key].append(word_scores[word_idx, label_idx])
 
+                avg_class_scores = {
+                    key: np.nanmean(score_per_classes[key]) for key in self._b_labels
+                }
                 if self.per_class_costs:
                     for key in self._b_labels:
-                        costs[key].append(cand_cost[key])
+                        costs[key].append(avg_class_scores[key])
                 else:
-                    max_cost = cand_cost[max(cand_cost, key=cand_cost.get)]
+                    max_cost = avg_class_scores[
+                        max(avg_class_scores, key=avg_class_scores.get)
+                    ]
                     costs["all"].append(max_cost)
 
             for key in costs:
