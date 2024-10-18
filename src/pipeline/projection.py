@@ -383,12 +383,21 @@ class RangeILPProjection(BaseProjectionTransform):
                     alignments: list[tuple[int, int]] = row[
                         cost_param["alignments_column"]
                     ]
+                    if "entities_column" in cost_param:
+                        entities_spans = get_entities_spans(
+                            row[cost_param["entities_column"]]
+                        )
+                        N_scr_words = max(entities_spans, key=lambda t: t[1])[1]
+                    else:
+                        entities_spans = src_entities_spans
+                        N_scr_words = len(src_words)
+
                     aligns_by_src_words = self.gather_aligned_words(
-                        alignments, len(src_words), to_tgt=False
+                        alignments, N_scr_words, to_tgt=False
                     )
 
                     costs += w * compute_alignment_cost(
-                        aligns_by_src_words, src_entities_spans, tgt_candidates
+                        aligns_by_src_words, entities_spans, tgt_candidates
                     )
                 case "ner":
                     ner_scores = row[cost_param["ner_scores_column"]]
