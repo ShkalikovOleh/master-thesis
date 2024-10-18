@@ -113,7 +113,7 @@ def compute_ner_model_cost(
     src_entities: list[dict[str, Any]],
     tgt_candidates: list[tuple[int, int]],
     scores_per_classes: dict[str, list[float]],
-    use_only_score_spans: bool = False,
+    use_only_spans: bool = False,
     threshold: float = 10e-3,
 ) -> csr_matrix:
     """Compute matching costs between source entities and target candidates
@@ -125,7 +125,7 @@ def compute_ner_model_cost(
         scores_per_classes (dict[str, list[float]]): scores obtained from
             NERModelLogitsCandidateEvaluator which represent NER model evaluation
             of the given candidate belong to class
-        use_only_score_spans (bool): if true requires that score only evaluate how
+        use_only_spans (bool): if true requires that score only evaluate how
             likely candidate span is a true entity span. Defaulf: False.
         threshold (float): if score is lower than threshold the cost will be zero
 
@@ -141,7 +141,7 @@ def compute_ner_model_cost(
     for entity in src_entities:
         label = entity["label"]
         for col, _ in enumerate(tgt_candidates):
-            if not use_only_score_spans:
+            if not use_only_spans:
                 score = scores_per_classes[label][col]
             else:
                 score = scores_per_classes["all"][col]

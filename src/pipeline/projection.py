@@ -3,6 +3,7 @@ steps of the XLNER pipeline. Labels produced by these steps are returned
 in IOB2 format."""
 
 from contextlib import ExitStack
+from copy import deepcopy
 from itertools import groupby
 import logging
 from typing import Any
@@ -37,13 +38,11 @@ class BaseProjectionTransform(ABC):
         tgt_words_column: str = "tokens",
         src_words_column: str = "src_words",
         src_entities_column: str = "src_entities",
-        alignments_column: str = "word_alignments",
         out_column: str = "labels",
     ) -> None:
         self.tgt_words_column = tgt_words_column
         self.src_words_column = src_words_column
         self.src_entities_column = src_entities_column
-        self.alignments_column = alignments_column
         self.out_column = out_column
 
     @staticmethod
@@ -101,9 +100,9 @@ class HeuriticsProjection(BaseProjectionTransform):
             tgt_words_column,
             src_words_column,
             src_entities_column,
-            alignments_column,
             out_column,
         )
+        self.alignments_column = alignments_column
         self.length_ratio_threshold = length_ratio_threshold
         self.merge_distance = merge_distance
         self.merge_only_i_labels = merge_only_i_labels
@@ -277,8 +276,6 @@ class RangeILPProjection(BaseProjectionTransform):
         tgt_words_column: str = "tokens",
         src_words_column: str = "src_words",
         src_entities_column: str = "src_entities",
-        alignments_column: str | None = "word_alignments",
-        ner_scores_column: str | None = "tgt_cand_cost",
         tgt_cand_column: str = "tgt_candidates",
         out_column: str = "labels",
         n_projected: int = 1,
@@ -288,7 +285,9 @@ class RangeILPProjection(BaseProjectionTransform):
         num_proc: int | None = None,
         remove_entities_with_zero_cost: bool = True,
         remove_candidates_with_zero_cost: bool = True,
-        cost_params: dict[str, dict[str, Any]] = {"alignment": {"weight": 1}},
+        cost_params: list[dict[str, Any]] = [
+            {"weight": 1, "type": "alignment", "alignments_column": "word_alignments"}
+        ],
     ) -> None:
         assert n_projected >= 0
 
@@ -296,10 +295,8 @@ class RangeILPProjection(BaseProjectionTransform):
             tgt_words_column,
             src_words_column,
             src_entities_column,
-            alignments_column,
             out_column,
         )
-        self.ner_scores_column = ner_scores_column
 
         self.n_projected = n_projected
         self.tgt_cand_column = tgt_cand_column
@@ -379,11 +376,13 @@ class RangeILPProjection(BaseProjectionTransform):
         src_entities_spans = get_entities_spans(src_entities)
 
         costs = csr_matrix((len(src_entities), len(tgt_candidates)))
-        for cost_name, params in self.costs_params.items():
-            w = self.cost_weights[cost_name]
-            match cost_name:
+        for cost_param in self.costs_params:
+            w = cost_param.get("weight", 1)
+            match cost_param["type"]:
                 case "alignment":
-                    alignments: list[tuple[int, int]] = row[self.alignments_column]
+                    alignments: list[tuple[int, int]] = row[
+                        cost_param["alignments_column"]
+                    ]
                     aligns_by_src_words = self.gather_aligned_words(
                         alignments, len(src_words), to_tgt=False
                     )
@@ -392,9 +391,16 @@ class RangeILPProjection(BaseProjectionTransform):
                         aligns_by_src_words, src_entities_spans, tgt_candidates
                     )
                 case "ner":
-                    ner_scores = row[self.ner_scores_column]
+                    ner_scores = row[cost_param["ner_scores_column"]]
+                    use_only_spans = cost_param["use_only_spans"]
+                    threshold = cost_param["threshold"]
+
                     costs += w * compute_ner_model_cost(
-                        src_entities, tgt_candidates, ner_scores, **params
+                        src_entities,
+                        tgt_candidates,
+                        ner_scores,
+                        use_only_spans,
+                        threshold,
                     )
                 case "nmtscore":
                     costs += w * self.nmt_cost_evaluator(
@@ -442,10 +448,13 @@ class RangeILPProjection(BaseProjectionTransform):
             }
 
         with ExitStack() as stack:
-            if "nmtscore" in self.costs_params:
-                params = self.costs_params["nmtscore"]
-                self.nmt_cost_evaluator = NMTScoreCostEvaluator(**params)
-                stack.enter_context(self.nmt_cost_evaluator)
+            for cost_param in self.costs_params:
+                if cost_param["type"] == "nmtscore":
+                    params = deepcopy(cost_param)
+                    del params["type"]
+                    del params["weight"]
+                    self.nmt_cost_evaluator = NMTScoreCostEvaluator(**params)
+                    stack.enter_context(self.nmt_cost_evaluator)
 
             ds = ds.map(
                 project_func,
