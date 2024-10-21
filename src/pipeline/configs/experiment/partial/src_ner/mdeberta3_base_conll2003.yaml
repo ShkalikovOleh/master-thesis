@@ -1,0 +1,25 @@
+# @package _global_
+
+defaults:
+  - override /pipeline: partial/src_ner
+
+log_to_wandb: false
+hydra:
+  job:
+    chdir: false
+
+pipeline:
+  load_translation:
+    transform:
+      dataset_path: ${dataset_path}
+  apply_ner:
+    transform:
+      model_path: ShkalikovOleh/mdeberta-v3-base-conll2003-en
+      batch_size: ${batch_size}
+  write_entities:
+    transform:
+      save_path: ${out_dir}
+
+dataset_path: ???
+batch_size: 64
+out_dir: src_entities

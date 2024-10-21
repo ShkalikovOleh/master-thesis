@@ -306,9 +306,6 @@ class RangeILPProjection(BaseProjectionTransform):
         self.remove_entities_with_zero_cost = remove_entities_with_zero_cost
         self.remove_candidates_with_zero_cost = remove_candidates_with_zero_cost
 
-        self.cost_weights = {}
-        for cost_name in cost_params:
-            self.cost_weights[cost_name] = cost_params[cost_name].pop("weight")
         self.costs_params = cost_params
 
         if solver_params is None:
@@ -401,8 +398,8 @@ class RangeILPProjection(BaseProjectionTransform):
                     )
                 case "ner":
                     ner_scores = row[cost_param["ner_scores_column"]]
-                    use_only_spans = cost_param.get(["use_only_spans"], False)
-                    threshold = cost_param.get(["threshold"], 0.01)
+                    use_only_spans = cost_param.get("use_only_spans", False)
+                    threshold = cost_param.get("threshold", 0.01)
 
                     costs += w * compute_ner_model_cost(
                         src_entities,
