@@ -36,7 +36,7 @@ class SeqEvalIntrinsicEvaluation:
         # Make all to be ignored labels equal to O
         if self.labels_to_ignore is not None:
             label_list = [
-                label if label not in self._labels_to_ignore else "O"
+                label if label not in self.labels_to_ignore else "O"
                 for label in label_list
             ]
 
