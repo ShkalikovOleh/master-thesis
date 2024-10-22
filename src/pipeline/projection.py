@@ -415,6 +415,13 @@ class RangeILPProjection(BaseProjectionTransform):
                         src_entities_spans,
                         tgt_candidates,
                     )
+                case _:
+                    raise ValueError(
+                        (
+                            "Unsupported cost type. Please choose between alignment, "
+                            "ner, nmtscore"
+                        )
+                    )
 
         return costs
 
