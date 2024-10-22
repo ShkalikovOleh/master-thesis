@@ -66,9 +66,10 @@ project:
     num_proc: 16
     cost_params:
       - type: alignment
-        weight: 1
+        weight: 0.5
         alignments_column: word_alignments
       - type: ner
+        weight: 0.5
         ner_scores_column: ${pipeline.cand_eval.transform.out_column}
         use_only_spans: True
         threshold: 0.05

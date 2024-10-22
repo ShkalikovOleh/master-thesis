@@ -66,13 +66,15 @@ project:
     num_proc: null
     cost_params:
       - type: alignment
-        weight: 1
+        weight: 0.5
         alignments_column: word_alignments
       - type: ner
+        weight: 0.5
         ner_scores_column: ${pipeline.cand_eval.transform.out_column}
         use_only_spans: True
         threshold: 0.05
       - type: nmtscore
+        weight: 1
         tgt_lang: ???
         nmt_model: nllb-200-distilled-600M
         device: 0
