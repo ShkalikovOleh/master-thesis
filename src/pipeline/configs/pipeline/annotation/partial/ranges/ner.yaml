@@ -48,7 +48,7 @@ cand_eval:
     tgt_words_column: tokens
     tgt_cand_column: ${pipeline.cand_extraction.transform.out_column}
     subword_aggr_straregy: first
-    per_class_costs: False
+    per_class_costs: True
     temperature: 1.0
     use_only_i_labels: False
 project:
@@ -65,12 +65,9 @@ project:
     solver: GUROBI
     num_proc: 16
     cost_params:
-      - type: alignment
-        weight: 1
-        alignments_column: word_alignments
       - type: ner
         ner_scores_column: ${pipeline.cand_eval.transform.out_column}
-        use_only_spans: True
+        use_only_spans: False
         threshold: 0.05
 intrinsic_eval:
   deps: [project]
