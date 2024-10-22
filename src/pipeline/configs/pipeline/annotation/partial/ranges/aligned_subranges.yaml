@@ -48,7 +48,7 @@ project:
     tgt_cand_column: ${pipeline.cand_extraction.transform.out_column}
     out_column: labels
     n_projected: 1
-    proj_constraint: EQUAL
+    proj_constraint: LESS_OR_EQUAL
     solver: GUROBI
     num_proc: 16
 intrinsic_eval:
