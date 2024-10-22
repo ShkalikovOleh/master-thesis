@@ -1,5 +1,6 @@
 """This module implements steps for evaluation of XLNER pipeline"""
 
+from collections import defaultdict
 import evaluate
 from datasets import Dataset, DatasetDict
 import numpy as np
@@ -16,7 +17,7 @@ class SeqEvalIntrinsicEvaluation:
         gen_as_tags: bool = False,
         log_to_wandb: bool = True,
         batch_size: int = 1000,
-        labels_to_ignore: list[str] | None = None,
+        labels_to_ignore: list[str] = [],
     ) -> None:
         super().__init__()
         self.orig_column = orig_column
@@ -26,19 +27,8 @@ class SeqEvalIntrinsicEvaluation:
         self.batch_size = batch_size
         self.gen_as_tags = gen_as_tags
 
-    def __call__(self, ds: Dataset) -> Dataset:
-        if isinstance(ds, DatasetDict):
-            split = next(iter(ds.keys()))
-            label_list = ds[split].features[self.orig_column].feature.names
-        else:
-            label_list = ds.features[self.orig_column].feature.names
-
-        # Make all to be ignored labels equal to O
-        if self.labels_to_ignore is not None:
-            label_list = [
-                label if label not in self.labels_to_ignore else "O"
-                for label in label_list
-            ]
+    def __call__(self, ds: Dataset | DatasetDict) -> Dataset | DatasetDict:
+        label_list, label_map = self.prepare_labels_mapping(ds)
 
         metric = evaluate.load("seqeval")
 
@@ -47,7 +37,7 @@ class SeqEvalIntrinsicEvaluation:
             if self.gen_as_tags:
                 pred_labels = [[label_list[tag] for tag in pred] for pred in preds]
             else:
-                pred_labels = preds
+                pred_labels = [[label_map[label] for label in pred] for pred in preds]
             metric.add_batch(references=ref_labels, predictions=pred_labels)
 
         ds.map(
@@ -71,6 +61,29 @@ class SeqEvalIntrinsicEvaluation:
                     wandb.run.summary[gkey] = gvalue
 
         return ds
+
+    def prepare_labels_mapping(self, ds: Dataset | DatasetDict):
+        if isinstance(ds, DatasetDict):
+            split = next(iter(ds.keys()))
+            label_list = ds[split].features[self.orig_column].feature.names
+        else:
+            label_list = ds.features[self.orig_column].feature.names
+
+        # Make all to be ignored labels equal to O
+        new_label_list = []
+        label_map = defaultdict(lambda: "O")
+        for label in label_list:
+            if label.startswith("B-") or label.startswith("I-"):
+                if label[2:] in self.labels_to_ignore:
+                    new_label_list.append("O")
+                else:
+                    new_label_list.append(label)
+                    label_map[label] = label
+            else:
+                new_label_list.append(label)
+                label_map[label] = label
+
+        return new_label_list, label_map
 
 
 class ILPObjectiveEvaluation:
