@@ -60,4 +60,8 @@ intrinsic_eval:
     gen_as_tags: False
     log_to_wandb: ${log_to_wandb}
     batch_size: 1000
-    labels_to_ignore: null
+cost_eval:
+  deps: [project]
+  transform:
+    _target_: src.pipeline.eval.ILPObjectiveEvaluation
+    log_to_wandb: ${log_to_wandb}

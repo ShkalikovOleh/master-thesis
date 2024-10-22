@@ -18,7 +18,7 @@ load_entities:
     local: true
 load_alignments:
   deps: []
-  load_alignments:
+  transform:
     _target_: src.pipeline.data.LoadDataset
     dataset_path: ???
     cfg_name: null
@@ -65,11 +65,11 @@ project:
     solver: GUROBI
     num_proc: null
     cost_params:
-      - type: alignments
+      - type: alignment
         weight: 1
         alignments_column: word_alignments
       - type: ner
-        ner_scores_column: ${pipeline.cand_extraction.transform.cand_eval}
+        ner_scores_column: ${pipeline.cand_eval.transform.out_column}
         use_only_spans: True
         threshold: 0.05
       - type: nmtscore
@@ -92,4 +92,8 @@ intrinsic_eval:
     gen_as_tags: False
     log_to_wandb: ${log_to_wandb}
     batch_size: 1000
-    labels_to_ignore: null
+cost_eval:
+  deps: [project]
+  transform:
+    _target_: src.pipeline.eval.ILPObjectiveEvaluation
+    log_to_wandb: ${log_to_wandb}
