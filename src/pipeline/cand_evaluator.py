@@ -26,6 +26,7 @@ class NERModelLogitsCandidateEvaluator:
         per_class_costs: bool = True,
         temperature: float = 1.0,
         use_only_i_labels: bool = False,
+        cont_multiplier: float = 1.15,
     ) -> None:
         self.model_path = model_path
         self.batch_size = batch_size
@@ -37,6 +38,7 @@ class NERModelLogitsCandidateEvaluator:
         self.subword_aggr_straregy = subword_aggr_straregy
         self.per_class_costs = per_class_costs
         self.temperature = temperature
+        self.cont_multiplier = cont_multiplier
 
         # to handle FacebookAI/xlm-roberta-large-finetuned-conll03-english issues
         self.use_only_i_labels = use_only_i_labels
@@ -121,19 +123,38 @@ class NERModelLogitsCandidateEvaluator:
             for cand in tgt_candidates:
                 s, e = cand
 
-                # # init with scores of B- labels
+                # init with scores of B- labels
                 score_per_classes = {
                     key: [word_scores[s, idx]] for key, idx in self._b_labels.items()
                 }
+                max_idx = np.argmax(word_scores[s])
+                cand_label = next(
+                    (key for key, idx in self._b_labels.items() if idx == max_idx), None
+                )
 
                 # accumulate scores of I- labels
                 for word_idx in range(s + 1, e):
+                    max_idx = np.argmax(word_scores[word_idx])
+                    idx_found = False
+
                     for key, label_idx in self._i_labels.items():
                         score_per_classes[key].append(word_scores[word_idx, label_idx])
+                        if cand_label is not None:
+                            if max_idx == label_idx:
+                                idx_found = True
+                                cand_label = cand_label if key == cand_label else None
+
+                    if not idx_found:
+                        cand_label = None
 
                 avg_class_scores = {
                     key: np.nanmean(score_per_classes[key]) for key in self._b_labels
                 }
+                if cand_label is not None:
+                    L = len(score_per_classes[cand_label]) - 1
+                    mult = self.cont_multiplier**L
+                    avg_class_scores[cand_label] *= mult
+
                 if self.per_class_costs:
                     for key in self._b_labels:
                         costs[key].append(avg_class_scores[key])
