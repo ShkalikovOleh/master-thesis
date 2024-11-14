@@ -20,6 +20,7 @@
 
 \usepackage{amsmath}
 \usepackage{amsfonts}
+\usepackage{amsthm}
 \usepackage{bm}			% used for making things bold in equations
 \usepackage[b]{esvect}
 
@@ -102,3 +103,11 @@
 \setlength{\floatsep}{5pt plus 2pt minus 2pt}
 %\setlength{\textfloatsep}{15pt plus 2pt minus 2pt}
 %\setlength{\intextsep}{5pt plus 2pt minus 2pt}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
