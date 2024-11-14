@@ -19,7 +19,7 @@ logger = logging.getLogger("Pipeline")
 try:
     import gurobipy as grp
 except ImportError:
-    logger.warn("If you want to use GUROBI please install gurobipy")
+    logger.warning("If you want to use GUROBI please install gurobipy")
 
 
 class ProjectionContraint(Enum):
@@ -150,11 +150,22 @@ def construct_ilp_problem(
 
     # Constraint: don't project enitities to overlapped candidates
     overlapped_cands = get_overlapped_candidates_idxs(tgt_candidates)
+
     # don't project to overlapped
+    single_cands = set(range(n_cand))
     for a_idx, b_idx in overlapped_cands:
         n_proj_a = sum(x[a_idx:n_total:n_cand])
         n_proj_b = sum(x[b_idx:n_total:n_cand])
         constraints.append(n_proj_a + n_proj_b <= 1)
+
+        for idx in [a_idx, b_idx]:
+            if idx in single_cands:
+                single_cands.remove(idx)
+
+    # don't project to the same candidates
+    for idx in single_cands:
+        n_proj = sum(x[idx:n_total:n_cand])
+        constraints.append(n_proj <= 1)
 
     problem = cp.Problem(objective=objective, constraints=constraints)
     return problem
@@ -185,7 +196,7 @@ def solve_ilp_problem(
 
     x = problem.variables()[0].value
     if x is None:
-        logger.warn(f"ILP solver failed. Status: {problem.status}")
+        logger.warning(f"ILP solver failed. Status: {problem.status}")
         return [], [], 0
 
     idxs = np.argwhere(x == 1)[:, 0]
@@ -253,10 +264,21 @@ def solve_ilp_with_gurobi(
         )
 
         # don't project to overlapped candidates
+        single_cands = set(range(n_cand))
         for a_idx, b_idx in overlapped_cands:
             m.addConstr(
                 x.sum("*", a_idx) + x.sum("*", b_idx) <= 1,
                 name="not_project_to_overlapped",
+            )
+            for idx in [a_idx, b_idx]:
+                if idx in single_cands:
+                    single_cands.remove(idx)
+
+        # don't project to the same candidates
+        for idx in single_cands:
+            m.addConstr(
+                x.sum("*", idx) <= 1,
+                name="not_project_to_the_same_cand",
             )
 
         m.optimize()
