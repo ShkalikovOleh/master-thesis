@@ -37,7 +37,7 @@ project:
     length_ratio_threshold: 0.8
     project_top_k: null
     merge_distance: 1
-    merge_only_i_labels: true
+    merge_only_i_labels: false
 intrinsic_eval:
   deps: [project]
   transform:
