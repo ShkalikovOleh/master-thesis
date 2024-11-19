@@ -56,7 +56,7 @@ if [ -f $FWD_TRANS_PATH ]; then
    echo "Use cached translation"
 else
     echo "[PIPELINE] Start forward translation"
-    python -m src.pipelines.run_pipeline experiment=partial/translate/nllb200_3B.yaml \
+    python -m src.pipeline.run_pipeline experiment=partial/translate/nllb200_3B.yaml \
         src_lang=$lang tgt_lang=eng pipeline.translate.transform.src_lang_code=$tgt_lang_code \
         batch_size=$TRANS_BATCH_SIZE \
         dataset_path=masakhane/masakhaner2 \
@@ -76,7 +76,7 @@ if [ -f $SRC_ENTITIES_PATH ]; then
    echo "Use cached source entities"
 else
     echo "[PIPELINE] Start SRC NER labeling"
-    python -m src.pipelines.run_pipeline pipeline=src_ner \
+    python -m src.pipeline.run_pipeline pipeline=src_ner \
         pipeline.load_translation.transform.dataset_path=$FWD_TRANS_PATH \
         pipeline.apply_ner.transform.model_path=$SRC_NER_MODEL \
         pipeline.apply_ner.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
@@ -131,7 +131,7 @@ do
        echo "Use cached $aligner alignments"
     else
         echo "[PIPELINE] Start W2W alignments computation"
-        python -m src.pipelines.run_pipeline pipeline=annotation/partial/alignments \
+        python -m src.pipeline.run_pipeline pipeline=annotation/partial/alignments \
             aligner=$aligner \
             pipeline.align_words.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
             pipeline.save_alignments.transform.save_path=$ALIGNMENTS_PATH
