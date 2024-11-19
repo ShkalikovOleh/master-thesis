@@ -2,7 +2,7 @@
 
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=4:00:00
+#SBATCH --time=8:00:00
 #SBATCH --account=p_scads_nlp
 #SBATCH --job-name=masakhaner2_pipelines
 #SBATCH --gres=gpu:1
