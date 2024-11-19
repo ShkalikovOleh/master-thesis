@@ -16,8 +16,17 @@ load_entities:
     split: null
     streaming: false
     local: true
+load_alignments:
+  deps: []
+  transform:
+    _target_: src.pipeline.data.LoadDataset
+    dataset_path: ???
+    cfg_name: null
+    split: null
+    streaming: false
+    local: true
 merge_datasets:
-  deps: [load_entities, load_ds]
+  deps: [load_entities, load_ds, load_alignments]
   transform:
     _target_: src.pipeline.data.ConcatDatasets
 cand_extraction:
@@ -27,23 +36,9 @@ cand_extraction:
     tgt_words_column: tokens
     out_column: tgt_candidates
     min_words: 1
-    max_words: 15
-cand_eval:
-  deps: [cand_extraction]
-  transform:
-    _target_: src.pipeline.cand_evaluator.NERModelLogitsCandidateEvaluator
-    model_path: ???
-    batch_size: ???
-    device: 0
-    out_column: tgt_cand_cost
-    tgt_words_column: tokens
-    tgt_cand_column: ${pipeline.cand_extraction.transform.out_column}
-    subword_aggr_straregy: first
-    per_class_costs: True
-    temperature: 1.0
-    use_only_i_labels: False
+    max_words: 7
 project:
-  deps: [cand_eval]
+  deps: [cand_extraction]
   transform:
     _target_: src.pipeline.projection.RangeILPProjection
     tgt_words_column: tokens
@@ -54,12 +49,23 @@ project:
     n_projected: 1
     proj_constraint: LESS_OR_EQUAL
     solver: GUROBI
-    num_proc: 16
+    num_proc: null
     cost_params:
-      - type: ner
-        ner_scores_column: ${pipeline.cand_eval.transform.out_column}
-        use_only_spans: False
-        threshold: 0.05
+      - type: alignment
+        weight: 0.5
+        alignments_column: word_alignments
+      - type: nmtscore
+        weight: 1
+        tgt_lang: ???
+        nmt_model: nllb-200-distilled-600M
+        device: 0
+        batch_size: ???
+        src_lang: eng_Latn
+        score_method: direct
+        normalize: True
+        both_directions: True
+        threshold: 0.1
+        use_cache: True
 intrinsic_eval:
   deps: [project]
   transform:

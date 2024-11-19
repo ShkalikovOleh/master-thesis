@@ -83,7 +83,7 @@ project:
         score_method: direct
         normalize: True
         both_directions: True
-        threshold: 0.02
+        threshold: 0.1
         use_cache: True
 intrinsic_eval:
   deps: [project]
