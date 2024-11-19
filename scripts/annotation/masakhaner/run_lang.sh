@@ -60,7 +60,7 @@ else
         src_lang=$lang tgt_lang=eng pipeline.translate.transform.src_lang_code=$tgt_lang_code \
         batch_size=$TRANS_BATCH_SIZE \
         dataset_path=masakhane/masakhaner2 \
-        pipeline.load_ds.split=test \
+        pipeline.load_ds.transform.split=test \
         pipeline.load_ds.transform.cfg_name=$lang \
         out_dir=$FWD_TRANS_PATH
 
@@ -76,7 +76,7 @@ if [ -f $SRC_ENTITIES_PATH ]; then
    echo "Use cached source entities"
 else
     echo "[PIPELINE] Start SRC NER labeling"
-    python -m src.pipeline.run_pipeline pipeline=src_ner \
+    python -m src.pipeline.run_pipeline pipeline=annotation/partial/src_ner \
         pipeline.load_translation.transform.dataset_path=$FWD_TRANS_PATH \
         pipeline.apply_ner.transform.model_path=$SRC_NER_MODEL \
         pipeline.apply_ner.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
@@ -89,9 +89,10 @@ else
 fi
 
 
-RUN="python3 src/pipeline/run_pipeline.py log_to_wandb=true \
-        tgt_lang=$lang  pipeline.load_ds.split=test \
-        pipeline.load_ds.dataset_path=masakhane/masakhaner2 \
+RUN="python3 src/pipeline/run_pipeline.py \
+        log_to_wandb=true tgt_lang=$lang \
+        pipeline.load_ds.transform.split=test \
+        pipeline.load_ds.transform.dataset_path=masakhane/masakhaner2 \
         pipeline.load_ds.transform.cfg_name=$lang"
 
 # Model transfer
