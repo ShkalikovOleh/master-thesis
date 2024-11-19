@@ -22,10 +22,10 @@ export NMTSCORE_CACHE=$WORKSPACE/cache
 
 if [ -x "$(command -v module)" ]; then
     # Execution on HPC
-    module switch release/23.04
-    module load GCCcore/11.3.0
-    module load Python/3.10.4
-    module load CUDA/11.8.0
+    module switch release/24.04
+    module load GCCcore/13.2.0
+    module load Python/3.11.5
+    module load CUDA/12.1.1
 
     source $VENV_DIR/bin/activate
 
