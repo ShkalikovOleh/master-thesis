@@ -142,6 +142,10 @@ do
         fi
     fi
 
+    # Heuristic aligment-based
+    $RUN aligner=$aligner pipeline=annotation/partial/heuristics \
+        pipeline.load_alignments.transform.dataset_path=$ALIGNMENTS_PATH
+
     # Alignments-based score
     $RUN aligner=$aligner pipeline=annotation/partial/ranges/aligned_subranges \
         pipeline.load_alignments.transform.dataset_path=$ALIGNMENTS_PATH
