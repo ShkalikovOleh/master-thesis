@@ -100,7 +100,11 @@ $RUN pipeline=annotation/full/model_transfer lang=$lang \
     pipeline.apply_ner.transform.model_path=$TGT_NER_MODEL \
     pipeline.apply_ner.transform.batch_size=$NER_ALIGN_BATCH_SIZE
 
-RUN=$RUN pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH
+# Compute maximum length of entities in the GT dataset
+MAX_CAND_LENGTH=$(python3 $SRC_DIR/scripts/utils/count_max_entity_length.py -d masakhane/masakhaner2 -s test -c bam | awk 'FNR == 10 {print int($2)}')
+
+RUN=$RUN pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
+    pipeline.cand_extraction.transform.max_words=$MAX_CAND_LENGTH
 
 # NER score
 $RUN pipeline=annotation/partial/ranges/ner \
@@ -142,13 +146,13 @@ do
     $RUN aligner=$aligner pipeline=annotation/partial/ranges/aligned_subranges \
         pipeline.load_alignments.transform.dataset_path=$ALIGNMENTS_PATH
 
-    # NER + alignments
+    # NER + alignments (ignore NER labels)
     $RUN aligner=$aligner pipeline=annotation/partial/ranges/align_ner_fusion \
         pipeline.cand_eval.transform.model_path=$TGT_NER_MODEL \
         pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
         pipeline.load_alignments.transform.dataset_path=$ALIGNMENTS_PATH
 
-    # NER + alignments (ignore NER labels)
+    # NER + alignments
     $RUN aligner=$aligner pipeline=annotation/partial/ranges/align_ner_per_class_fusion \
         pipeline.cand_eval.transform.model_path=$TGT_NER_MODEL \
         pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE \

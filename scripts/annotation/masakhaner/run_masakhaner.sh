@@ -24,5 +24,5 @@ langs=(bam ewe fon hau ibo kin lug luo mos nya sna swa tsn twi wol xho yor zul)
 
 for lang in ${langs[@]}
 do
-    sbatch $SRC_DIR/slurm/pipelines/masakhaner2/run_lang.sh $CFG_FILE $lang $SRC_NER_MODEL $TGT_NER_MODEL
+    sbatch $SRC_DIR/scripts/annotation/masakhaner/run_lang.sh $CFG_FILE $lang $SRC_NER_MODEL $TGT_NER_MODEL
 done
