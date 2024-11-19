@@ -92,6 +92,48 @@ class NERTransform:
             return ds
 
 
+class EntitiesToLabelsTransform:
+    """Make it possible to use an output of the NERTransform for the model transfer"""
+
+    def __init__(
+        self,
+        tgt_words_column: str = "tokens",
+        tgt_entity_column: str = "entities",
+        out_column: str = "labels",
+    ) -> None:
+        self.tgt_words_column = tgt_words_column
+        self.tgt_entity_column = tgt_entity_column
+        self.out_column = out_column
+
+    @staticmethod
+    def entity_to_labels(
+        tgt_words: list[str], entities: list[dict[str, Any]]
+    ) -> list[str]:
+        labels = ["O"] * len(tgt_words)
+
+        for entity in entities:
+            label = entity["label"]
+            tgt_s, tgt_e = entity["start_idx"], entity["end_idx"]
+
+            labels[tgt_s] = "B-" + label
+            for idx in range(tgt_s + 1, tgt_e):
+                labels[idx] = "I-" + label
+
+        return labels
+
+    def __call__(self, ds: Dataset) -> Dataset:
+        def map_func(tgt_words: list[str], entities: list[dict[str, Any]]):
+            labels = self.entity_to_labels(tgt_words, entities)
+            return {self.out_column: labels}
+
+        ds = ds.map(
+            map_func,
+            input_columns=[self.tgt_words_column, self.tgt_entity_column],
+        )
+
+        return ds
+
+
 class SubwordEmbeddingExtractor:
     """Extractor which generates source entities spans and target candidates for
     word-to-word alignment task, i.e. for the given source and target words compute
