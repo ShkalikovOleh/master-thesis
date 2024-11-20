@@ -105,9 +105,9 @@ $RUN pipeline=annotation/full/model_transfer tgt_lang=$lang \
 # Compute maximum length of entities in the GT dataset
 MAX_CAND_LENGTH=$(python3 $SRC_DIR/scripts/utils/count_max_entity_length.py -d masakhane/masakhaner2 -s test -c bam | awk 'FNR == 10 {print int($2)}')
 
-RUN=$RUN pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
+RUN="$RUN pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
     pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
-    pipeline.cand_extraction.transform.max_words=$MAX_CAND_LENGTH
+    pipeline.cand_extraction.transform.max_words=$MAX_CAND_LENGTH"
 
 # NER score
 $RUN pipeline=annotation/partial/ranges/ner \
@@ -120,7 +120,7 @@ $RUN pipeline=annotation/partial/ranges/nmtscore \
     pipeline.project.transform.cost_params.0.batch_size=$TRANS_BATCH_SIZE
 
 # NER + NMT
-$RUN pipeline=annotation/partial/ranges/nmtscore \
+$RUN pipeline=annotation/partial/ranges/ner_nmtscore_fusion \
     pipeline.cand_eval.transform.model_path=$TGT_NER_MODEL \
     pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
     pipeline.project.transform.cost_params.1.tgt_lang=$tgt_lang_code \
