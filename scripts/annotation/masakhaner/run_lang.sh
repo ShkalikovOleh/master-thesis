@@ -20,7 +20,7 @@ source "$CFG_FILE"
 export $(cut -d= -f1 "$CFG_FILE")
 export NMTSCORE_CACHE=$WORKSPACE/cache
 
-if [ -x "$(command -v module)" ]; then
+if  [ -x "$(which sbatch)" ]; then
     # Execution on HPC
     module switch release/24.04
     module load GCCcore/13.2.0
