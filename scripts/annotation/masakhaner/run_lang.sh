@@ -115,15 +115,15 @@ $RUN pipeline=annotation/partial/ranges/ner \
 
 # NMT-score
 $RUN pipeline=annotation/partial/ranges/nmtscore \
-    pipeline.project.transform.cost_params[0].tgt_lang=$tgt_lang_code \
-    pipeline.project.transform.cost_params[0].batch_size=$TRANS_BATCH_SIZE
+    pipeline.project.transform.cost_params.0.tgt_lang=$tgt_lang_code \
+    pipeline.project.transform.cost_params.0.batch_size=$TRANS_BATCH_SIZE
 
 # NER + NMT
 $RUN pipeline=annotation/partial/ranges/nmtscore \
     pipeline.cand_eval.transform.model_path=$TGT_NER_MODEL \
     pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
-    pipeline.project.transform.cost_params[1].tgt_lang=$tgt_lang_code \
-    pipeline.project.transform.cost_params[1].batch_size=$TRANS_BATCH_SIZE
+    pipeline.project.transform.cost_params.1.tgt_lang=$tgt_lang_code \
+    pipeline.project.transform.cost_params.1.batch_size=$TRANS_BATCH_SIZE
 
 aligners=(awesome_mbert)
 for aligner in ${aligners[@]}
@@ -172,16 +172,16 @@ do
     # NMT + alignments
     $RUN aligner=$aligner pipeline=annotation/partial/ranges/align_nmtscore_fusion \
         pipeline.load_alignments.transform.dataset_path=$ALIGNMENTS_PATH \
-        pipeline.project.transform.cost_params[1].tgt_lang=$tgt_lang_code \
-        pipeline.project.transform.cost_params[1].batch_size=$TRANS_BATCH_SIZE
+        pipeline.project.transform.cost_params.1.tgt_lang=$tgt_lang_code \
+        pipeline.project.transform.cost_params.1.batch_size=$TRANS_BATCH_SIZE
 
     # NMT + NER + alignments
     $RUN aligner=$aligner pipeline=annotation/partial/ranges/align_ner_nmtscore_fusion \
         pipeline.load_alignments.transform.dataset_path=$ALIGNMENTS_PATH \
         pipeline.cand_eval.transform.model_path=$TGT_NER_MODEL \
         pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
-        pipeline.project.transform.cost_params[2].tgt_lang=$tgt_lang_code \
-        pipeline.project.transform.cost_params[2].batch_size=$TRANS_BATCH_SIZE
+        pipeline.project.transform.cost_params.2.tgt_lang=$tgt_lang_code \
+        pipeline.project.transform.cost_params.2.batch_size=$TRANS_BATCH_SIZE
 
 done
 
