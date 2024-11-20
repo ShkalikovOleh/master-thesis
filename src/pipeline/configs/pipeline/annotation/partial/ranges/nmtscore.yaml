@@ -43,6 +43,7 @@ project:
     num_proc: null
     cost_params:
       - type: nmtscore
+        weight: 1
         tgt_lang: ???
         nmt_model: nllb-200-distilled-600M
         device: 0
