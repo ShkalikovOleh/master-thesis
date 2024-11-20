@@ -106,6 +106,7 @@ $RUN pipeline=annotation/full/model_transfer tgt_lang=$lang \
 MAX_CAND_LENGTH=$(python3 $SRC_DIR/scripts/utils/count_max_entity_length.py -d masakhane/masakhaner2 -s test -c bam | awk 'FNR == 10 {print int($2)}')
 
 RUN=$RUN pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
+    pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
     pipeline.cand_extraction.transform.max_words=$MAX_CAND_LENGTH
 
 # NER score

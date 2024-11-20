@@ -20,15 +20,15 @@ project:
   deps: [apply_ner]
   transform:
     _target_: src.pipeline.ner.EntitiesToLabelsTransform
-    tgt_words_column: {pipeline.apply_ner.transform.in_column}
-    tgt_entity_column: {pipeline.apply_ner.transform.out_column}
+    tgt_words_column: ${pipeline.apply_ner.transform.in_column}
+    tgt_entity_column: ${pipeline.apply_ner.transform.out_column}
     out_column: labels
 intrinsic_eval:
   deps: [project]
   transform:
     _target_: src.pipeline.eval.SeqEvalIntrinsicEvaluation
     orig_column: ner_tags
-    gen_column: {pipeline.project.transform.out_column}
+    gen_column: ${pipeline.project.transform.out_column}
     gen_as_tags: False
     log_to_wandb: ${log_to_wandb}
     batch_size: 1000
