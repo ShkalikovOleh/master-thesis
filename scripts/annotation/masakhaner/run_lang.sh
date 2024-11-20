@@ -52,7 +52,7 @@ PIPE_CACHE_DIR=$WORKSPACE/cache/masakhaner2/$lang
 mkdir -p $PIPE_CACHE_DIR
 
 FWD_TRANS_PATH=$PIPE_CACHE_DIR/fwd_translation_nllb_${lang}_eng
-if [ -f $FWD_TRANS_PATH ]; then
+if [ -d $FWD_TRANS_PATH ]; then
    echo "Use cached translation"
 else
     echo "[PIPELINE] Start forward translation"
@@ -72,7 +72,7 @@ fi
 
 ner_model_name=$(echo $SRC_NER_MODEL | sed  's\/\_\g')
 SRC_ENTITIES_PATH=$PIPE_CACHE_DIR/src_entities_$ner_model_name
-if [ -f $SRC_ENTITIES_PATH ]; then
+if [ -d $SRC_ENTITIES_PATH ]; then
    echo "Use cached source entities"
 else
     echo "[PIPELINE] Start SRC NER labeling"
@@ -129,7 +129,7 @@ aligners=(awesome_mbert)
 for aligner in ${aligners[@]}
 do
     ALIGNMENTS_PATH=$PIPE_CACHE_DIR/alignments_$aligner.arrow
-    if [ -f $SRC_ENTITIES_PATH ]; then
+    if [ -d $SRC_ENTITIES_PATH ]; then
        echo "Use cached $aligner alignments"
     else
         echo "[PIPELINE] Start W2W alignments computation"
