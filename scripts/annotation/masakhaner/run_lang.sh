@@ -51,7 +51,7 @@ fi
 PIPE_CACHE_DIR=$WORKSPACE/cache/masakhaner2/$lang
 mkdir -p $PIPE_CACHE_DIR
 
-FWD_TRANS_PATH=$PIPE_CACHE_DIR/fwd_translation_nllb_${lang}_eng.arrow
+FWD_TRANS_PATH=$PIPE_CACHE_DIR/fwd_translation_nllb_${lang}_eng
 if [ -f $FWD_TRANS_PATH ]; then
    echo "Use cached translation"
 else
@@ -71,7 +71,7 @@ else
 fi
 
 ner_model_name=$(echo $SRC_NER_MODEL | sed  's\/\_\g')
-SRC_ENTITIES_PATH=$PIPE_CACHE_DIR/src_entities_$ner_model_name.arrow
+SRC_ENTITIES_PATH=$PIPE_CACHE_DIR/src_entities_$ner_model_name
 if [ -f $SRC_ENTITIES_PATH ]; then
    echo "Use cached source entities"
 else
