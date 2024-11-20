@@ -98,7 +98,7 @@ RUN="python -m src.pipeline.run_pipeline \
 
 # Model transfer
 echo "[PIPELINE] Start model transfer pipeline"
-$RUN pipeline=annotation/full/model_transfer lang=$lang \
+$RUN pipeline=annotation/full/model_transfer tgt_lang=$lang \
     pipeline.apply_ner.transform.model_path=$TGT_NER_MODEL \
     pipeline.apply_ner.transform.batch_size=$NER_ALIGN_BATCH_SIZE
 
