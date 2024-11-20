@@ -27,6 +27,7 @@ class NERModelLogitsCandidateEvaluator:
         temperature: float = 1.0,
         use_only_i_labels: bool = False,
         cont_multiplier: float = 1.15,
+        labels_to_ignore: list[str] = [],
     ) -> None:
         self.model_path = model_path
         self.batch_size = batch_size
@@ -39,6 +40,7 @@ class NERModelLogitsCandidateEvaluator:
         self.per_class_costs = per_class_costs
         self.temperature = temperature
         self.cont_multiplier = cont_multiplier
+        self.labels_to_ignore = labels_to_ignore
 
         # to handle FacebookAI/xlm-roberta-large-finetuned-conll03-english issues
         self.use_only_i_labels = use_only_i_labels
@@ -186,9 +188,9 @@ class NERModelLogitsCandidateEvaluator:
         b_labels = {}
         i_labels = {}
         for key, idx in model.config.label2id.items():
-            if key.startswith("B-"):
+            if key.startswith("B-") and key[2:] not in self.labels_to_ignore:
                 b_labels[key[2:]] = idx
-            elif key.startswith("I-"):
+            elif key.startswith("I-") and key[2:] not in self.labels_to_ignore:
                 i_labels[key[2:]] = idx
 
         if not self.use_only_i_labels:

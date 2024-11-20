@@ -81,7 +81,8 @@ else
         pipeline.load_translation.transform.dataset_path=$FWD_TRANS_PATH \
         pipeline.apply_ner.transform.model_path=$SRC_NER_MODEL \
         pipeline.apply_ner.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
-        pipeline.write_entities.transform.save_path=$SRC_ENTITIES_PATH
+        pipeline.write_entities.transform.save_path=$SRC_ENTITIES_PATH \
+        +pipeline.apply_ner.transform.class_mapping='{MISC: "O"}'
 
     if [ $? -ne 0 ]; then
       echo "Error during source NER labeling!"
@@ -94,13 +95,15 @@ RUN="python -m src.pipeline.run_pipeline \
         log_to_wandb=true tgt_lang=$lang \
         pipeline.load_ds.transform.split=test \
         pipeline.load_ds.transform.dataset_path=masakhane/masakhaner2 \
-        pipeline.load_ds.transform.cfg_name=$lang"
+        pipeline.load_ds.transform.cfg_name=$lang \
+        +pipeline.intrinsic_eval.transform.labels_to_ignore='[DATE]'"
 
 # Model transfer
 echo "[PIPELINE] Start model transfer pipeline"
 $RUN pipeline=annotation/full/model_transfer tgt_lang=$lang \
     pipeline.apply_ner.transform.model_path=$TGT_NER_MODEL \
-    pipeline.apply_ner.transform.batch_size=$NER_ALIGN_BATCH_SIZE
+    pipeline.apply_ner.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
+    +pipeline.apply_ner.transform.class_mapping='{MISC: "O"}'
 
 # Compute maximum length of entities in the GT dataset
 MAX_CAND_LENGTH=$(python3 $SRC_DIR/scripts/utils/count_max_entity_length.py -d masakhane/masakhaner2 -s test -c bam | awk 'FNR == 10 {print int($2)}')
@@ -112,7 +115,8 @@ RUN="$RUN pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
 # NER score
 $RUN pipeline=annotation/partial/ranges/ner \
     pipeline.cand_eval.transform.model_path=$TGT_NER_MODEL \
-    pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE
+    pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
+    +pipeline.cand_eval.transform.labels_to_ignore='[MISC]'
 
 # NMT-score
 $RUN pipeline=annotation/partial/ranges/nmtscore \
@@ -124,7 +128,8 @@ $RUN pipeline=annotation/partial/ranges/ner_nmtscore_fusion \
     pipeline.cand_eval.transform.model_path=$TGT_NER_MODEL \
     pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
     pipeline.project.transform.cost_params.1.tgt_lang=$tgt_lang_code \
-    pipeline.project.transform.cost_params.1.batch_size=$TRANS_BATCH_SIZE
+    pipeline.project.transform.cost_params.1.batch_size=$TRANS_BATCH_SIZE \
+    +pipeline.cand_eval.transform.labels_to_ignore='[MISC]'
 
 aligners=(awesome_mbert)
 for aligner in ${aligners[@]}
@@ -162,12 +167,14 @@ do
     $RUN aligner=$aligner pipeline=annotation/partial/ranges/align_ner_fusion \
         pipeline.cand_eval.transform.model_path=$TGT_NER_MODEL \
         pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
+        +pipeline.cand_eval.transform.labels_to_ignore='[MISC]' \
         pipeline.load_alignments.transform.dataset_path=$ALIGNMENTS_PATH
 
     # NER + alignments
     $RUN aligner=$aligner pipeline=annotation/partial/ranges/align_ner_per_class_fusion \
         pipeline.cand_eval.transform.model_path=$TGT_NER_MODEL \
         pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
+        +pipeline.cand_eval.transform.labels_to_ignore='[MISC]' \
         pipeline.load_alignments.transform.dataset_path=$ALIGNMENTS_PATH
 
     # NMT + alignments
@@ -181,6 +188,7 @@ do
         pipeline.load_alignments.transform.dataset_path=$ALIGNMENTS_PATH \
         pipeline.cand_eval.transform.model_path=$TGT_NER_MODEL \
         pipeline.cand_eval.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
+        +pipeline.cand_eval.transform.labels_to_ignore='[MISC]' \
         pipeline.project.transform.cost_params.2.tgt_lang=$tgt_lang_code \
         pipeline.project.transform.cost_params.2.batch_size=$TRANS_BATCH_SIZE
 
