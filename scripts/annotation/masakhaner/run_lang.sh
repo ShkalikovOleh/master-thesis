@@ -76,7 +76,8 @@ if [ -f $SRC_ENTITIES_PATH ]; then
    echo "Use cached source entities"
 else
     echo "[PIPELINE] Start SRC NER labeling"
-    python -m src.pipeline.run_pipeline pipeline=annotation/partial/src_ner \
+    python -m src.pipeline.run_pipeline log_to_wandb=false \
+        pipeline=annotation/partial/src_ner \
         pipeline.load_translation.transform.dataset_path=$FWD_TRANS_PATH \
         pipeline.apply_ner.transform.model_path=$SRC_NER_MODEL \
         pipeline.apply_ner.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
@@ -89,7 +90,7 @@ else
 fi
 
 
-RUN="python3 src/pipeline/run_pipeline.py \
+RUN="python -m src.pipeline.run_pipeline \
         log_to_wandb=true tgt_lang=$lang \
         pipeline.load_ds.transform.split=test \
         pipeline.load_ds.transform.dataset_path=masakhane/masakhaner2 \
@@ -132,8 +133,13 @@ do
        echo "Use cached $aligner alignments"
     else
         echo "[PIPELINE] Start W2W alignments computation"
-        python -m src.pipeline.run_pipeline pipeline=annotation/partial/alignments \
-            aligner=$aligner \
+        python -m src.pipeline.run_pipeline aligner=$aligner \
+            log_to_wandb=false \
+            pipeline=annotation/partial/alignments \
+            pipeline.load_ds.transform.dataset_path=masakhane/masakhaner2 \
+            pipeline.load_ds.transform.split=test \
+            pipeline.load_ds.transform.cfg_name=$lang" \
+            pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
             pipeline.align_words.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
             pipeline.save_alignments.transform.save_path=$ALIGNMENTS_PATH
 

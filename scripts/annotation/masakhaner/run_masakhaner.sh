@@ -2,7 +2,7 @@ CFG_FILE=$1
 
 if [[ $# -eq 1 ]]
 then
-    SRC_NER_MODEL=FacebookAI/xlm-roberta-large-finetuned-conll03-english
+    SRC_NER_MODEL=ShkalikovOleh/mdeberta-v3-base-conll2003-en
     TGT_NER_MODEL=$SRC_NER_MODEL
 elif [[ $# -eq 2 ]]
 then
