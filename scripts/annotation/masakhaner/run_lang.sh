@@ -138,7 +138,7 @@ do
             pipeline=annotation/partial/alignments \
             pipeline.load_ds.transform.dataset_path=masakhane/masakhaner2 \
             pipeline.load_ds.transform.split=test \
-            pipeline.load_ds.transform.cfg_name=$lang" \
+            pipeline.load_ds.transform.cfg_name=$lang \
             pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
             pipeline.align_words.transform.batch_size=$NER_ALIGN_BATCH_SIZE \
             pipeline.save_alignments.transform.save_path=$ALIGNMENTS_PATH
