@@ -134,8 +134,8 @@ $RUN pipeline=annotation/partial/ranges/ner_nmtscore_fusion \
 aligners=(awesome_mbert)
 for aligner in ${aligners[@]}
 do
-    ALIGNMENTS_PATH=$PIPE_CACHE_DIR/alignments_$aligner.arrow
-    if [ -d $SRC_ENTITIES_PATH ]; then
+    ALIGNMENTS_PATH=$PIPE_CACHE_DIR/alignments_$aligner
+    if [ -d $ALIGNMENTS_PATH ]; then
        echo "Use cached $aligner alignments"
     else
         echo "[PIPELINE] Start W2W alignments computation"
