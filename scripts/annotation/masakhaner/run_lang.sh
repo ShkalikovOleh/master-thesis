@@ -109,7 +109,6 @@ $RUN pipeline=annotation/full/model_transfer tgt_lang=$lang \
 MAX_CAND_LENGTH=$(python3 $SRC_DIR/scripts/utils/count_max_entity_length.py -d masakhane/masakhaner2 -s test -c bam | awk 'FNR == 10 {print int($2)}')
 
 RUN="$RUN pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
-    pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
     pipeline.cand_extraction.transform.max_words=$MAX_CAND_LENGTH"
 
 # NER score
@@ -156,7 +155,14 @@ do
     fi
 
     # Heuristic aligment-based
-    $RUN aligner=$aligner pipeline=annotation/partial/heuristics \
+    python -m src.pipeline.run_pipeline \
+        aligner=$aligner pipeline=annotation/partial/heuristics \
+        log_to_wandb=true tgt_lang=$lang \
+        pipeline.load_ds.transform.split=test \
+        pipeline.load_ds.transform.dataset_path=masakhane/masakhaner2 \
+        pipeline.load_ds.transform.cfg_name=$lang \
+        +pipeline.intrinsic_eval.transform.labels_to_ignore='[DATE]' \
+        pipeline.load_entities.transform.dataset_path=$SRC_ENTITIES_PATH \
         pipeline.load_alignments.transform.dataset_path=$ALIGNMENTS_PATH
 
     # Alignments-based score
