@@ -21,38 +21,44 @@
 \begin{figure*}[t]
     \centering
     \begin{tikzpicture}[node distance=-0.1,
-            % font=\footnotesize,
-            % font=\fontsize{7pt}{10pt}\selectfont,
-            % every node/.style={text centered,
-            %         text height=1.5ex,
-            %         text depth=.25ex,},
+            every node/.style={text centered,
+                    text height=2ex,
+                    text depth=.25ex,
+                },
             loc/.style={fill=orange!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:#1-LOC}},
             per/.style={fill=green!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:#1-PER}},
             cand/.style={fill=blue!30, rounded rectangle},]
 
-        \node[per={B}, rounded rectangle east arc=none](Mark_src){Mark};
-        \node[per={I}, rounded rectangle west arc=none, right=of Mark_src](Twain_src){Twain};
-        \node[right=of Twain_src](was_src){was};
-        \node[right=of was_src](born_src){born};
-        \node[right=of born_src](in_src){in};
-        \node[loc={B}, right=of in_src](Florida_src){Florida};
+        \node[per={B}, rounded rectangle east arc=none](George_src){George};
+        \node[per={I}, rounded rectangle west arc=none, right=of George_src](Washington_src){Washington};
+        \node[right=of Washington_src](is_src){is};
+        \node[right=of is_src](the_src){the};
+        \node[right=of the_src](first_src){first};
+        \node[right=of first_src](president_src){president};
+        \node[right=of president_src](of_src){of};
+        \node[right=of of_src](the_src){the};
+        \node[loc={B}, rounded rectangle east arc=none, right=of the_src](United_src){United};
+        \node[loc={I}, rounded rectangle west arc=none, right=of United_src](States_src){States};
 
-        \node[cand, rounded rectangle east arc=none, below=of Mark_src, yshift=-1.2cm](Mark_tgt){Mark};
-        \node[cand, rounded rectangle west arc=none, right=of Mark_tgt](Twain_tgt){Twain};
-        \node[right=of Twain_tgt](wurde_tgt){wurde};
-        \node[right=of wurde_tgt](in_tgt){in};
-        \node[cand, right=of in_tgt](Florida_tgt){Florida};
-        \node[right=of Florida_tgt](geboren_tgt){geboren};
+        \node[cand, rounded rectangle east arc=none, below=of George_src, yshift=-1.5cm](George_tgt){George};
+        \node[cand, rounded rectangle west arc=none, right=of George_tgt](Washington_tgt){Washington};
+        \node[right=of Washington_tgt](ist_tgt){ist};
+        \node[right=of ist_tgt](der_tgt){die};
+        \node[right=of der_tgt](erste_tgt){erste};
+        \node[right=of erste_tgt](president_tgt){Präsident};
+        \node[right=of president_tgt](der_tgt){der};
+        \node[cand, rounded rectangle east arc=none, right=of der_tgt](Vereinigten_tgt){Vereinigten};
+        \node[cand, rounded rectangle west arc=none, right=of Vereinigten_tgt](Staaten_tgt){Staaten};
 
-        \node[text=gray, font=\scriptsize, above=of born_src, yshift=0.2cm](source){Source labeled sentence};
-        \node[text=gray, font=\scriptsize, below=of source, yshift=-2.45cm]{Original sentence with extracted candidates};
+        \node[text=gray, font=\scriptsize, above=of first_src, yshift=0.2cm, xshift=0.2cm](source){Source labeled sentence};
+        \node[text=gray, font=\scriptsize, below=of source, yshift=-3cm]{Original sentence with extracted candidates};
 
-        \draw[->] (Mark_src.south east) -- node[left]{\(c_{11}\)} (Mark_tgt.north east);
-        \draw[->] (Florida_src.south) -- node[right]{\(c_{22}\)} (Florida_tgt.north);
-        \draw[->] (Mark_src.south east) -- node[above left, yshift=0.1cm]{\(c_{12}\)} (Florida_tgt.north);
-        \draw[->] (Florida_src.south) -- node[above right, yshift=0.1cm]{\(c_{21}\)} (Mark_tgt.north east);
+        \draw[->] (George_src.south east) -- node[left]{\(c_{11}\)} (George_tgt.north east);
+        \draw[->] (United_src.south east) -- node[right]{\(c_{22}\)} (Vereinigten_tgt.north east);
+        \draw[->] (George_src.south east) -- node[above left, yshift=0.1cm, xshift=-0.2cm]{\(c_{12}\)} (Vereinigten_tgt.north east);
+        \draw[->] (United_src.south east) -- node[below left]{\(c_{21}\)} (George_tgt.north east);
     \end{tikzpicture}
-    \caption{Proposed idea of matching source entities and candidates in the target sentence}
+    \caption{Illustration of the proposed idea of matching source entities and candidates in the target sentence}
     \label{fig:cand_matching}
 \end{figure*}
 
