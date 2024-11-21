@@ -21,8 +21,12 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amsthm}
+\usepackage{amssymb}
 \usepackage{bm}			% used for making things bold in equations
 \usepackage[b]{esvect}
+
+\usepackage{algorithm2e}
+\RestyleAlgo{ruled}
 
 \usepackage{multirow}	% use tables with columns stretching over multiple rows
 \usepackage{booktabs}
@@ -111,3 +115,7 @@
 \newtheorem{definition}{Definition}[section]
 \theoremstyle{remark}
 \newtheorem*{remark}{Remark}
+
+\newcommand{\src}[1]{#1^{src}}
+\newcommand{\tgt}[1]{#1^{tgt}}
+\DeclareMathOperator*{\argmax}{arg\,max}

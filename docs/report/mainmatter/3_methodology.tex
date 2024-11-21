@@ -10,6 +10,13 @@
 
 \end{definition}
 
+\begin{align}
+     & \argmax\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                      \\
+     & \text{subject to} \notag                                                                                                                                                        \\
+     & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                         & \forall \src{p} \in S                                              \\
+     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1                                                 & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi} \\
+     & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                        & \forall (\src{p}, \tgt{p}) \in S \times T
+\end{align}
 
 \begin{theorem}
     The relation of overlapping is not transitive.
@@ -19,16 +26,83 @@
 \end{proof}
 
 \begin{corollary}
-    We can not simplify constraints
+    We can not simplify constraints too much
 \end{corollary}
+
+merge some constraints
+\begin{theorem}
+    Merged constr and original are equivalent
+\end{theorem}
+\begin{proof}
+    Trust me!
+\end{proof}
+
+\begin{equation}
+    \begin{aligned}
+         & \argmax\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                                                                   \\
+         & \text{subject to} \notag                                                                                                                                                                                                     \\
+         & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                         & \forall \src{p} \in S                                                                                           \\
+         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                       & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi                                                                          \\
+         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1                                                    & \forall \tgt{p} \in T | \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset \\
+         & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                        & \forall (\src{p}, \tgt{p}) \in S \times T
+    \end{aligned}
+\end{equation}
+
+\section{Candidates extraction}
+n-grams
+
+T5, LLM, high recall NER
 
 \section{Matching score}
 \subsection{Alignment-based}
 
+\begin{equation} \label{eq:align_cost}
+    c_{\src{p}, \tgt{p}}
+\end{equation}
+
+shrink candidate set + prove
+
+\begin{lemma}
+    If append unaligned word to a candidate cost will be smaller
+\end{lemma}
+\begin{proof}
+    Trust me!
+\end{proof}
+
+\begin{theorem}
+    Can remove candidates outside left and right most aligned words
+\end{theorem}
+\begin{proof}
+    Trust me!
+\end{proof}
+
 \subsection{NER model-based}
+
+model transfer for cand eval
+
+\begin{equation} \label{eq:ner_cost}
+    c_{\src{p}, \tgt{p}} =
+\end{equation}
 
 \subsection{Translation score-based}
 
+nmtscore
+\begin{equation} \label{eq:nmt_cost}
+    c_{\src{p}, \tgt{p}}
+\end{equation}
+
 \subsection{Fused score}
 
+ner score without classes (max over all)
+
+weighted sum of scores
+\begin{equation} \label{eq:fused_cost}
+    c_{\src{p}, \tgt{p}}
+\end{equation}
+
 \section{Solution of the ILP problem}
+
+greedy algorithm
+\begin{algorithm}
+    \caption{Greedy algorithm for the proposed ILP problem} \label{alg:ilp_greedy}
+\end{algorithm}
