@@ -7,7 +7,7 @@
 #SBATCH --job-name=masakhaner2_pipelines
 #SBATCH --gres=gpu:1
 #SBATCH --partition=alpha
-#SBATCH --mem=48G
+#SBATCH --mem=64G
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-type=end,fail
 
@@ -96,7 +96,8 @@ RUN="python -m src.pipeline.run_pipeline \
         pipeline.load_ds.transform.split=test \
         pipeline.load_ds.transform.dataset_path=masakhane/masakhaner2 \
         pipeline.load_ds.transform.cfg_name=$lang \
-        +pipeline.intrinsic_eval.transform.labels_to_ignore='[DATE]'"
+        +pipeline.intrinsic_eval.transform.labels_to_ignore='[DATE]' \
+        +pipeline.project.transform.solver_params.MemLimit=2 "
 
 # Model transfer
 echo "[PIPELINE] Start model transfer pipeline"
