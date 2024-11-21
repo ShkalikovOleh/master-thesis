@@ -97,7 +97,7 @@ RUN="python -m src.pipeline.run_pipeline \
         pipeline.load_ds.transform.dataset_path=masakhane/masakhaner2 \
         pipeline.load_ds.transform.cfg_name=$lang \
         +pipeline.intrinsic_eval.transform.labels_to_ignore='[DATE]' \
-        +pipeline.project.transform.solver_params.MemLimit=2 "
+        +pipeline.project.transform.solver_params.MemLimit=4 "
 
 # Model transfer
 echo "[PIPELINE] Start model transfer pipeline"
