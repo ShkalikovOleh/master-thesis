@@ -38,7 +38,7 @@ do
     fi
 
     sbatch_out=$(sbatch $deps $SRC_DIR/scripts/annotation/masakhaner/run_lang.sh $CFG_FILE $lang $SRC_NER_MODEL $TGT_NER_MODEL)
-    JOBID=$($sbatch_out | awk '{print $4}')
+    JOBID=$(echo $sbatch_out | awk '{print $4}')
     JOB_IDS+=($JOBID)
 
     i=$((i+1))
