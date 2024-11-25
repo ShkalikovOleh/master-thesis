@@ -144,8 +144,105 @@ weighted sum of scores
     c_{\src{p}, \tgt{p}}
 \end{equation}
 
-\section{Solution of the ILP problem}
+\section{Analysis of the ILP problem}
 
+\subsection{Hardness of the problem}
+\begin{figure}[ht]
+    \begin{subfigure}{.5\textwidth}
+        \centering
+        \begin{tikzpicture}[every node/.style = {draw, circle}]
+            \node[fill=green!10] (1) {1};
+            \node[right=of 1] (2) {2};
+            \node[below right=of 2, fill=green!10] (3) {3};
+            \node[below=of 1, fill=green!10] (4) {4};
+            \node[left=of 4] (5) {5};
+            \node[below right=of 4] (6) {6};
+
+            \graph{
+                (1) -- (2) -- (4) -- (6) -- (5) -- (4),
+                (6) -- (2) -- (3)
+            };
+        \end{tikzpicture}
+        \caption{Maximum independent set problem (MaxIS). Vertices that form an optimal solution are colored in \textcolor{green!60}{green}.}
+    \end{subfigure}
+    \begin{subfigure}{.5\textwidth}
+        \centering
+        \begin{tikzpicture}[
+                node distance=0.1,
+                realstate/.style = {draw, circle, font=\scriptsize},
+                dummystate/.style = {draw, circle, minimum width=4, inner sep=6, fill=blue!10}
+            ]
+            \node[dummystate] (src_1) {};
+            \node[right=of src_1, xshift=10, dummystate] (src_2) {};
+            \node[right=of src_2, xshift=10, dummystate] (src_3) {};
+
+            \node[below=of src_1, fill=green!10, xshift=-50, yshift=-1.75cm, realstate] (1) {1};
+            \node[right=of 1, realstate] (2) {2};
+            \node[right=of 2, fill=green!10, realstate] (3) {3};
+            \node[right=of 3, fill=green!10, realstate] (4) {4};
+            \node[right=of 4, realstate] (5) {5};
+            \node[right=of 5, realstate] (6) {6};
+            \node[right=of 6, dummystate](dummy_1) {};
+            \node[right=of dummy_1] (dots) {\dots};
+            \node[right=of dots, dummystate] (dummy_2) {};
+
+            \node[above=of src_2, text=gray, font=\scriptsize] {Source nodes};
+            \node[below=of 5, text=gray, font=\scriptsize] {Target nodes};
+
+            \draw[green] (src_1) -- (1);
+            \draw[gray!40] (src_1) -- node[below left, black, font=\small]{1} (2);
+            \draw[gray!40] (src_1) -- (3);
+            \draw[gray!40] (src_1) -- (4);
+            \draw[gray!40] (src_1) -- (5);
+            \draw[gray!40] (src_1) -- (6);
+            \draw (src_1) -- (dummy_1);
+            \draw (src_1) -- (dummy_2);
+            \draw[gray!40] (src_2) -- (2);
+            \draw[green] (src_2) -- (3);
+            \draw[gray!40] (src_2) -- (4);
+            \draw[gray!40] (src_2) -- (5);
+            \draw[gray!40] (src_2) -- (6);
+            \draw (src_2) -- (dummy_1);
+            \draw (src_2) -- (dummy_2);
+            \draw[gray!40] (src_3) -- (2);
+            \draw[gray!40] (src_3) -- (3);
+            \draw[green] (src_3) -- (4);
+            \draw[gray!40] (src_3) -- (5);
+            \draw[gray!40] (src_3) -- (6);
+            \draw (src_3) -- (dummy_1);
+            \draw (src_3) -- node[above, font=\small]{0} (dummy_2);
+        \end{tikzpicture}
+        \caption{Reduction to the proposed ILP problem. \textcolor{blue!60}{Blue} depicts dummy nodes.}
+    \end{subfigure}
+    \caption{The diagram of the general idea of the reduction MaxIS problem to the proposed ILP problem}
+\end{figure}
+
+definition of the Max Independent Set problem
+
+Idea of the reduction to the MIS (explanation) (without constraint with nproj)
+
+What is optimal solution and quotient set of solutions
+
+\begin{lemma}
+    If we take an edge from source to target, delete it and connect to another source, the solution is steal optimal
+\end{lemma}
+\begin{proof}
+    Trust me!
+\end{proof}
+
+\begin{corollary}
+    It is possible to bound sum over all candidates for one source entity
+\end{corollary}
+
+\begin{theorem}[]
+    The proposed ILP problem is NP-hard
+\end{theorem}
+\begin{proof}
+    Trust me!
+\end{proof}
+
+
+\subsection{Approaches to compute the solution of the problem}
 greedy algorithm
 \begin{algorithm}
     \caption{Greedy algorithm for the proposed ILP problem} \label{alg:ilp_greedy}
