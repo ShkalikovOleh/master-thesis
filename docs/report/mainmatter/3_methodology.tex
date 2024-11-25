@@ -11,11 +11,14 @@
 \end{definition}
 
 \begin{align}
-     & \argmax\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                      \\
-     & \text{subject to} \notag                                                                                                                                                        \\
-     & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                         & \forall \src{p} \in S                                              \\
-     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1                                                 & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi} \\
-     & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                        & \forall (\src{p}, \tgt{p}) \in S \times T
+    \label{eq:objective}
+     & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                      \\
+     & \text{subject to} \notag                                                                                                                                                     \\
+    \label{eq:num_proj_const}
+     & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                      & \forall \src{p} \in S                                              \\
+     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1                                              & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi} \\
+    \label{eq:binary_prog}
+     & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
 \end{align}
 
 \begin{figure*}[t]
@@ -83,12 +86,12 @@ merge some constraints
 
 \begin{equation}
     \begin{aligned}
-         & \argmax\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                                                                   \\
-         & \text{subject to} \notag                                                                                                                                                                                                     \\
-         & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                         & \forall \src{p} \in S                                                                                           \\
-         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                       & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi                                                                          \\
-         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1                                                    & \forall \tgt{p} \in T | \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset \\
-         & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                        & \forall (\src{p}, \tgt{p}) \in S \times T
+         & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                                                                   \\
+         & \text{subject to} \notag                                                                                                                                                                                                  \\
+         & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                      & \forall \src{p} \in S                                                                                           \\
+         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                    & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi                                                                          \\
+         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1                                                 & \forall \tgt{p} \in T | \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset \\
+         & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
     \end{aligned}
 \end{equation}
 
@@ -217,11 +220,81 @@ weighted sum of scores
     \caption{The diagram of the general idea of the reduction MaxIS problem to the proposed ILP problem}
 \end{figure}
 
-definition of the Max Independent Set problem
+\begin{definition}[MaxIS] \label{def:maxis}
+    Let \( G=(V, E), V \neq \emptyset \) be a undirected graph, then a maximum independent set problem for the graph \( G \) is the following:
+    \begin{align*}
+         & \max \sum\limits_{v \in V} x_v                          \\
+         & x_u + x_v \leq 1               & \forall \{u, v\} \in E \\
+         & x_v \in \{0, 1\}
+    \end{align*}
+
+\end{definition}
 
 Idea of the reduction to the MIS (explanation) (without constraint with nproj)
 
+We will consider that target nodes \( t_u, t_v \in T_{V} \) that correspond to graph's nodes \( u, v \in V \) overlap
+if and only if there is an edge in the graph \( G \) between these nodes:
+\[
+    t_u \cap t_v \neq \emptyset \Leftrightarrow \exists \{ u, v \} \in E
+\]
+In the case when \( t_u = t_v \) we will also consider that these nodes overlap.
+
+
+\begin{table}
+    \begin{subfigure}[t]{0.5\linewidth}
+        \centering
+        \renewcommand{\arraystretch}{1.5}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            \(<\)                                 & \( \leq \), \( = \)               & \(>\), \( \geq \) \\
+            \hline
+            \( \ceil{\frac{|V|}{n_{proj} - 1}} \) & \( \ceil{\frac{|V|}{n_{proj}}} \) & 1                 \\
+            \hline
+        \end{tabular}
+        \caption{For source nodes}
+        \label{tab:src_dummy_nodes_num}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.5\linewidth}
+        \centering
+        \renewcommand{\arraystretch}{1.5}
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            \(<\), \(\leq\) & \( = \)                                       & \( \geq \)         & \(>\)          \\
+            \hline
+            \( 0 \)         & \( \ceil{\frac{|V|}{n_{proj}}} n_{proj} - 1\) & \( n_{proj} - 1 \) & \( n_{proj} \) \\
+            \hline
+        \end{tabular}
+        \caption{For target nodes}
+        \label{tab:tgt_dummy_nodes_num}
+    \end{subfigure}
+    \caption{Number of dummy nodes for every type of constraints \eqref{eq:num_proj_const}}
+    \label{tab:dummy_nodes_num}
+\end{table}
+
 What is optimal solution and quotient set of solutions
+\[
+    T^*_{x} = \{ t \in T_V | \exists s \in S, x_{s, t} = 1 \}
+\]
+
+Let's \( x_1, x_2 \) be a two feasible solutions of problem \eqref{}, then we will say that
+they are in relation~\( \sim \) if their corresponding solutions of the MaxIS problem are equal:
+\[
+    x_1 \sim x_2 \Leftrightarrow T^{*}_{x_1} = T^{*}_{x_2}
+\]
+Since this relation defined by an equality of sets it is reflexive, symmetric and transitive and therefore
+equivalence relation.
+
+Then quotient set \( \quot{X}{\sim} \) will consist of all equivalence classes of feasible solutions
+that differ only in matching of dummy nodes. Let's notice that the objective function value is equal for all
+elements of any equivalence class.
+\begin{lemma}
+    Cost inside equiv. class are constant
+\end{lemma}
+\begin{proof}
+    Trust me!
+\end{proof}
+
+Thus we will call optimal an equivalence class with the highest objective value.
 
 \begin{lemma}
     If we take an edge from source to target, delete it and connect to another source, the solution is steal optimal
@@ -235,7 +308,7 @@ What is optimal solution and quotient set of solutions
 \end{corollary}
 
 \begin{theorem}[]
-    The proposed ILP problem is NP-hard
+    The proposed ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} is NP-hard
 \end{theorem}
 \begin{proof}
     Trust me!
