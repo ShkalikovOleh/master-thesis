@@ -208,11 +208,11 @@ can not be negative.
     Let's look at case when the sum is equal to \( 1 \).
     \begin{equation} \label{eq:derivation_of_const_reduction}
         \begin{aligned}
-            & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) = 1
-        \stackrel{\eqref{eq:binary_prog}}{\implies}                                                       \\
-         & \exists! \tgt{p} \in S, \exists! \tgt{p} \in \{ \tgt{p_1}, \tgt{p_2}\}
-        \Bigg| x_{\src{p}, \tgt{p}} = 1 \implies                                                          \\
-         & \forall \src{p_1}, \src{p_2} \in S, x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+             & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) = 1
+            \stackrel{\eqref{eq:binary_prog}}{\implies}                                                       \\
+             & \exists! \src{p} \in S, \exists! \tgt{p} \in \{ \tgt{p_1}, \tgt{p_2}\}
+            \Bigg| x_{\src{p}, \tgt{p}} = 1 \implies                                                          \\
+             & \forall \src{p_1}, \src{p_2} \in S, x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
         \end{aligned}
     \end{equation}
     Therefore we proved that
@@ -237,7 +237,10 @@ can not be negative.
     \begin{multline*}
         \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)
         \qquad
-        \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1
+        \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}})
+        =
+        \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p_1}} +
+        \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p_2}} \leq 1
         \implies                        \\
         \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
         \quad
@@ -248,7 +251,7 @@ can not be negative.
     And using exactly the same derivation as above \eqref{eq:derivation_of_const_reduction} we get:
     \begin{align*}
         x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} \leq 1 \qquad
-         & \forall \src{p_1}, \src{p_1} \in S, \src{p_1} != \src{p_2}                                                          \\
+         & \forall \src{p_1}, \src{p_1} \in S, \src{p_1} \neq \src{p_2}                                                        \\
          & \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
     \end{align*}
     So, only the case, when entity has no overlapped entity that are
