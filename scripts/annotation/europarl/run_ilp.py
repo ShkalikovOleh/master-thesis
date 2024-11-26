@@ -54,7 +54,7 @@ def main(cfg: argparse.Namespace):
                 f"+pipeline.cand_extraction.transform.max_words={cfg.max_cand_length}"
             ]
             if pipeline == "ner":
-                ds_params = ds_params[:-1]
+                curr_ds_params = ds_params[:-1]
                 additional_params.append(
                     f"pipeline.cand_eval.transform.model_path={cfg.ner_model}"
                 )
@@ -62,7 +62,7 @@ def main(cfg: argparse.Namespace):
                     f"pipeline.cand_eval.transform.batch_size={cfg.ner_batch_size}"
                 )
             elif pipeline == "nmtscore":
-                ds_params = ds_params[:-1]
+                curr_ds_params = ds_params[:-1]
                 additional_params.append(
                     (
                         "pipeline.project.transform.cost_params.0.tgt_lang="
@@ -75,13 +75,15 @@ def main(cfg: argparse.Namespace):
                         f"{cfg.trans_batch_size}"
                     )
                 )
+            else:
+                curr_ds_params = ds_params
 
             python_call = [
                 "python",
                 "-m",
                 "src.pipeline.run_pipeline",
                 f"tgt_lang={lang}",
-                *ds_params,
+                *curr_ds_params,
                 pipe_param,
                 solver_param,
                 constr_type_param,
