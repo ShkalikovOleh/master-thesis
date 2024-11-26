@@ -30,17 +30,13 @@ def main(cfg: argparse.Namespace):
     constraints = make_constraints_option_list(cfg)
 
     for lang in cfg.langs:
-        orig_ds_params = [
+        ds_params = [
             "pipeline.load_ds.transform.dataset_path=ShkalikovOleh/europarl-ner",
             "pipeline.load_ds.transform.split=test",
             f"pipeline.load_ds.transform.cfg_name={lang}",
-        ]
-        align_ds_param = (
-            f"pipeline.load_alignments.transform.dataset_path={cfg.align_path}"
-        )
-        src_ds_param = (
             f"pipeline.load_entities.transform.dataset_path={cfg.src_entities_path}"
-        )
+            f"pipeline.load_alignments.transform.dataset_path={cfg.align_path}",
+        ]
 
         for pipeline, solver, constraint in product(
             cfg.pipelines, cfg.solvers, constraints
@@ -58,15 +54,15 @@ def main(cfg: argparse.Namespace):
                 f"+pipeline.cand_extraction.transform.max_words={cfg.max_cand_length}"
             ]
             if pipeline == "ner":
+                ds_params = ds_params[:-1]
                 additional_params.append(
                     f"pipeline.cand_eval.transform.model_path={cfg.ner_model}"
                 )
                 additional_params.append(
                     f"pipeline.cand_eval.transform.batch_size={cfg.ner_batch_size}"
                 )
-                align_ds_param = ""
             elif pipeline == "nmtscore":
-                align_ds_param = ""
+                ds_params = ds_params[:-1]
                 additional_params.append(
                     (
                         "pipeline.project.transform.cost_params.0.tgt_lang="
@@ -85,9 +81,7 @@ def main(cfg: argparse.Namespace):
                 "-m",
                 "src.pipeline.run_pipeline",
                 f"tgt_lang={lang}",
-                *orig_ds_params,
-                align_ds_param,
-                src_ds_param,
+                *ds_params,
                 pipe_param,
                 solver_param,
                 constr_type_param,
