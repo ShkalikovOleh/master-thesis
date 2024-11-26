@@ -50,12 +50,10 @@ a relation of overlapping, then the projection ILP problem is the following:
 \end{align}
 where \( \hat{\Pi}(S, T) \) is a set of source entities -- target candidates combinations that can not be
 projected onto together since they are overlapping. This set is defined as follows:
-\begin{equation} \label{eq:overlapping_set}
-    \begin{aligned}
-        \hat{\Pi}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
-        (\src{p_1} \neq \src{p_2}) \lor (\tgt{p_1} \neq \tgt{p_2}) \Big\}
-    \end{aligned}
-\end{equation}
+\begin{align} \label{eq:overlapping_set}
+    \hat{\Pi}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
+    (\src{p_1} \neq \src{p_2}) \lor (\tgt{p_1} \neq \tgt{p_2}) \Big\}
+\end{align}
 
 Here every variable \( x_{\src{p}, \tgt{p}} \) represents whether the source entity \( \src{p} \in S \)
 is projected to the target candidates \( \tgt{p} \in T \).
@@ -155,19 +153,117 @@ can not be negative.
     Set of constraints \eqref{eq:non_overlap_const} is satisfied if and only if
     the following sets of reduced constraints are satisfied:
     \begin{align*}
-         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1 & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)                                                                           \\
-         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1                              & \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset \\
+         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                                & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T) \\
+         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1
+         & \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset                                             \\
     \end{align*}
     where
     \begin{equation*}
-        \Pi(T) = \left\{ (\tgt{p_1}, \tgt{p_2}) \Big| \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset,        \tgt{p_1} \neq \tgt{p_2} \right\}
+        \Pi(T) = \left\{ (\tgt{p_1}, \tgt{p_2}) \Big| \tgt{p_1}, \tgt{p_2} \in T,
+        \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset,
+        \tgt{p_1} \neq \tgt{p_2} \right\}
     \end{equation*}
 \end{theorem}
 \begin{proof}
-    Trust me!
+    \textit{Necessity:} Assume that constraints \eqref{eq:non_overlap_const} are satisfied, but
+    the proposed constraints are not. Then there are two options:
+    \[
+        \exists (\tgt{p_1}, \tgt{p_2}) \in \Pi(T) \Bigg| \quad
+        \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) > 1
+    \]
+    or
+    \[
+        \exists \tgt{p} \in T \Big|
+        \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
+        \Bigg| \quad \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} > 1
+    \]
+
+    Consider the first option:
+    \begin{align*}
+         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) > 1
+        \stackrel{\eqref{eq:binary_prog}}{\implies}                                                                     \\
+         & \exists \src{p_1}, \src{p_2} \in S \Big| x_{\src{p_1}, \tgt{p_1}} = 1, x_{\src{p_2}, \tgt{p_2}} = 1 \implies \\
+         & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} = 2 > 1
+    \end{align*}
+    that contradicts our assumption that constraints \eqref{eq:non_overlap_const} are satisfied.
+
+    The same result we can obtain for the second case:
+    \begin{align*}
+         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} > 1
+        \stackrel{\eqref{eq:binary_prog}}{\implies}                                                                                           \\
+         & \exists \src{p_1}, \src{p_2} \in S, \src{p_1} \neq \src{p_2} \Big| x_{\src{p_1}, \tgt{p}} = 1, x_{\src{p_2}, \tgt{p}} = 1 \implies \\
+         & x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} = 2 > 1
+    \end{align*}
+
+    Thus we proved necessity.
+
+    \textit{Sufficiency:}
+    Suppose that the following constraints are satisfied:
+    \[
+        \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1
+        \qquad \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)
+    \]
+    Then the sum could be equal to \( 0 \) or \( 1 \). If it is zero then none entities are projected onto
+    any of these overlapped candidates and therefore constraints \eqref{eq:non_overlap_const} are not violated.
+    Let's look at case when the sum is equal to \( 1 \).
+    \begin{equation} \label{eq:derivation_of_const_reduction}
+        \begin{aligned}
+            & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) = 1
+        \stackrel{\eqref{eq:binary_prog}}{\implies}                                                       \\
+         & \exists! \tgt{p} \in S, \exists! \tgt{p} \in \{ \tgt{p_1}, \tgt{p_2}\}
+        \Bigg| x_{\src{p}, \tgt{p}} = 1 \implies                                                          \\
+         & \forall \src{p_1}, \src{p_2} \in S, x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+        \end{aligned}
+    \end{equation}
+    Therefore we proved that
+    \[
+        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1 \qquad
+        \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi'}(S, T)
+    \]
+    where
+    \begin{align*}
+        \hat{\Pi'}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
+        \tgt{p_1} \neq \tgt{p_2} \Big\}
+    \end{align*}
+
+    But it is not the same as set \eqref{eq:overlapping_set}:
+    \[
+        \hat{\Pi}(S, T) \setminus \hat{\Pi'}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \tgt{p_1} = \tgt{p_2},
+        \src{p_1} \neq \src{p_2} \Big\}
+    \]
+    So we need to check whether constraints \eqref{eq:non_overlap_const} are satisfied on this set difference.
+
+    First of all, let's notice that
+    \begin{multline*}
+        \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)
+        \qquad
+        \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1
+        \implies                        \\
+        \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
+        \quad
+        \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1
+    \end{multline*}
+    Therefore there exists at most one source entity \( \src{p} \in S \) that are projected
+    to the target candidate \( \tgt{p} \).
+    And using exactly the same derivation as above \eqref{eq:derivation_of_const_reduction} we get:
+    \begin{align*}
+        x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} \leq 1 \qquad
+         & \forall \src{p_1}, \src{p_1} \in S, \src{p_1} != \src{p_2}                                                          \\
+         & \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
+    \end{align*}
+    So, only the case, when entity has no overlapped entity that are
+    not equal to it, remains. But this case is fully covered by the second part of the proposed reduced constraints:
+    \[
+        \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1 \qquad
+        \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
+    \]
+    And by considering that this sum can be either \( 0 \) or \( 1 \) and making
+    exactly the same derivation as in the \eqref{eq:derivation_of_const_reduction} we conclude that it implies that constraints \eqref{eq:non_overlap_const}
+    satisfies.
 \end{proof}
 
-As a result we end up with the following final formulation of the ILP problem for the projection step
+The theorem allows us to reduce number of constraints and make them scale as a constant
+with respect to the number of source entities. As a result we end up with the following final formulation of the ILP problem for the projection step
 of the XLNER pipeline.
 \begin{equation} \label{eq:ilp}
     \begin{aligned}
