@@ -56,7 +56,7 @@ $RUN pipeline=annotation/full/model_transfer tgt_lang=$lang \
     pipeline.apply_ner.transform.batch_size=$NER_ALIGN_BATCH_SIZE
 
 # Compute maximum length of entities in the GT dataset
-MAX_CAND_LENGTH=$(python3 $SRC_DIR/scripts/utils/count_max_entity_length.py -d masakhane/masakhaner2 -s test -c bam | awk 'FNR == 10 {print int($2)}')
+MAX_CAND_LENGTH=$(python3 $SRC_DIR/scripts/utils/count_max_entity_length.py -d ShkalikovOleh/europarl-ner -s test -c $lang | awk 'FNR == 10 {print int($2)}')
 
 aligners=(awesome_mbert)
 for aligner in ${aligners[@]}
@@ -95,7 +95,8 @@ do
         --align_path $ALIGNMENTS_PATH \
         --ner-model $TGT_NER_MODEL \
         --ner-batch-size $NER_ALIGN_BATCH_SIZE \
-        --trans-batch-size $TRANS_BATCH_SIZE
+        --trans-batch-size $TRANS_BATCH_SIZE \
+        --max-cand-length $MAX_CAND_LENGTH
 
 done
 
