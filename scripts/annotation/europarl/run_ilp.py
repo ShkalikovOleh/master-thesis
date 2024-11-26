@@ -51,7 +51,7 @@ def main(cfg: argparse.Namespace):
             )
 
             additional_params = [
-                f"+pipeline.cand_extraction.transform.max_words={cfg.max_cand_length}"
+                f"++pipeline.cand_extraction.transform.max_words={cfg.max_cand_length}"
             ]
             if pipeline == "ner":
                 curr_ds_params = ds_params[:-1]
