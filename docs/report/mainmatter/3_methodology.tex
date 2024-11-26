@@ -1,7 +1,25 @@
 \chapter{Methodology}
 \label{sec:methodology}
+The overall idea of formalization the projection step of the XLNER pipeline
+is to represent it as a matching the source entities and ranges of words
+of the target sentence, called candidates. It is shown on the figure \ref{fig:cand_matching}.
+The set of source entities that we need to project is given, so let's take some set of
+continuous word ranges from the original sentence in the target language
+and consider them as a possible projection of some entities. Then compute
+quantities how likely a source entity should be projected onto every candidate.
+And then we should take such a combination of source entities-target candidates
+that maximize overall sum of selected tuples. But we need to take in mind
+natural constraints that should be ensured. Assume two source entities
+projects onto overlapping candidates, then we cannot precisely answer which source
+entity overlapped words are projected to, therefore we should prohibit projection
+onto overlapped candidates. Also, it makes sense to limit how many candidates every
+source entity can be projected to, since usually we expect 1-to-1 correspondence
+between source entities and entities of the target sentence. Based on this simple
+properties let's build an integer linear optimization problem and study it.
 
 \section{Formulation of the ILP problem}
+In order to properly build the optimization problem first of all let's define
+sets and relations that we will use.
 
 \begin{definition}[Source entity]
 
@@ -10,16 +28,48 @@
 
 \end{definition}
 
+\begin{definition}[Relation of overlapping] \label{def:overlapping}
+
+\end{definition}
+
+Having defined all necessary objects we can finale formulate the ILP problem for a
+projection step of the XLNER pipeline.
+
+Let \( S \) be a set of source entities, \( T \) -- set of target candidates and \( \cap \subset T^2 \) is
+a relation of overlapping, then the projection ILP problem is the following:
 \begin{align}
     \label{eq:objective}
-     & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                      \\
-     & \text{subject to} \notag                                                                                                                                                     \\
+     & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                            \\
+     & \text{subject to} \notag                                                                                                                                                           \\
     \label{eq:num_proj_const}
-     & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                      & \forall \src{p} \in S                                              \\
-     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1                                              & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi} \\
+     & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                      & \forall \src{p} \in S                                                    \\
+    \label{eq:non_overlap_const}
+     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1                                              & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \\
     \label{eq:binary_prog}
      & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
 \end{align}
+where \( \hat{\Pi}(S, T) \) is a set of source entities -- target candidates combinations that can not be
+projected onto together since they are overlapping. This set is defined as follows:
+\begin{equation} \label{eq:overlapping_set}
+    \begin{aligned}
+        \hat{\Pi}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
+        (\src{p_1} \neq \src{p_2}) \lor (\tgt{p_1} \neq \tgt{p_2}) \Big\}
+    \end{aligned}
+\end{equation}
+
+Here every variable \( x_{\src{p}, \tgt{p}} \) represents whether the source entity \( \src{p} \in S \)
+is projected to the target candidates \( \tgt{p} \in T \).
+The set of constraints \eqref{eq:non_overlap_const} ensures that it is impossible to have a situation when
+two or one source entity are being projected onto overlapping target candidates.
+And other set of constraints \eqref{eq:num_proj_const} limits number of projections
+for every source entity. Note, that the inequality sign is not fixed since any form
+could make sense: less, less or equal and equal can be used to ensure that we don't
+project a source entity to as much available candidates as possible as long as it
+increase the objection value, and great or great or equal can be a way to enforce
+that a source entiry will be projected at least specified number of times, e.g. once,
+and solver will not simply ignore it. It is clear that \( n_{proj} = 0 \) is a corner
+case and usually doesn't make sense except greater inequality when it simply
+eliminates any limits and equivalent to not have any constraints of such type.
 
 \begin{figure*}[t]
     \centering
@@ -65,32 +115,67 @@
     \label{fig:cand_matching}
 \end{figure*}
 
-\begin{theorem}
+However the number of constraints \eqref{eq:non_overlap_const} scales as a cube with respect to
+length of the target sentence, assuming that we use all possible continuous subranges as candidates, and as
+a scare with respect to the number of source entities.
+It can make this problem harder to solve. Therefore we need to try to lower number of constraints
+of this type. For this let's take a look at the overlapping relation that a basis of it.
+\begin{lemma} \label{lemma:not_transitive}
     The relation of overlapping is not transitive.
-\end{theorem}
+\end{lemma}
 \begin{proof}
-    Trust me!
+    We will proof this by showing a counterexample.
+    Assume the following target candidates
+    \[
+        a = (2, 4) \quad b = (1, 2) \quad c = (4, 5)
+    \]
+    By the definition of the overlapping relation \( a \cap b \neq \emptyset \) and
+    \( a \cap c \neq \emptyset \) but \( b \) and \( c \) are not overlapping.
 \end{proof}
 
+This fact leads to the impossibility to split all target candidates into groups of mutually
+overlapped candidates and choice at maximum one candidate from every group to match with a source entity.
 \begin{corollary}
-    We can not simplify constraints too much
+    It is impossible to partition set of target candidates such that every partition consists of
+    candidates that are pairwise overlapping with each other and there are no overlapping candidates
+    that are in different partitions.
 \end{corollary}
+\begin{proof}
+    By Lemma \ref{lemma:not_transitive} the overlapping relation is not transitive and therefore
+    is not an equivalence relation that implies we can not construct a quotient set.
+\end{proof}
 
-merge some constraints
+Nevertheless it is possible to make number of constraints \eqref{eq:non_overlap_const} lower.
+The idea behind the reduction is that if it is impossible to project one or any two source entities to
+overlapped candidates it means that it impossible to project any number of source entities to these candidates.
+Thus we can just sum up constraints over all source entities.
+We can do it because all variables \( x_{\src{p}, \tgt{p}} \) are binary and therefore
+can not be negative.
 \begin{theorem}
-    Merged constr and original are equivalent
+    Set of constraints \eqref{eq:non_overlap_const} is satisfied if and only if
+    the following sets of reduced constraints are satisfied:
+    \begin{align*}
+         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1 & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)                                                                           \\
+         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1                              & \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset \\
+    \end{align*}
+    where
+    \begin{equation*}
+        \Pi(T) = \left\{ (\tgt{p_1}, \tgt{p_2}) \Big| \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset,        \tgt{p_1} \neq \tgt{p_2} \right\}
+    \end{equation*}
 \end{theorem}
 \begin{proof}
     Trust me!
 \end{proof}
 
-\begin{equation}
+As a result we end up with the following final formulation of the ILP problem for the projection step
+of the XLNER pipeline.
+\begin{equation} \label{eq:ilp}
     \begin{aligned}
-         & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                                                                   \\
-         & \text{subject to} \notag                                                                                                                                                                                                  \\
-         & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                      & \forall \src{p} \in S                                                                                           \\
-         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                    & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi                                                                          \\
-         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1                                                 & \forall \tgt{p} \in T | \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset \\
+         & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                                                                       \\
+         & \text{subject to} \notag                                                                                                                                                                                                      \\
+         & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                      & \forall \src{p} \in S                                                                                               \\
+         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                    & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)                                                                           \\
+         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1                                                 & \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset \\
          & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
     \end{aligned}
 \end{equation}
@@ -148,8 +233,27 @@ weighted sum of scores
 \end{equation}
 
 \section{Analysis of the ILP problem}
+Despite the fact that the proposed ILP problem is just a particular case
+of well-studied the general binary programming problem it doesn't imply that
+it inherits all properties of it. For example, maximum bipartite matching problem
+can be formulated as an instance of the ILP problem, but still can be solved in a
+polynomial time, whereas general case of ILP is NP-hard. That motivates a deeper analysis
+of the proposed formulation.
 
-\subsection{Hardness of the problem}
+\subsection{Complexity}
+Constraints, especially \eqref{eq:non_overlap_const}, play a crucial role in a complexity
+of the proposed problem. In the case if all candidates are nor overlapping and constraints
+\eqref{eq:num_proj_const} has a form of equalities with \( n_{proj} = 1 \) the problem reduces to
+an instance of the weighted bipartite matching problem, that is in complexity class \( P \). But let's study
+more general case.
+
+For the sake of convenience we will use the first form \eqref{eq:objective}--\eqref{eq:binary_prog}
+of the ILP problem in this section, but since it equivalent to the \eqref{eq:ilp} it doesn't affect
+the results of the analysis.
+
+The usual way to prove the complexity of some problem is to reduce other problem with known complexity to
+an instance of the studied one. Thus let's consider the maximum independent set problem \cite{pemmaraju2003computational}.
+
 \begin{figure}[ht]
     \begin{subfigure}{.5\textwidth}
         \centering
@@ -166,7 +270,7 @@ weighted sum of scores
                 (6) -- (2) -- (3)
             };
         \end{tikzpicture}
-        \caption{Maximum independent set problem (MaxIS). Vertices that form an optimal solution are colored in \textcolor{green!60}{green}.}
+        \caption{Maximum independent set problem (MaxIS). Vertices that form an optimal solution are colored in \textbf{\textcolor{green!50}{green}}}
     \end{subfigure}
     \begin{subfigure}{.5\textwidth}
         \centering
@@ -193,55 +297,81 @@ weighted sum of scores
             \node[below=of 5, text=gray, font=\scriptsize] {Target nodes};
 
             \draw[green] (src_1) -- (1);
-            \draw[gray!40] (src_1) -- node[below left, black, font=\small]{1} (2);
-            \draw[gray!40] (src_1) -- (3);
-            \draw[gray!40] (src_1) -- (4);
-            \draw[gray!40] (src_1) -- (5);
-            \draw[gray!40] (src_1) -- (6);
-            \draw (src_1) -- (dummy_1);
-            \draw (src_1) -- (dummy_2);
-            \draw[gray!40] (src_2) -- (2);
+            \draw (src_1) -- node[above left, xshift=3, rotate=60, black, font=\footnotesize]{c=1} (2);
+            \draw (src_1) -- (3);
+            \draw (src_1) -- (4);
+            \draw (src_1) -- (5);
+            \draw (src_1) -- (6);
+            \draw[gray!40] (src_1) -- (dummy_1);
+            \draw[gray!40] (src_1) -- (dummy_2);
+            \draw (src_2) -- (2);
             \draw[green] (src_2) -- (3);
-            \draw[gray!40] (src_2) -- (4);
-            \draw[gray!40] (src_2) -- (5);
-            \draw[gray!40] (src_2) -- (6);
-            \draw (src_2) -- (dummy_1);
-            \draw (src_2) -- (dummy_2);
-            \draw[gray!40] (src_3) -- (2);
-            \draw[gray!40] (src_3) -- (3);
+            \draw (src_2) -- (4);
+            \draw (src_2) -- (5);
+            \draw (src_2) -- (6);
+            \draw[gray!40] (src_2) -- (dummy_1);
+            \draw[gray!40] (src_2) -- (dummy_2);
+            \draw (src_3) -- (2);
+            \draw (src_3) -- (3);
             \draw[green] (src_3) -- (4);
-            \draw[gray!40] (src_3) -- (5);
-            \draw[gray!40] (src_3) -- (6);
-            \draw (src_3) -- (dummy_1);
-            \draw (src_3) -- node[above, font=\small]{0} (dummy_2);
+            \draw (src_3) -- (5);
+            \draw (src_3) -- (6);
+            \draw[gray!40] (src_3) -- (dummy_1);
+            \draw[gray!40] (src_3) -- node[above right, black, font=\footnotesize]{c=0} (dummy_2);
         \end{tikzpicture}
-        \caption{Reduction to the proposed ILP problem. \textcolor{blue!60}{Blue} depicts dummy nodes.}
+        \caption{Reduction to the proposed ILP problem. Dummy nodes are colored in \textcolor{blue!60}{blue}}
     \end{subfigure}
     \caption{The diagram of the general idea of the reduction MaxIS problem to the proposed ILP problem}
+    \label{fig:maxis_reduction}
 \end{figure}
 
+The maximum independent set problem is a problem of finding a subset of vertices of some undirected
+graph with maximum cardinality, such that it doesn't contain any vertices connected by edges of the graph.
+An example of the maximum independent set problem is depicted on the figure \ref{fig:maxis_reduction} (a).
+The formal definition as an ILP problem is given by \ref{def:maxis}.
 \begin{definition}[MaxIS] \label{def:maxis}
-    Let \( G=(V, E), V \neq \emptyset \) be a undirected graph, then a maximum independent set problem for the graph \( G \) is the following:
+    Let \( G=(V, E), V \neq \emptyset \) be an undirected graph, then a maximum independent set problem for the graph \( G \) is the following:
     \begin{align*}
-         & \max \sum\limits_{v \in V} x_v                          \\
-         & x_u + x_v \leq 1               & \forall \{u, v\} \in E \\
+         & \max \sum\limits_{v \in V} x_v                               \\
+         & x_u + x_v \leq 1               \qquad \forall \{u, v\} \in E \\
          & x_v \in \{0, 1\}
     \end{align*}
-
 \end{definition}
+
+The MaxIS problem is an NP-hard \cite{pemmaraju2003computational} problem since VertexCover can be reduced to an instance of
+this problem. But what is even more interesting for us is that this problem looks very similar to the
+our projection ILP problem, except the fact, that set of constraint \eqref{eq:num_proj_const} are
+omitted and costs are equal to \( 1 \). Moreover, the relation whether two edges of the graph are adjacent
+is not transitive as well as the relation of overlapping \ref{def:overlapping}! That's why we will try to reduce
+the maximum independent set problem to an instance of the proposed ILP problem.
 
 Idea of the reduction to the MIS (explanation) (without constraint with nproj)
 
 We will consider that target nodes \( t_u, t_v \in T_{V} \) that correspond to graph's nodes \( u, v \in V \) overlap
-if and only if there is an edge in the graph \( G \) between these nodes:
+if and only if there is an edge in the graph \( G \) between these nodes or \( u = v \).
 \[
-    t_u \cap t_v \neq \emptyset \Leftrightarrow \exists \{ u, v \} \in E
+    t_u \cap t_v \neq \emptyset \Leftrightarrow
+    \Biggl[
+    \begin{array}{l}
+        \{ u, v \} \in E \\
+        u = v
+    \end{array}
 \]
-In the case when \( t_u = t_v \) we will also consider that these nodes overlap.
+Such a definition of overlapping allow us to match all properties, i.e. reflexivity, symmetricity and non transitivity,
+of overlapping relation on word ranges in the initial definition \ref{def:overlapping}. The fact that we consider
+overlapping nodes that correspond to the same vertex simply means that it is impossible to
+add the same vertex in the independent set to time which is a property of the any set.
 
+\begin{equation} \label{eq:reduction_without_nproj}
+    \begin{aligned}
+         & \max \sum\limits_{v \in V} x_v                          \\
+         & x_u + x_v \leq 1               & \forall \{u, v\} \in E \\
+         & x_v \in \{0, 1\}
+    \end{aligned}
+\end{equation}
 
-\begin{table}
-    \begin{subfigure}[t]{0.5\linewidth}
+\begin{table}[h]
+    \begin{subtable}[t]{0.5\linewidth}
         \centering
         \renewcommand{\arraystretch}{1.5}
         \begin{tabular}{|c|c|c|}
@@ -253,20 +383,20 @@ In the case when \( t_u = t_v \) we will also consider that these nodes overlap.
         \end{tabular}
         \caption{For source nodes}
         \label{tab:src_dummy_nodes_num}
-    \end{subfigure}
-    \begin{subfigure}[t]{0.5\linewidth}
+    \end{subtable}
+    \begin{subtable}[t]{0.5\linewidth}
         \centering
         \renewcommand{\arraystretch}{1.5}
         \begin{tabular}{|c|c|c|c|}
             \hline
-            \(<\), \(\leq\) & \( = \)                                       & \( \geq \)         & \(>\)          \\
+            \(<\), \(\leq\) & \( = \)                                    & \(>\)          & \( \geq \)         \\
             \hline
-            \( 0 \)         & \( \ceil{\frac{|V|}{n_{proj}}} n_{proj} - 1\) & \( n_{proj} - 1 \) & \( n_{proj} \) \\
+            \( 0 \)         & \( \ceil{\frac{|V|}{n_{proj}}} n_{proj} \) & \( n_{proj} \) & \( n_{proj} + 1 \) \\
             \hline
         \end{tabular}
         \caption{For target nodes}
         \label{tab:tgt_dummy_nodes_num}
-    \end{subfigure}
+    \end{subtable}
     \caption{Number of dummy nodes for every type of constraints \eqref{eq:num_proj_const}}
     \label{tab:dummy_nodes_num}
 \end{table}
@@ -276,7 +406,7 @@ What is optimal solution and quotient set of solutions
     T^*_{x} = \{ t \in T_V | \exists s \in S, x_{s, t} = 1 \}
 \]
 
-Let's \( x_1, x_2 \) be a two feasible solutions of problem \eqref{}, then we will say that
+Let's \( x_1, x_2 \) be a two feasible solutions of problem \eqref{eq:reduction_without_nproj}, then we will say that
 they are in relation~\( \sim \) if their corresponding solutions of the MaxIS problem are equal:
 \[
     x_1 \sim x_2 \Leftrightarrow T^{*}_{x_1} = T^{*}_{x_2}
@@ -297,7 +427,8 @@ elements of any equivalence class.
 Thus we will call optimal an equivalence class with the highest objective value.
 
 \begin{lemma}
-    If we take an edge from source to target, delete it and connect to another source, the solution is steal optimal
+    Let \( x \) be a feasible solution of the problem \eqref{eq:reduction_without_nproj}.
+    Then a solution \( x^* \) such that \( t \in T \)
 \end{lemma}
 \begin{proof}
     Trust me!
