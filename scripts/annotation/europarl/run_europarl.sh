@@ -2,16 +2,10 @@ CFG_FILE=$1
 
 if [[ $# -eq 1 ]]
 then
-    SRC_NER_MODEL=ShkalikovOleh/mdeberta-v3-base-conll2003-en
-    TGT_NER_MODEL=$SRC_NER_MODEL
+    TGT_NER_MODEL=ShkalikovOleh/mdeberta-v3-base-conll2003-en
 elif [[ $# -eq 2 ]]
 then
-    SRC_NER_MODEL=$2
-    TGT_NER_MODEL=$SRC_NER_MODEL
-elif [[ $# -eq 3 ]]
-then
-    SRC_NER_MODEL=$2
-    TGT_NER_MODEL=$3
+    TGT_NER_MODEL=$2
 else
     echo "Illegal number of parameters" >&2
     exit 2
@@ -37,7 +31,7 @@ do
         deps=""
     fi
 
-    sbatch_out=$(sbatch $deps $SRC_DIR/scripts/annotation/europarl/run_lang.sh $CFG_FILE $lang $SRC_NER_MODEL $TGT_NER_MODEL)
+    sbatch_out=$(sbatch $deps $SRC_DIR/scripts/annotation/europarl/run_lang.sh $CFG_FILE $lang $TGT_NER_MODEL)
     JOBID=$(echo $sbatch_out | awk '{print $4}')
     JOB_IDS+=($JOBID)
 
