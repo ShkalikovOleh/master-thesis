@@ -84,11 +84,13 @@ do
 
     # Heuristic aligment-based
     python $SRC_DIR/scripts/annotation/europarl/run_heuristics.py \
+        --langs $lang \
         --src-entities-path $SRC_ENTITIES_PATH\
         --align_path $ALIGNMENTS_PATH
 
     # ILP
     python $SRC_DIR/scripts/annotation/europarl/run_ilp.py \
+        --langs $lang \
         --src-entities-path $SRC_ENTITIES_PATH \
         --align_path $ALIGNMENTS_PATH \
         --ner-model $TGT_NER_MODEL \
