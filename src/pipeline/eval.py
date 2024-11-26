@@ -17,15 +17,19 @@ class SeqEvalIntrinsicEvaluation:
         gen_as_tags: bool = False,
         log_to_wandb: bool = True,
         batch_size: int = 1000,
-        labels_to_ignore: list[str] = [],
+        labels_to_ignore: list[str] | None = None,
     ) -> None:
         super().__init__()
         self.orig_column = orig_column
         self.gen_column = gen_column
         self.log_to_wandb = log_to_wandb
-        self.labels_to_ignore = labels_to_ignore
         self.batch_size = batch_size
         self.gen_as_tags = gen_as_tags
+
+        if labels_to_ignore:
+            self.labels_to_ignore = labels_to_ignore
+        else:
+            self.labels_to_ignore = []
 
     def __call__(self, ds: Dataset | DatasetDict) -> Dataset | DatasetDict:
         label_list, label_map = self.prepare_labels_mapping(ds)

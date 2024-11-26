@@ -31,9 +31,11 @@ if  [ -x "$(which sbatch)" ]; then
     nvidia-smi
 
     NER_ALIGN_BATCH_SIZE=256
+    TRANS_BATCH_SIZE=32
 else
     # Local execution
     NER_ALIGN_BATCH_SIZE=32
+    TRANS_BATCH_SIZE=2
 fi
 
 PIPE_CACHE_DIR=$WORKSPACE/cache/europarl/$lang
