@@ -55,7 +55,7 @@ def main(cfg: argparse.Namespace):
             )
 
             additional_params = [
-                f"pipeline.cand_extraction.transform.max_words={cfg.max_cand_length}"
+                f"+pipeline.cand_extraction.transform.max_words={cfg.max_cand_length}"
             ]
             if pipeline == "ner":
                 additional_params.append(
@@ -64,7 +64,9 @@ def main(cfg: argparse.Namespace):
                 additional_params.append(
                     f"pipeline.cand_eval.transform.batch_size={cfg.ner_batch_size}"
                 )
+                align_ds_param = ""
             elif pipeline == "nmtscore":
+                align_ds_param = ""
                 additional_params.append(
                     (
                         "pipeline.project.transform.cost_params.0.tgt_lang="
