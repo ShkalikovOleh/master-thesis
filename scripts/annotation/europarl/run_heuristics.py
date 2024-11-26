@@ -26,7 +26,9 @@ def main(cfg: argparse.Namespace):
             "pipeline.load_ds.transform.split=test",
             f"pipeline.load_ds.transform.cfg_name={lang}",
         ]
-        align_ds_param = f"pipeline.load_alignments.transform.dataset_path={cfg.aligns_path_prefix}_{lang}"  # noqa
+        align_ds_param = (
+            f"pipeline.load_alignments.transform.dataset_path={cfg.align_path}"
+        )
         src_ds_param = (
             f"pipeline.load_entities.transform.dataset_path={cfg.src_entities_path}"
         )
@@ -77,7 +79,7 @@ if __name__ == "__main__":
         type=str,
     )
     parser.add_argument(
-        "--aligns-path-prefix",
+        "--align_path",
         required=True,
         type=str,
     )

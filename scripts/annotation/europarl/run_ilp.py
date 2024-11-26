@@ -23,6 +23,9 @@ def make_constraints_option_list(cfg: argparse.Namespace) -> list[Constraint]:
     return constraints
 
 
+lang_code_map = {"de": "deu_Latn", "it": "ita_Latn", "es": "spa_Latn"}
+
+
 def main(cfg: argparse.Namespace):
     constraints = make_constraints_option_list(cfg)
 
@@ -32,7 +35,9 @@ def main(cfg: argparse.Namespace):
             "pipeline.load_ds.transform.split=test",
             f"pipeline.load_ds.transform.cfg_name={lang}",
         ]
-        align_ds_param = f"pipeline.load_alignments.transform.dataset_path={cfg.aligns_path_prefix}_{lang}"  # noqa
+        align_ds_param = (
+            f"pipeline.load_alignments.transform.dataset_path={cfg.align_path}"
+        )
         src_ds_param = (
             f"pipeline.load_entities.transform.dataset_path={cfg.src_entities_path}"
         )
@@ -49,6 +54,30 @@ def main(cfg: argparse.Namespace):
                 f"pipeline.project.transform.n_projected={constraint.n_proj}"
             )
 
+            additional_params = [
+                f"pipeline.cand_extraction.transform.max_words={cfg.max_cand_length}"
+            ]
+            if pipeline == "ner":
+                additional_params.append(
+                    f"pipeline.cand_eval.transform.model_path={cfg.ner_model}"
+                )
+                additional_params.append(
+                    f"pipeline.cand_eval.transform.batch_size={cfg.ner_batch_size}"
+                )
+            elif pipeline == "nmtscore":
+                additional_params.append(
+                    (
+                        "pipeline.project.transform.cost_params.0.tgt_lang="
+                        f"{lang_code_map[lang]}"
+                    )
+                )
+                additional_params.append(
+                    (
+                        "pipeline.project.transform.cost_params.0.batch_size="
+                        f"{cfg.trans_batch_size}"
+                    )
+                )
+
             python_call = [
                 "python",
                 "-m",
@@ -61,6 +90,7 @@ def main(cfg: argparse.Namespace):
                 solver_param,
                 constr_type_param,
                 constr_n_proj_param,
+                *additional_params,
             ]
 
             match cfg.executor:
@@ -79,7 +109,7 @@ if __name__ == "__main__":
         type=str,
     )
     parser.add_argument(
-        "--aligns-path-prefix",
+        "--align_path",
         required=True,
         type=str,
     )
@@ -107,6 +137,22 @@ if __name__ == "__main__":
         type=int,
         default=[1],
     )
+    parser.add_argument(
+        "--ner-model",
+        type=str,
+        default="ShkalikovOleh/mdeberta-v3-base-conll2003-en",
+    )
+    parser.add_argument(
+        "--ner-batch-size",
+        type=int,
+        default=32,
+    )
+    parser.add_argument(
+        "--trans-batch-size",
+        type=int,
+        default=2,
+    )
+    parser.add_argument("--max-cand-length", type=int, required=True)
     parser.add_argument(
         "--n-proj-greq",
         nargs="*",
@@ -136,8 +182,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--pipelines",
         nargs="*",
-        choices=["ngrams", "aligned_ngrams", "aligned_subranges"],
-        default=["aligned_ngrams", "aligned_subranges"],
+        choices=["ngrams", "aligned_ngrams", "ner", "nmtscore"],
+        default=["aligned_ngrams", "ner", "nmtscore"],
     )
 
     cfg = parser.parse_args()
