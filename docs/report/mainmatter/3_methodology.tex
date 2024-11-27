@@ -73,7 +73,7 @@ First of all let's start with a definition of overlapping.
 \end{definition}
 
 Having defined all necessary objects we can finally formulate the ILP problem for a
-projection step of the XLNER pipeline.
+projection step of the XLNER pipeline that aligns with our requirements.
 
 Let \( S \) be a set of source entities, \( T \) -- set of target candidates and \( \cap \subset T^2 \) is
 a relation of overlapping, then the projection ILP problem is the following:
@@ -308,15 +308,15 @@ target candidates. But when it comes to the computational point of view it can b
 number of all n-grams scales quadratically. And from the application point of view most of
 the candidates generated in such way are not good nominee to be a real target entity.
 
-One of the simplest way to handle this problem is to limit the maximum possible length of the candidate.
+One of the simplest idea to handle this problem is to limit the maximum possible length of the candidate.
 From the point of NER it is natural to expect that real target entities usually do not exceed some
 predefined number. For example it is unlikely that a person's name will contain more than 10 words or
 if we have 3 source entities there is a real target entity that contains all words of the target sentence.
 
-Thus, the algorithm for candidate extraction wilt bounded maximum length of n-grams are the following.
+Thus, the algorithm for candidates extraction wilt bounded maximum length of n-grams are the following.
 \begin{algorithm}
-    \KwData{\( n \in \mathrm{N} \) -- number of words in the target sentence,
-        \(M \leq n \in \mathrm{N} \) -- maximum length of a target candidate}
+    \KwData{\( n \in \mathbb{N} \) -- number of words in the target sentence,
+        \(M \leq n \in \mathbb{N} \) -- maximum length of a target candidate}
     \KwResult{\( T \) -- set of target candidates}
 
     \( T \gets \emptyset \) \;
@@ -330,7 +330,7 @@ Thus, the algorithm for candidate extraction wilt bounded maximum length of n-gr
     \label{alg:ngram_extraction}
 \end{algorithm}
 
-An alternative approach to candidates extraction is to use some model to generate candidates.
+An alternative approach for candidates extraction is to use some model to generate candidates.
 TProjection uses fine-tuned T5 model with beam-search to generate candidates. In theory any LLM can be finetuned
 to do it. But the main drawback of this approach is that we need to finetune these models for which we need
 a labeled dataset in a target language or rely on cross-lingual model transfer.
@@ -343,28 +343,114 @@ Therefore it make sense also consider multilingual encoder-only Transformer mode
 but we still need to train these model to extract candidates. In the following chapters we will not consider all
 these alternatives and leave for further works.
 
-\section{Matching score}
-\subsection{Alignment-based}
+\section{Matching scores}
+So far we have formulated and discussed the ILP problem \eqref{eq:ilp} that projects source entities onto
+target candidates using a matching score \( c_{\src{p}, \tgt{p}} \). This score represents
+how likely given source entity \( \src{p} \in S \) should be projected onto the target candidate \( \tgt{p} \in T \).
+But the question how to compute all these scores remains unanswered. In this section we will propose
+some options to evaluate them.
 
+\subsection{Alignment-based}
+In the chapter \ref{sec:background} it has been showed that word-to-word alignments can be used
+for the projection step of the XLNER pipeline. But it was done by the heuristic algorithm.
+Nevertheless we can try incorporate them into the proposed ILP problem by calculating scores of matching with use of
+word-to-word alignments.
+
+The matching score that inspired from this idea is the following:
 \begin{equation} \label{eq:align_cost}
-    c_{\src{p}, \tgt{p}}
+    c_{\src{p}, \tgt{p}} =
+    \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
+    {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}})}
 \end{equation}
 
-shrink candidate set + prove
-
-\begin{lemma}
-    If append unaligned word to a candidate cost will be smaller
+The form of the score based on the natural properties that we can expect from score that based on word-to-word alignments.
+First of all, the more aligned words between source entity and target candidates the higher should be a score.
+Secondly, we can not divide number of aligned word by length of only source entity then
+score will be higher for just longer target candidates.
+And the third property is especially useful: if we consider two candidates where one is a
+substring of other, but total number of aligned words between words of
+source entity and these candidates are the same, we should prefer smaller candidate.
+And the score \eqref{eq:align_cost} satisfies this requirement.
+\begin{lemma} \label{lemma:align_cost_decrease}
+    Suppose that for some pair of source entity \( \src{p} \in S \) and target candidate \( \tgt{p} \in T \)
+    the score \eqref{eq:align_cost} equal to c, then if there is an extended by 1 word to left or
+    right candidate \( \tgt{\hat{p}} \in T \) such as this word is not aligned to any word of source
+    entity, the score \eqref{eq:align_cost} between source entity and this target candidate
+    will be lower than \( c \).
 \end{lemma}
 \begin{proof}
-    Trust me!
+    Consider extension to the right, then \( \tgt{\hat{p}} = (i_{\tgt{p}}, j_{\tgt{p}} + 1) \). Since it is
+    given that this additional word is not aligned to any word of the source entity it means that:
+    \[
+        \sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} a_{k,j_{\tgt{p}} + 1} = 0
+    \]
+    Then
+    \begin{multline*}
+        c_{\src{p}, \tgt{\hat{p}}} =
+        \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}} + 1} a_{kl}}
+        {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{\hat{p}}} - i_{\tgt{\hat{p}}})} =                                \\
+        \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
+        {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} + 1 - i_{\tgt{p}})} +
+        \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} a_{k,j_{\tgt{p}} + 1}}
+        {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} + 1 - i_{\tgt{p}})} =                                        \\
+        \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
+        {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}}) + 1} <
+        \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
+        {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}})} = c
+    \end{multline*}
+    The derivation for the extension to the left where \( \tgt{\hat{p}} = (i_{\tgt{p}} - 1, j_{\tgt{p}}) \) is structurally the same, so we
+    proved the lemma.
 \end{proof}
 
+\begin{corollary}
+    The cost of the extended candidate \( \tgt{p_{+n}} \) of the target candidate \( \tgt{p} \) to the left or right with
+    \( n \in \mathbb{N} \) non-aligned to any word of the source entity \( \src{p} \in S \) words is lower than
+    the cost of the original candidate.
+\end{corollary}
+\begin{proof} Let's prove it by the mathematical induction for the case of extension to the right (for the left it will the same).
+
+    \textit{Base:} By the lemma \ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p}} > c_{\src{p}, \tgt{p_{+1}}} \).
+
+    \textit{Induction step:} Assume that for some \( k \in \mathbb{N} \) holds \( c_{\src{p}, \tgt{p}} > c_{\src{p}, \tgt{p_{+k}}} \).
+    Then by the lemma~\ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p_{+k}}} > c_{\src{p}, \tgt{p_{+(k+1)}}} \) and therefore
+    \( c_{\src{p}, \tgt{p}} > c_{\src{p}, \tgt{p_{+(k+1)}}} \).
+
+    Thus, by the mathematical induction, \( c_{\src{p}, \tgt{p}} > c_{\src{p}, \tgt{p_{+n}}}   \)
+
+\end{proof}
+
+The main advantages of this property is that it is possible to shrink the set of target candidates without losing
+optimal solutions: we can consider as candidates only subranges that are between the leftmost and rightmost words that are aligned to any
+word of any source entity.
 \begin{theorem}
-    Can remove candidates outside left and right most aligned words
+    Let \( m, M \in \mathbb{N} \) be indices of a leftmost and rightmost aligned word to any source entity, then there is
+    an optimal solution for the problem \eqref{eq:ilp} where constraints \eqref{eq:num_proj_const} has a form
+    of \( < \) or \( \leq \), such that it projects source entity to a target candidate where any word's index is inside the range \( [m, M] \).
 \end{theorem}
 \begin{proof}
-    Trust me!
+    Suppose that there is no such an optimal solution that satisfies this requirement. It means that there exists
+    a source entity \( \src{p} \in S \) and a source candidate
+    \( \tgt{\hat{p}} \in S \) such that \( (i_{\tgt{\hat{p}}} < m) \lor (M < j_{\tgt{\hat{p}} < m}) \)
+    and \( x_{\src{p}, \tgt{\hat{p}}} = 1 \).
+
+    This case can be divided into two parts: \( \tgt{\hat{p}} \) is completely outside of words with indices
+    between \( m \) and \( M \) or it overlaps with this range.
+
+    Consider the first option.
 \end{proof}
+
+In comparison to the heuristic algorithm that uses word-to-word alignment the formulation of the optimization
+problem with matching scores \eqref{eq:align_cost} has an important advantage: we can evaluate the confidence of
+every particular projection, since we have a score of it, whereas heuristics provide us only with labelling of the target
+sentence. In the same time the prediction of this formulation and heuristics are not always the same, e.g.
+the heuristic algorithm merges every continuous ranges of aligned words separated but at most some fixed number of non-aligned words,
+but for the ILP formulation it will be so only for some specific cases.
+
+Also it worth to mention that for the alignment-based score there is no fixed upper bound, since
+the maximum value of the denominator is a product of length of a source entity and a target candidate.
+It is possible to overcome it if we exchange one of the summation operation in the denominator from the
+equation \eqref{eq:align_cost} with a logical OR. Nevertheless, during experiments we will use the
+original form of the alignment-based matching score.
 
 \subsection{NER model-based}
 
