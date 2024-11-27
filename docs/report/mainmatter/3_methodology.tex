@@ -297,9 +297,51 @@ of the XLNER pipeline.
 \end{equation}
 
 \section{Candidates extraction}
-n-grams
-\eqref{eq:ilp}
-T5, LLM, high recall NER
+Whereas the set \( S \) of source entities are given, since all source entities have been
+extracted on the previous step of the XLNER pipeline, the construction of the set \( T \)
+of target candidates is an open question.
+
+The simplest way for candidates extraction is to consider all possible n-grams
+(continuous ranges of words) of the target sentence as candidates. This approach ensures
+that there won't be any possibility that we don't include any actual target entity in the set
+target candidates. But when it comes to the computational point of view it can be a problem since
+number of all n-grams scales quadratically. And from the application point of view most of
+the candidates generated in such way are not good nominee to be a real target entity.
+
+One of the simplest way to handle this problem is to limit the maximum possible length of the candidate.
+From the point of NER it is natural to expect that real target entities usually do not exceed some
+predefined number. For example it is unlikely that a person's name will contain more than 10 words or
+if we have 3 source entities there is a real target entity that contains all words of the target sentence.
+
+Thus, the algorithm for candidate extraction wilt bounded maximum length of n-grams are the following.
+\begin{algorithm}
+    \KwData{\( n \in \mathrm{N} \) -- number of words in the target sentence,
+        \(M \leq n \in \mathrm{N} \) -- maximum length of a target candidate}
+    \KwResult{\( T \) -- set of target candidates}
+
+    \( T \gets \emptyset \) \;
+    \For{\(i \gets 0 \) \KwTo \( n \)}{
+        \( m \gets \min(s + M, n) \) \;
+        \For{\(j \gets i \) \KwTo \( m \)}{
+            \( T \gets T \cup \{ (i, j) \} \) \;
+        }
+    }
+    \caption{Bounded length n-gram candidates extraction}
+    \label{alg:ngram_extraction}
+\end{algorithm}
+
+An alternative approach to candidates extraction is to use some model to generate candidates.
+TProjection uses fine-tuned T5 model with beam-search to generate candidates. In theory any LLM can be finetuned
+to do it. But the main drawback of this approach is that we need to finetune these models for which we need
+a labeled dataset in a target language or rely on cross-lingual model transfer.
+But in this case it will be easier and more effective to train a model to label
+target entities itself rather than generate candidates for the projection step of the
+XLNER pipeline. In addition, autoregressive models are very resource consuming and it is
+inefficient to use them only for candidates extraction.
+
+Therefore it make sense also consider multilingual encoder-only Transformer model with a high recall,
+but we still need to train these model to extract candidates. In the following chapters we will not consider all
+these alternatives and leave for further works.
 
 \section{Matching score}
 \subsection{Alignment-based}
@@ -565,5 +607,5 @@ Thus we will call optimal an equivalence class with the highest objective value.
 \subsection{Approaches to compute the solution of the problem}
 greedy algorithm
 \begin{algorithm}
-    \caption{Greedy algorithm for the proposed ILP problem} \label{alg:ilp_greedy}
+    \caption{Approximate greedy algorithm for the proposed ILP problem} \label{alg:ilp_greedy}
 \end{algorithm}
