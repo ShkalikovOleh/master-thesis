@@ -844,7 +844,51 @@ omitted and costs are equal to \( 1 \). Moreover, the relation whether two edges
 is not transitive as well as the relation of overlapping \ref{def:overlapping}! That's why we will try to reduce
 the maximum independent set problem to an instance of the proposed ILP problem.
 
-Idea of the reduction to the MIS (explanation) (without constraint with nproj)
+The idea of the reduction is straightforward. For every vertex \( v \in V \) of the MaxIS problem
+we will create one distinct target candidate \( \tgt{p_v} \) that corresponds to this vertex.
+The set of all such target candidate will be called \( T_V \). The ILP problem are formulated as a projection
+from source entities, in order to represent MaxIS as this ILP problem let's create dummy source nodes. The number of source nodes
+is determined in such a way that it will be easy to satisfy constraints~\eqref{eq:num_proj_const}.
+The proposed number of dummy source nodes for any type of constraints \eqref{eq:num_proj_const} are given
+in the table \ref{tab:dummy_nodes_num} (a). The matching cost between any dummy source node and
+target candidate from the set \( T_V \) will make equal to \( 1 \). And finally let's link solution of the
+ILP problem to the solutions of the MaxIS problem:
+\[
+    x_v = 1 \Leftrightarrow \exists \src{p} \in S \Big| x_{\src{p}, \tgt{p_v}} = 1
+\]
+i.e. the vertex \( v \in V \) belongs to the maximum independent set if and only if there is a dummy
+source node that are projected to the target candidate \( \tgt{p_v} \) that correspond to this vertex.
+
+\begin{table}[h]
+    \begin{subtable}[t]{0.5\linewidth}
+        \centering
+        \renewcommand{\arraystretch}{1.5}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            \(<\)                                 & \( \leq \), \( = \)               & \(>\), \( \geq \) \\
+            \hline
+            \( \ceil{\frac{|V|}{n_{proj} - 1}} \) & \( \ceil{\frac{|V|}{n_{proj}}} \) & 1                 \\
+            \hline
+        \end{tabular}
+        \caption{Source nodes}
+        \label{tab:src_dummy_nodes_num}
+    \end{subtable}
+    \begin{subtable}[t]{0.5\linewidth}
+        \centering
+        \renewcommand{\arraystretch}{1.5}
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            \(<\), \(\leq\) & \( = \)                                    & \(>\)          & \( \geq \)         \\
+            \hline
+            \( 0 \)         & \( \ceil{\frac{|V|}{n_{proj}}} n_{proj} \) & \( n_{proj} \) & \( n_{proj} + 1 \) \\
+            \hline
+        \end{tabular}
+        \caption{Target nodes}
+        \label{tab:tgt_dummy_nodes_num}
+    \end{subtable}
+    \caption{Number of dummy nodes for every type of constraints \eqref{eq:num_proj_const}}
+    \label{tab:dummy_nodes_num}
+\end{table}
 
 We will consider that target nodes \( t_u, t_v \in T_{V} \) that correspond to graph's nodes \( u, v \in V \) overlap
 if and only if there is an edge in the graph \( G \) between these nodes or \( u = v \).
@@ -859,52 +903,38 @@ if and only if there is an edge in the graph \( G \) between these nodes or \( u
 Such a definition of overlapping allow us to match all properties, i.e. reflexivity, symmetricity and non transitivity,
 of overlapping relation on word ranges in the initial definition \ref{def:overlapping}. The fact that we consider
 overlapping nodes that correspond to the same vertex simply means that it is impossible to
-add the same vertex in the independent set to time which is a property of the any set.
+add the same vertex in the independent set two times which is a property of the any set.
 
+Hence the resulting ILP problem induced by the MaxIS problem is the following:
 \begin{equation} \label{eq:reduction_without_nproj}
     \begin{aligned}
-         & \max \sum\limits_{v \in V} x_v                          \\
-         & x_u + x_v \leq 1               & \forall \{u, v\} \in E \\
-         & x_v \in \{0, 1\}
+         & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                             \\
+         & \text{subject to}                                                                                                                                   \\
+         & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T)                                                                            \\
+         & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
     \end{aligned}
 \end{equation}
+where set \( \hat{PI} \) defined based on the introduced above overlapping relation.
 
-\begin{table}[h]
-    \begin{subtable}[t]{0.5\linewidth}
-        \centering
-        \renewcommand{\arraystretch}{1.5}
-        \begin{tabular}{|c|c|c|}
-            \hline
-            \(<\)                                 & \( \leq \), \( = \)               & \(>\), \( \geq \) \\
-            \hline
-            \( \ceil{\frac{|V|}{n_{proj} - 1}} \) & \( \ceil{\frac{|V|}{n_{proj}}} \) & 1                 \\
-            \hline
-        \end{tabular}
-        \caption{For source nodes}
-        \label{tab:src_dummy_nodes_num}
-    \end{subtable}
-    \begin{subtable}[t]{0.5\linewidth}
-        \centering
-        \renewcommand{\arraystretch}{1.5}
-        \begin{tabular}{|c|c|c|c|}
-            \hline
-            \(<\), \(\leq\) & \( = \)                                    & \(>\)          & \( \geq \)         \\
-            \hline
-            \( 0 \)         & \( \ceil{\frac{|V|}{n_{proj}}} n_{proj} \) & \( n_{proj} \) & \( n_{proj} + 1 \) \\
-            \hline
-        \end{tabular}
-        \caption{For target nodes}
-        \label{tab:tgt_dummy_nodes_num}
-    \end{subtable}
-    \caption{Number of dummy nodes for every type of constraints \eqref{eq:num_proj_const}}
-    \label{tab:dummy_nodes_num}
-\end{table}
+The problem \eqref{eq:reduction_without_nproj} is exactly the same as the ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog}
+except the fact that constraints \eqref{eq:num_proj_const} are omitted. The reason is that we can not be sure
+that them can be satisfied for type of constraints with \( =, >, \geq \) inequalities, since it is possible to just run out of nodes.
+In order to overcome this problem, let's create dummy target nodes. The proposed minimum number of such nodes are given
+in the table \ref{tab:dummy_nodes_num} (b). Let's denote set of all such nodes as \( T_{add} \) and then the set of all target candidates
+will be \( T = T_V \cup T_{add} \). We will consider that dummy target nodes don't overlap with any node expect itself:
+\[
+    \forall \tgt{p_1} \in T_{add}, \tgt{p} \in T
+    \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \Leftrightarrow \tgt{p_1} = \tgt{p_2}
+\]
+Target dummy nodes are created only to satisfy constraints \eqref{eq:num_proj_const}, so all matching scores
+between any dummy source node and any dummy target node set to be equal \( 0 \).
 
-What is optimal solution and quotient set of solutions
+Since we have a one to one correspondence between vertices from the MaxIS problem and target
+candidates from the set \( T_V \), consider the following set
 \[
     T^*_{x} = \{ t \in T_V | \exists s \in S, x_{s, t} = 1 \}
 \]
-
 Let's \( x_1, x_2 \) be a two feasible solutions of problem \eqref{eq:reduction_without_nproj}, then we will say that
 they are in relation~\( \sim \) if their corresponding solutions of the MaxIS problem are equal:
 \[
@@ -914,13 +944,45 @@ Since this relation defined by an equality of sets it is reflexive, symmetric an
 equivalence relation.
 
 Then quotient set \( \quot{X}{\sim} \) will consist of all equivalence classes of feasible solutions
-that differ only in matching of dummy nodes. Let's notice that the objective function value is equal for all
-elements of any equivalence class.
+that differ only in matching of dummy nodes. Every such equivalence class corresponds to one feasible solution of
+the maximum independent set problem. Let's notice that the objective function value is equal for all
+elements within any equivalence class.
 \begin{lemma}
-    Cost inside equiv. class are constant
+    Let X be a set of feasible solution of the problem \eqref{eq:reduction_without_nproj}. Then
+    for any equivalence class in the quotient set \( \quot{X}{\sim} \) the objective
+    value is the same for every solution within this equivalence class.
 \end{lemma}
 \begin{proof}
-    Trust me!
+    Consider an equivalence class \( [x] \) of some feasible solution \( x \).
+    Let's notice that non zero scores have only elements from the set \( T^*_x \),
+    therefore the objective determines by this set of projected target candidates:
+    \begin{multline*}
+        \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
+        \sum\limits_{(\src{p}, \tgt{p}) \in S \times T_V} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} = \\
+        \sum\limits_{(\src{p}, \tgt{p}) \in S \times T^{*}_{x}} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}
+    \end{multline*}
+    Because of non-overlapping constraints and the fact that we consider that target candidate overlaps with
+    itself only one source entity can be projected onto every target candidate from the set \( T_x^* \):
+    \[
+        \forall \tgt{p} \in T^*_x, \exists! \src{p} \in S \Big| x_{\src{p}, \tgt{p}} = 1
+    \]
+    Then the objective value equals to the cardinality of the set \( T^*_x \) that are equal for
+    any solution without the same equivalence class by the definition of the relation \( ~ \).
+    \[
+        \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
+        \sum\limits_{(\src{p}, \tgt{p}) \in S \times T^{*}_{x}} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
+        |T_x^*|
+    \]
+\end{proof}
+\begin{corollary} \label{col:maxis_and_ilp_objective_equal}
+    The objective function value of the ILP problem \eqref{eq:reduction_without_nproj} and the maximum independent
+    set problem are equal.
+\end{corollary}
+\begin{proof}
+    By construction every target candidate from the set \( T^*_x \) corresponds to one only one vertex
+    from the MaxIS problem. Therefore the objective value is equal to the cardinality of the set \(  T^*_x \).
+    In the proof of the lemma we showed that the objective value of the ILP problem~\eqref{eq:reduction_without_nproj}
+    equals to \( | T^*_x| \) as well.
 \end{proof}
 
 Thus we will call optimal an equivalence class with the highest objective value.
@@ -937,7 +999,7 @@ Thus we will call optimal an equivalence class with the highest objective value.
     It is possible to bound sum over all candidates for one source entity
 \end{corollary}
 
-\begin{theorem}[]
+\begin{theorem}[\( MaxIS \leq_P ILP_{proj} \)]
     The proposed ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} is NP-hard
 \end{theorem}
 \begin{proof}
@@ -947,7 +1009,7 @@ Thus we will call optimal an equivalence class with the highest objective value.
 
 \subsection{Approaches to compute the solution of the problem}
 As any ILP problem the problem \eqref{eq:ilp} can be solved by branch and bound, cutting planes,
-branch and cut methods. Nevertheless it can take a lot of time to find and optimal solution and
+branch and cut methods, other exact algorithms. Nevertheless it can take a lot of time to find an optimal solution and
 it can make such formulation inefficient from the application point of view where it is required to
 solve instances of this problem for thousands sentences in a limited time.
 
@@ -1009,3 +1071,20 @@ non-overlapping constraints \eqref{eq:non_overlap_const}.
 
 Nevertheless, the algorithm \ref{alg:ilp_greedy} is linear on a number of variables and therefore can
 solve the ILP problem significantly faster than the exact ILP solver in a general case.
+
+Even in the case when the output of the greedy algorithm is a feasible solution it does not
+necessary mean that the solution is optimal, i.e. there may exists a feasible solution with higher objective
+value. This facts leads from the fact that the proposed ILP problem is NP-hard and therefore polynomial
+algorithm can not solve it in a general case unless P=NP. But also it can be easily shown on an example.
+Consider the ILP problem \eqref{eq:ilp} with \( n_{proj} = 2 \) and \( \leq \) type of constraints \eqref{eq:num_proj_const}.
+Let \( T = \{ \tgt{p_1} = (1, 2), \tgt{p_2} = (2, 3), \tgt{p_3} = (3, 5) \}, S = \{ \src{p} \} \) and
+the matching scores are the following:
+\[
+    c_{\src{p}, \tgt{p_1}} = 0.2 \qquad
+    c_{\src{p}, \tgt{p_2}} = 0.3 \qquad
+    c_{\src{p}, \tgt{p_3}} = 0.2
+\]
+The output of the algorithm \ref{alg:ilp_greedy} is the solution \( \src{p} \) with only one
+non zero variable where \( x_{\src, \tgt{p_2}} = 1 \). It has an objective value \( 0.3 \).
+While the optimal solution is the one where source entity is projected onto \( \tgt{p_1} \) and
+\( \tgt{p_2} \) with the objective value equal to \( 0.4 \).
