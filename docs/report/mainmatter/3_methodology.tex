@@ -538,8 +538,8 @@ the output of a model can be represented as a matrix \( p_{m, o} \) where \( m \
 \( o \in \{ 1, 2|L| + 1 \} \) is an index of a label (assume that the label \( O \), i. e. a word doesn't belong to any class,
 has an index \( 2|L| + 1 \)).
 
-Then let's introduce mappings \( B[l]: L \rightarrow \{ 1, 2|L| \} \) and
-\( I[l]: L \rightarrow \{ 1, 2|L| \} \) that returns index of B and I labels respectively
+Then let's introduce mappings \( B[l]: L \rightarrow \{ 1, \dots, 2|L| \} \) and
+\( I[l]: L \rightarrow \{ 1, \dots, 2|L| \} \) that returns index of B and I labels respectively
 for a class \( l \in L \) in a probability matrix.
 
 So the NER model-based matching score is the following:
@@ -603,11 +603,22 @@ For this let's notice the following fact.
 \end{proof}
 Having this useful fact let's finally make some estimation of the constant \( \alpha \).
 \begin{theorem}
-
+    Consider a source entity \( \src{p} \in S \) and two target candidates \( \tgt{p_1} = (i, j+1), \tgt{p_2} = (i, j) \).
+    Suppose the predictions \( p \) of a NER model satisfy the following constraints:
+    \[
+        B[l_{\src{p}}] = \argmax\limits_{l \in \{ 1, \dots, 2|L| + 1 \}} p_{i, l} \qquad
+        I[l_{\src{p}}] = \argmax\limits_{l \in \{ 1, \dots, 2|L| + 1 \}} p_{k, l} \; \forall k \in \{ i + 1, \dots ,j +1 \}
+    \]
+    i.e. all these candidates are parts of the predicted by the model entity.
+    Let's denote \( M = \frac{1}{2|L| + 1} \).
+    Then:
+    \[
+        \alpha > 1 + \frac{1 - M}{1 + M} \implies c_{\src{p}, \tgt{p_2}}^{ner} > c_{\src{p}, \tgt{p_1}}^{ner}
+    \]
 \end{theorem}
 \begin{proof} Let's write down a desired inequality
     \begin{align*}
-         & c_{\src{p}, \tgt{p_2}}^{ner} > c_{\src{p}, \tgt{p_1}}^{ner} \implies \\
+         & c_{\src{p}, \tgt{p_2}}^{ner} > c_{\src{p}, \tgt{p_1}}^{ner} \Leftrightarrow \\
          & \alpha^{n}
         \frac{
             p_{i, B[l_{\src{p}}]} +
@@ -620,7 +631,7 @@ Having this useful fact let's finally make some estimation of the constant \( \a
             \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]}
         }
         {n}
-        \implies                                                                \\
+        \Leftrightarrow                                                                \\
          & \alpha >
         \frac
         {(n+1) \cdot \left( p_{i, B[l_{\src{p}}]} +
@@ -639,8 +650,7 @@ Having this useful fact let's finally make some estimation of the constant \( \a
     In order to simplify derivation we will introduce aliases for some quantities:
     \[
         S = p_{i, B[l_{\src{p}}]}  + \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} \qquad
-        s = p_{j+1, I[l_{\src{p}}]} \qquad
-        M = \frac{1}{2|L| + 1}
+        s = p_{j+1, I[l_{\src{p}}]}
     \]
     Note, that by the lemma \ref{lemma:maxprob_greater_than_avg} the following
     inequalities holds:
@@ -985,7 +995,6 @@ elements within any equivalence class.
     equals to \( | T^*_x| \) as well.
 \end{proof}
 
-Thus we will call optimal an equivalence class with the highest objective value.
 
 \begin{lemma}
     Let \( x \) be a feasible solution of the problem \eqref{eq:reduction_without_nproj}.
@@ -999,6 +1008,8 @@ Thus we will call optimal an equivalence class with the highest objective value.
     It is possible to bound sum over all candidates for one source entity
 \end{corollary}
 
+And finally we can prove the complexity of the proposed ILP problem by reduction the MaxIS problem
+to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
 \begin{theorem}[\( MaxIS \leq_P ILP_{proj} \)]
     The proposed ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} is NP-hard
 \end{theorem}
