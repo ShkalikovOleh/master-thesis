@@ -995,18 +995,84 @@ elements within any equivalence class.
     equals to \( | T^*_x| \) as well.
 \end{proof}
 
-
-\begin{lemma}
-    Let \( x \) be a feasible solution of the problem \eqref{eq:reduction_without_nproj}.
-    Then a solution \( x^* \) such that \( t \in T \)
+Dummy source nodes exists only to be able to formulate the MaxIS problem as the desired ILP projection problem.
+Hence we can swap a dummy source node for a target candidate it was projected from.
+\begin{lemma} \label{lemma:swap_source_reduction}
+    Let \( x \) be a feasible solution of the problem \eqref{eq:reduction_without_nproj} such that
+    some dummy source node \( \src{p} \in S \) is projected onto \( \tgt{p} \in T \),
+    i.e. \( x_{\src{p}, \tgt{p}} = 1 \). Then for any other source node
+    \( \src{\hat{p}} \in S, \src{p} \neq \src{\hat{p}} \) a solution \( x^{*} \), such that
+    \begin{align*}
+         & x^*_{\src{\hat{p}}, \tgt{p}} = 1  \qquad
+        x^*_{\src{p}, \tgt{p}} = 0                                                                                            \\
+         & \forall s, t \in S \times T \setminus \{ (\src{p}, \tgt{p}), (\src{\hat{p}}, \tgt{p}) \} \quad x^*_{s,t} = x_{s,t}
+    \end{align*}
+    is also feasible and has the same objective value.
 \end{lemma}
 \begin{proof}
-    Trust me!
+    Suppose that the solution \( x^* \) is not feasible, it means that:
+    \[
+        \exists s \in S, t \in T \Big| (s, \src{\hat{p}}, t, \tgt{p}) \in \hat{\Pi}(S, T), \; x^*_{s, t} = 1
+    \]
+    Let's notice that \( s \neq \src{p} \), since \( x^*_{\src{p}, \tgt{p}} = 0 \).
+    But then by construction:
+    \[
+        x_{\src{p}, \tgt{p}} + x_{s, t} = 1 + x^*_{s, t} = 1 + 1 > 2
+    \]
+    It contradicts with the fact that \( x \) is a feasible solution, therefore \( x^* \) should be
+    feasible.
+
+    And since by construction sets \( T^*_x \) and \( T^*_{x^*} \) are equal by the corollary \ref{col:maxis_and_ilp_objective_equal}
+    the objective values for these solutions are also equal.
 \end{proof}
 
 \begin{corollary}
-    It is possible to bound sum over all candidates for one source entity
+    For any feasible solution of the problem \eqref{eq:reduction_without_nproj} there is a feasible solution  \( x^* \)
+    such that
+    \[
+        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|}
+        \qquad \forall \src{p} \in S
+    \]
+    and \( T_{x^*}^* =  T^*_x \).
 \end{corollary}
+\begin{proof}
+    Assume the solution \( \hat{x} \) such that
+    \begin{align*}
+         & \forall \src{p} \in S \; \forall \tgt{p} \in T_V \qquad \hat{x}_{\src{p}, \tgt{p}} = x_{\src{p}, \tgt{p}} \\
+         & \forall \src{p} \in S \; \forall \tgt{p} \in T_{add} \qquad \hat{x}_{\src{p}, \tgt{p}} = 0
+    \end{align*}
+    This solution has the same objective value since all score that for dummy target nodes are equal to \( 0 \)
+    by construction and also it \( \hat{x} \) doesn't violate the non-overlapping constraints:
+    \begin{align*}
+         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_2} \in T_{V} \quad
+        \hat{x}_{\src{p_1}, \tgt{p_1}} + \hat{x}_{\src{p_2}, \tgt{p_2}} =
+        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1                                                    \\
+         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_2} \in T_{add} \quad
+        \hat{x}_{\src{p_1}, \tgt{p_1}} + 0 \leq
+        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+    \end{align*}
+
+    Because of overlapping constraints \eqref{eq:non_overlap_const} at most one source node can
+    be projected on every target node, therefore:
+    \[
+        \sum\limits_{\src{p} \in S} \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} \leq |V|
+    \]
+    Suppose there exists such a \( \src{p} \in S \) that
+    \[
+        \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} > \frac{|V|}{|S|}
+    \]
+    Then there is another source entity \( \src{\hat{p}} \) for which we have
+    \[
+        \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{\hat{p}}, \tgt{p}} < \frac{|V|}{|S|}
+    \]
+    By the lemma \ref{lemma:swap_source_reduction} there exists such an optimal solution \( x^* \)
+    where
+    \begin{align*}
+         & \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} = \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} - 1       \\
+         & \sum\limits_{\tgt{p} \in T} x^*_{\src{\hat{p}}, \tgt{p}} = 1 + \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} \\
+    \end{align*}
+    If this solution doesn't satisfy the desired property repeat the procedure.
+\end{proof}
 
 And finally we can prove the complexity of the proposed ILP problem by reduction the MaxIS problem
 to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
