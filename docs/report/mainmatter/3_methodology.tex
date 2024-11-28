@@ -946,7 +946,66 @@ Thus we will call optimal an equivalence class with the highest objective value.
 
 
 \subsection{Approaches to compute the solution of the problem}
-greedy algorithm
+As any ILP problem the problem \eqref{eq:ilp} can be solved by branch and bound, cutting planes,
+branch and cut methods. Nevertheless it can take a lot of time to find and optimal solution and
+it can make such formulation inefficient from the application point of view where it is required to
+solve instances of this problem for thousands sentences in a limited time.
+
+It motivates the necessity of the approximate algorithm that can compute a solution that is not always
+optimal, but don't violate crucial constraints. One of the approach for such an algorithm for the problem
+\eqref{eq:ilp} is to iteratively assign \( 1 \) to a variable with the highest matching score and then remove
+all target candidates that overlap with the projected candidate to enforce non-overlapping constraints.
+Algorithm \ref{alg:ilp_greedy} is the variant of a such greedy algorithm.
+
 \begin{algorithm}
     \caption{Approximate greedy algorithm for the proposed ILP problem} \label{alg:ilp_greedy}
+    \KwData{instance of the ILP problem \eqref{eq:ilp}}
+    \KwResult{\( x \) -- "solution" of the ILP problem}
+
+    \( x \gets 0 \) \;
+    \( P \gets 0 \) \Comment*[r]{number of projections by source entity}
+    \While{\( \exists \src{p} \in S, \tgt{p} \in T \Big| c_{\src{p}, \tgt{p}} > 0 \)}{
+        \( s, t \gets \argmax\limits_{\src{p} \in S, \tgt{p} \in T } c_{\src{p}, \tgt{p}} \) \;
+        \( x_{s,t} \gets 1 \) \;
+        \( P_{s} \gets P_{s} + 1 \) \;
+
+        \ForAll(\tcp*[f]{remove all overlapping with \( t \) candidates}){\( \hat{t} \in T \Big| \hat{t} \cap t \neq \emptyset \)}{
+            \( c_{s, \hat{t}} \gets 0 \) \;
+        }
+
+        \Comment{ensure constraints \eqref{eq:num_proj_const}}
+        \If{constraints \eqref{eq:num_proj_const} is a type of \( =, \leq \)}{
+            \If{\( P_s = n_{proj} \)}{
+                \ForAll{\( \hat{t} \in T \)}{
+                    \( c_{s, \hat{t}} \gets 0 \) \;
+                }
+            }
+        }
+        \If{constraints \eqref{eq:num_proj_const} is a type of \( < \)}
+        {
+            \If{\( P_s = n_{proj} - 1 \)}{
+                \ForAll{\( \hat{t} \in T \)}{
+                    \( c_{s, \hat{t}} \gets 0 \) \;
+                }
+            }
+        }
+    }
 \end{algorithm}
+
+From the steps of the algorithm \ref{alg:ilp_greedy} it implies that after removing all
+overlapping target candidates by making their costs equal to zero the algorithm ensures the
+constants \eqref{eq:num_proj_const} on a number of projected from every source entity candidates.
+But only for the case where constraints have a form of \( <, \leq, = \).
+
+In the case \( >, \geq \) the algorithm will output a "solution" that violates constraint
+\eqref{eq:num_proj_const} only in two cases. The first one is when there is a source entity for which
+all target candidates, that are not overlapping with already projected ones, initially have zero matching cost. But then,
+from the application point of view it doesn't make sense to project the source entity onto these candidates
+since it is definitely not a counterpart of the source entity in the target sentence, otherwise it would not
+have a matching cost equal to \( 0 \). The second option is the situation where target candidates
+that could potentially be projected onto have been removed on the previous iterations of the algorithm.
+And it is hard to handle this issue without backtracking and losing feasibility on
+non-overlapping constraints \eqref{eq:non_overlap_const}.
+
+Nevertheless, the algorithm \ref{alg:ilp_greedy} is linear on a number of variables and therefore can
+solve the ILP problem significantly faster than the exact ILP solver in a general case.
