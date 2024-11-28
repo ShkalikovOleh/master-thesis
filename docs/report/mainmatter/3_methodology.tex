@@ -351,7 +351,7 @@ how likely given source entity \( \src{p} \in S \) should be projected onto the 
 But the question how to compute all these scores remains unanswered. In this section we will propose
 some options to evaluate them.
 
-\subsection{Alignment-based}
+\subsection{Alignment-based score}
 In the chapter \ref{sec:background} it has been showed that word-to-word alignments can be used
 for the projection step of the XLNER pipeline. But it was done by the heuristic algorithm.
 Nevertheless we can try incorporate them into the proposed ILP problem by calculating scores of matching with use of
@@ -524,7 +524,7 @@ It is possible to overcome it if we exchange one of the summation operation in t
 equation \eqref{eq:align_cost} with a logical OR. Nevertheless, during experiments we will use the
 original form of the alignment-based matching score.
 
-\subsection{NER model-based}
+\subsection{NER model-based score}
 
 An other way to evaluate matching scores between source entities and target candidates is to
 use a multilingual NER model. The idea is the following: a model for every word of the target candidate
@@ -692,20 +692,43 @@ for all source entities that have the same class. And from the point of view of 
 \eqref{eq:ilp} it can lead to a solution where a source entity is projected onto a semantically wrong candidate, but
 nevertheless a correct class will be assigned to the target candidate.
 
-\subsection{Translation score-based}
+\subsection{Translation-based score}
 
 
 \begin{equation} \label{eq:nmt_cost}
-    c_{\src{p}, \tgt{p}}
+    c_{\src{p}, \tgt{p}}^{nmt}
 \end{equation}
 
 \subsection{Fused score}
-
-ner score without classes (max over all)
-
-weighted sum of scores
+The performance of alignment, NER and translation models that were used for computation of
+scores above varies depending on the language, domain, set of classes, etc.
+Every matching score has their advantages and drawbacks, but the natural way to minimize fails is
+to fuse scores together. Since all scores are real numbers one of the approaches to do it is to compute a
+weighted sum of scores of all types:
 \begin{equation} \label{eq:fused_cost}
-    c_{\src{p}, \tgt{p}}
+    c_{\src{p}, \tgt{p}}^{fused} =
+    \lambda_{align} c_{\src{p}, \tgt{p}}^{align} +
+    \lambda_{ner} c_{\src{p}, \tgt{p}}^{ner} +
+    \lambda_{nmt} c_{\src{p}, \tgt{p}}^{nmt}
+\end{equation}
+where \( \lambda_{align} \geq, \lambda_{ner} \geq 0, \lambda_{nmt} \geq 0 \in R\).
+
+Moreover, the fused score can extend possibilities to handle issues of basic scores.
+A NER model that is used in the NER-based cost \eqref{eq:ner_cost} sometimes can properly
+predict spans of entities in the target sentence, but confuse classes.
+We assume that labels are predicted correctly during computation of the NER model-based cost because
+we have no way to correct them. But when the cost consists of different basic score, we can leverage a
+NER model-based score only evaluate how likely a given candidate can form a target entity of any class and
+determine label by using other types of scores. The modified \eqref{eq:ner_cost} that implements it
+is the following:
+\begin{equation} \label{eq:ner_cost_wo_classes}
+    c_{\src{p}, \tgt{p}}^{ner} = \alpha^{(j_{\tgt{p}} - i_{\tgt{p}}) - 1}
+    \max\limits_{l \in L}
+    \frac{
+        p_{i_{\tgt{p}}, B[l]} +
+        \sum\limits_{k = i_{\tgt{p}} + 1}^{j_{\tgt{p}}} p_{k, I[l]}
+    }
+    {j_\tgt{p} - i_{\tgt{p}}}
 \end{equation}
 
 \section{Analysis of the ILP problem}
