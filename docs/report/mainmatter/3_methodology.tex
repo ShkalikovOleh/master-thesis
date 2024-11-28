@@ -359,7 +359,7 @@ word-to-word alignments.
 
 The matching score that inspired from this idea is the following:
 \begin{equation} \label{eq:align_cost}
-    c_{\src{p}, \tgt{p}} =
+    c_{\src{p}, \tgt{p}}^{align} =
     \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
     {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}})}
 \end{equation}
@@ -387,7 +387,7 @@ And the score \eqref{eq:align_cost} satisfies this requirement.
     \]
     Then
     \begin{multline*}
-        c_{\src{p}, \tgt{\hat{p}}} =
+        c_{\src{p}, \tgt{\hat{p}}}^{align} =
         \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}} + 1} a_{kl}}
         {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{\hat{p}}} - i_{\tgt{\hat{p}}})} =                                \\
         \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
@@ -410,13 +410,13 @@ And the score \eqref{eq:align_cost} satisfies this requirement.
 \end{corollary}
 \begin{proof} Let's prove it by the mathematical induction for the case of extension to the right (for the left it will the same).
 
-    \textit{Base:} By the lemma \ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p}} > c_{\src{p}, \tgt{p_{+1}}} \).
+    \textit{Base:} By the lemma \ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+1}}}^{align} \).
 
-    \textit{Induction step:} Assume that for some \( k \in \mathbb{N} \) holds \( c_{\src{p}, \tgt{p}} > c_{\src{p}, \tgt{p_{+k}}} \).
-    Then by the lemma~\ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p_{+k}}} > c_{\src{p}, \tgt{p_{+(k+1)}}} \) and therefore
-    \( c_{\src{p}, \tgt{p}} > c_{\src{p}, \tgt{p_{+(k+1)}}} \).
+    \textit{Induction step:} Assume that for some \( k \in \mathbb{N} \) holds \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+k}}}^{align} \).
+    Then by the lemma~\ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p_{+k}}}^{align} > c_{\src{p}, \tgt{p_{+(k+1)}}}^{align} \) and therefore
+    \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+(k+1)}}}^{align} \).
 
-    Thus, by the mathematical induction, \( c_{\src{p}, \tgt{p}} > c_{\src{p}, \tgt{p_{+n}}}   \)
+    Thus, by the mathematical induction, \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+n}}}^{align}   \)
 
 \end{proof}
 
@@ -468,8 +468,8 @@ word of any source entity.
     higher aligned-based matching score.
 
     Let's consider a solution \( x^* \) that equals
-    to a solution \( x \) everywhere except for target candidates \( \tgt{\hat{p}}  \) and \(  \tgt{p} \)
-    i. e. \( x_{\src{p}, \tgt{\hat{p}}} = 0, x_{\src{p}, \tgt{p}} = 1 \). This solution also satisfies all constraints
+    to a solution \( x \) everywhere except for target candidates \( \tgt{\hat{p}}  \) and \(  \tgt{p} \),
+    i. e. \( x^*_{\src{p}, \tgt{\hat{p}}} = 0, x^*_{\src{p}, \tgt{p}} = 1 \). This solution also satisfies all constraints
     of the ILP problem. For constraints \eqref{eq:num_proj_const} the proof is the following:
     \begin{align*}
          & \sum\limits_{t \in T} x_{\src{p}, t} =
@@ -483,33 +483,33 @@ word of any source entity.
     And for non-overlapping constraints, since \( \tgt{p} \) is a substring of \( \tgt{\hat{p}} \) by a
     construction we have:
     \[
-        \forall t \in T \quad t \cap \tgt{p} \implies t \cap \tgt{\hat{p}}
+        \forall t \in T \quad t \cap \tgt{p} \neq \emptyset \implies t \cap \tgt{\hat{p}} \neq \emptyset
     \]
     It gets us that all constraints that should be hold for \( \tgt{p} \) should also be satisfied for \( \tgt{\hat{p}} \):
     \begin{equation} \label{eq:overlap_substring}
-        \begin{aligned}
-            \left\{ (\src{p_1}, \src{p_2}), \quad \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \right\} \subset \\
-            \left\{ (\src{p_1}, \src{p_2}), \quad \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \right\}
-        \end{aligned}
+        \left\{ (\src{p_1}, \tgt{p_1}) \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \right\} \subset
+        \left\{ (\src{p_1}, \tgt{p_1}) \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \right\}
     \end{equation}
-    Suppose that constraints \eqref{eq:non_overlap_const} are violated for a solution \( x^* \) then
+    Suppose that constraints \eqref{eq:non_overlap_const} are violated for the solution \( x^* \), then
     \begin{align*}
          & \exists \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \\
          & x^*_{\src{p_1}, \tgt{p_1}} + x^*_{\src{p}, \tgt{p}} =
         x_{\src{p_1}, \tgt{p_1}} + 1 > 1 \implies                                                                      \\
          & x_{\src{p_1}, \tgt{p_1}} = 1
-        \stackrel{\eqref{eq:overlap_substring}}{\implies}                                                              \\
+        \implies                                                                                                       \\
          & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p}, \tgt{\hat{p}}} = 1 + 1 = 2 > 1
     \end{align*}
-    It is contradiction that the solution \( x \) was optimal and feasible, therefore constraints \eqref{eq:non_overlap_const}
-    are satisfied by the solution \( x^* \).
+    But because of \eqref{eq:overlap_substring}
+    \( (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}} ) \in \hat{\Pi}(S, T) \),
+    therefore it contradicts that the solution \( x \) was feasible.
+    Hence constraints \eqref{eq:non_overlap_const} are satisfied by the solution \( x^* \).
 
     And in the same time the solution \( x^* \) has a higher objective value that implies that the original solution \( x \) was not optimal.
     This contradicts our assumption that there is no such an optimal solution that ensures requirements of the theorem.
 \end{proof}
 Note that the theorem holds only for constraints \eqref{eq:num_proj_const} with a form of \( < \) or
-\( \leq \) just because the ILP problem can lost feasibility if we remove matching with zero score that
-exists only to ensure these constraints and has no practical sense.
+\( \leq \) just because the ILP problem can lost feasibility if we remove projections with zero scores that
+exist only to ensure these constraints and has no application sense.
 
 In comparison to the heuristic algorithm that uses word-to-word alignment the formulation of the optimization
 problem with matching scores \eqref{eq:align_cost} has an important advantage: we can evaluate the confidence of
