@@ -902,14 +902,14 @@ source node that are projected to the target candidate \( \tgt{p_v} \) that corr
 
 We will consider that target nodes \( t_u, t_v \in T_{V} \) that correspond to graph's nodes \( u, v \in V \) overlap
 if and only if there is an edge in the graph \( G \) between these nodes or \( u = v \).
-\[
+\begin{equation} \label{eq:overlap_reduction}
     t_u \cap t_v \neq \emptyset \Leftrightarrow
     \Biggl[
     \begin{array}{l}
         \{ u, v \} \in E \\
         u = v
     \end{array}
-\]
+\end{equation}
 Such a definition of overlapping allow us to match all properties, i.e. reflexivity, symmetricity and non transitivity,
 of overlapping relation on word ranges in the initial definition \ref{def:overlapping}. The fact that we consider
 overlapping nodes that correspond to the same vertex simply means that it is impossible to
@@ -931,17 +931,18 @@ The problem \eqref{eq:reduction_without_nproj} is exactly the same as the ILP pr
 except the fact that constraints \eqref{eq:num_proj_const} are omitted. The reason is that we can not be sure
 that them can be satisfied for type of constraints with \( =, >, \geq \) inequalities, since it is possible to just run out of nodes.
 In order to overcome this problem, let's create dummy target nodes. The proposed minimum number of such nodes are given
-in the table \ref{tab:dummy_nodes_num} (b). Let's denote set of all such nodes as \( T_{add} \) and then the set of all target candidates
-will be \( T = T_V \cup T_{add} \). We will consider that dummy target nodes don't overlap with any node expect itself:
+in the table \ref{tab:dummy_nodes_num} (b). Let's denote set of all such nodes as \( T_{dummy} \) and then the set of all target candidates
+will be \( T = T_V \cup T_{dummy} \). We will consider that dummy target nodes don't overlap with any node expect itself:
 \[
-    \forall \tgt{p_1} \in T_{add}, \tgt{p} \in T
+    \forall \tgt{p_1} \in T_{dummy}, \tgt{p} \in T
     \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \Leftrightarrow \tgt{p_1} = \tgt{p_2}
 \]
 Target dummy nodes are created only to satisfy constraints \eqref{eq:num_proj_const}, so all matching scores
 between any dummy source node and any dummy target node set to be equal \( 0 \).
 
 Since we have a one to one correspondence between vertices from the MaxIS problem and target
-candidates from the set \( T_V \), consider the following set
+candidates from the set \( T_V \), consider the following set that fully determine the solution of the
+MaxIS problem:
 \[
     T^*_{x} = \{ t \in T_V | \exists s \in S, x_{s, t} = 1 \}
 \]
@@ -1007,7 +1008,7 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
         x^*_{\src{p}, \tgt{p}} = 0                                                                                            \\
          & \forall s, t \in S \times T \setminus \{ (\src{p}, \tgt{p}), (\src{\hat{p}}, \tgt{p}) \} \quad x^*_{s,t} = x_{s,t}
     \end{align*}
-    is also feasible and has the same objective value.
+    is also feasible and in the same equivalence class as \( x \).
 \end{lemma}
 \begin{proof}
     Suppose that the solution \( x^* \) is not feasible, it means that:
@@ -1022,8 +1023,8 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
     It contradicts with the fact that \( x \) is a feasible solution, therefore \( x^* \) should be
     feasible.
 
-    And since by construction sets \( T^*_x \) and \( T^*_{x^*} \) are equal by the corollary \ref{col:maxis_and_ilp_objective_equal}
-    the objective values for these solutions are also equal.
+    And since by construction sets \( T^*_x \) and \( T^*_{x^*} \) are equal solutions are in the same equivalence
+    class and by the corollary \ref{col:maxis_and_ilp_objective_equal} the objective values for these solutions are also equal.
 \end{proof}
 
 \begin{corollary}
@@ -1039,20 +1040,21 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
     Assume the solution \( \hat{x} \) such that
     \begin{align*}
          & \forall \src{p} \in S \; \forall \tgt{p} \in T_V \qquad \hat{x}_{\src{p}, \tgt{p}} = x_{\src{p}, \tgt{p}} \\
-         & \forall \src{p} \in S \; \forall \tgt{p} \in T_{add} \qquad \hat{x}_{\src{p}, \tgt{p}} = 0
+         & \forall \src{p} \in S \; \forall \tgt{p} \in T_{dummy} \qquad \hat{x}_{\src{p}, \tgt{p}} = 0
     \end{align*}
-    This solution has the same objective value since all score that for dummy target nodes are equal to \( 0 \)
-    by construction and also it \( \hat{x} \) doesn't violate the non-overlapping constraints:
+    By construction this solution has the same objective value since all score that for dummy target nodes are equal to \( 0 \),
+    the same set \( T^*_{\hat{x}} = T^*_x \)
+    and also it doesn't violate the non-overlapping constraints:
     \begin{align*}
          & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_2} \in T_{V} \quad
         \hat{x}_{\src{p_1}, \tgt{p_1}} + \hat{x}_{\src{p_2}, \tgt{p_2}} =
-        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1                                                    \\
-         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_2} \in T_{add} \quad
+        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1                                                      \\
+         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_2} \in T_{dummy} \quad
         \hat{x}_{\src{p_1}, \tgt{p_1}} + 0 \leq
         x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
     \end{align*}
 
-    Because of overlapping constraints \eqref{eq:non_overlap_const} at most one source node can
+    Because of non-overlapping constraints \eqref{eq:non_overlap_const} at most one source node can
     be projected on every target node, therefore:
     \[
         \sum\limits_{\src{p} \in S} \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} \leq |V|
@@ -1068,10 +1070,73 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
     By the lemma \ref{lemma:swap_source_reduction} there exists such an optimal solution \( x^* \)
     where
     \begin{align*}
-         & \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} = \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} - 1       \\
-         & \sum\limits_{\tgt{p} \in T} x^*_{\src{\hat{p}}, \tgt{p}} = 1 + \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} \\
+         & \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} = \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} - 1             \\
+         & \sum\limits_{\tgt{p} \in T} x^*_{\src{\hat{p}}, \tgt{p}} = 1 + \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{\hat{p}}, \tgt{p}} \\
     \end{align*}
-    If this solution doesn't satisfy the desired property repeat the procedure.
+    and \( T^*_x = T^*_{\hat{x}} = T^*_{x^*}  \). If this solution doesn't satisfy the desired property repeat the procedure.
+\end{proof}
+
+Let's note that all feasible solutions of the MaxIS will correspond to feasible solutions of the
+problem \ref{eq:reduction_without_nproj} and vice versa.
+
+\begin{lemma} \label{lemma:maxis_f_implies_ilp}
+    Suppose \( x_v \) is a feasible solution of the maximum independent set problem, then there is a
+    corresponding solution of the problem \eqref{eq:reduction_without_nproj}.
+\end{lemma}
+\begin{proof}
+    Suppose some a non feasible solution \( x \) that corresponds to the feasible solution of the
+    MaxIS problem. Then we have:
+    \[
+        \exists (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big|
+        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1
+    \]
+    But by construction of the set \( \hat{\Pi}(S, T) \) and the overlapping relation (dummy target nodes
+    are overlapping only with itself) if \( \tgt{p_1} \neq \tgt{p_2} \) then:
+    \begin{multline*}
+        \left\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \right\} = \\
+        \left\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T_V) \right\}
+    \end{multline*}
+    But since the solution \( x_v \) is feasible constraints with  \( \tgt{p_1} \neq \tgt{p_2} \) can not be violated:
+    \begin{align*}
+         & \forall \{ u, w \} \in E \quad x_u + x_w \leq 1 \stackrel{\eqref{eq:overlap_reduction}}{\implies}                  \\
+         & \forall \tgt{p_1} \in T^*_x \; \nexists \tgt{p_2} \in T^*_x \Big| \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \implies \\
+         & \forall \src{p_1}, \src{p_2} \in S \quad x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+    \end{align*}
+    Therefore \( \tgt{p_1} = \tgt{p_2} \) and constraints are violated because there exists
+    at least two source nodes \( \src{p_1}, \src{p_2} \in S \) that are projected onto the same target nodes \( \tgt{p} \in T \):
+    \[
+        x_{\src{p_1}, \tgt{p}} = 1 \qquad x_{\src{p_2}, \tgt{p}} = 1
+    \]
+
+    But then consider a solution \( x^* \) such that we remove one of the projection and make this constraint :
+    \begin{align*}
+         & \forall s,t \in S \times T \setminus \left\{ (\src{p_1}, \tgt{p}) \right\} x^*_{s,t} = x_{s,t} \\
+         & x^*_{\src{p_2}, \tgt{p_1}} = 0
+    \end{align*}
+    Note that \( T^*_{x^*} = T^*_x  \) because there is a projection to the target node \( \tgt{p} \)
+    since \( \)  \( x^*_{\src{p_1}, \tgt{p_1}} = 1 \).
+    If the solution \( x^* \) is infeasible - repeat procedure, otherwise
+    this solution is feasible and corresponds to the same solution \( x_v \) of the MaxIS problem.
+\end{proof}
+
+\begin{lemma} \label{lemma:ilp_f_implies_maxis}
+    Suppose \( x \) is a feasible solution of the problem \eqref{eq:reduction_without_nproj}, then
+    the corresponding solution of the maximum independent set problem is feasible as well.
+\end{lemma}
+\begin{proof} By construction the non-overlapping constraints of the problem \eqref{eq:reduction_without_nproj}
+    imply constraints of the MaxIS problem:
+    \begin{align*}
+         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \quad
+        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
+         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_1}, \tgt{p_2} \in T_V \quad
+        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
+         & \forall \tgt{p_1}, \tgt{p_2} \in T_V, \tgt{p_1} \neq \tgt{p_2}, \tgt{p_1} \cap \tgt{p_2} \neq \emptyset
+        \quad \nexists \src{p_1}, \src{p_2} \in S \Big|
+        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
+         & \nexists \tgt{p_1}, \tgt{p_2} \in T_V, \tgt{p_1} \neq \tgt{p_2}, \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \Big|
+        \tgt{p_1} \in T^*_x, \tgt{p_2} \in T^*_x \implies                                                                    \\
+         & \forall \{ v_{\tgt{p_1}}, v_{\tgt{p_2}} \} \in E \quad x_{v_{\tgt{p_1}}} + x_{v_{\tgt{p_2}}}\leq 1
+    \end{align*}
 \end{proof}
 
 And finally we can prove the complexity of the proposed ILP problem by reduction the MaxIS problem
@@ -1080,7 +1145,22 @@ to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
     The proposed ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} is NP-hard
 \end{theorem}
 \begin{proof}
-    Trust me!
+    Assume the reduction of the MaxIS problem to an instance of the projection ILP problem described above.
+    Since number of nodes in the ILP problem is linear on the number of vertices in the MaxIS problem and
+    having a solution of the ILP problem it scales at most quadratically on number of vertices time to
+    determine the solution of the MaxIS problem the reduction takes a polynomial time.
+    The only thing that it is required to check is whether the projected optimal solution of the ILP problem
+    will be always optimal solution of the MaxIS.
+
+    By the corollary \ref{col:maxis_and_ilp_objective_equal} the objective values of two problems are equal and therefore
+    feasible solution with highest objective value will have a highest objective value in the counterpart problem.
+    And by lemmas \ref{lemma:maxis_f_implies_ilp} and \ref{lemma:ilp_f_implies_maxis} the non-overlapping constraint
+    won't make any optimal solution infeasible.
+
+    But besides non-overlapping constraint the problem \eqref{eq:objective}--\eqref{eq:binary_prog} also has
+    constraints \eqref{eq:num_proj_const}. Let's check whether they won't make any optimal solution of the MaxIS
+    problem infeasible in their ILP formulation.
+
 \end{proof}
 
 
