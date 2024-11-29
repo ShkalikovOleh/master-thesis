@@ -1110,7 +1110,7 @@ problem \ref{eq:reduction_without_nproj} and vice versa.
 
     But then consider a solution \( x^* \) such that we remove one of the projection and make this constraint :
     \begin{align*}
-         & \forall s,t \in S \times T \setminus \left\{ (\src{p_1}, \tgt{p}) \right\} x^*_{s,t} = x_{s,t} \\
+         & \forall (s,t) \in S \times T \setminus \left\{ (\src{p_1}, \tgt{p}) \right\} x^*_{s,t} = x_{s,t} \\
          & x^*_{\src{p_2}, \tgt{p_1}} = 0
     \end{align*}
     Note that \( T^*_{x^*} = T^*_x  \) because there is a projection to the target node \( \tgt{p} \)
@@ -1150,12 +1150,12 @@ to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
     having a solution of the ILP problem it scales at most quadratically on number of vertices time to
     determine the solution of the MaxIS problem the reduction takes a polynomial time.
     The only thing that it is required to check is whether the projected optimal solution of the ILP problem
-    will be always optimal solution of the MaxIS.
+    will be always optimal solution of the MaxIS and vice versa.
 
     By the corollary \ref{col:maxis_and_ilp_objective_equal} the objective values of two problems are equal and therefore
     feasible solution with highest objective value will have a highest objective value in the counterpart problem.
     And by lemmas \ref{lemma:maxis_f_implies_ilp} and \ref{lemma:ilp_f_implies_maxis} the non-overlapping constraint
-    won't make any optimal solution infeasible.
+    won't make any optimal solution infeasible for their counterpart.
 
     But besides non-overlapping constraint the problem \eqref{eq:objective}--\eqref{eq:binary_prog} also has
     constraints \eqref{eq:num_proj_const}. Let's check whether they won't make any optimal solution of the MaxIS
@@ -1174,7 +1174,7 @@ to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
     \]
     Let's prove it. For this we need to analyze constraints \eqref{eq:num_proj_const} for every type of inequalities.
 
-    \textit{The case of \( < \):} the number of dummy source nodes is given in the table \ref{tab:dummy_nodes_num} (a) and equal to
+    \textit{The case of \( < \).} The number of dummy source nodes is given in the table \ref{tab:dummy_nodes_num} (a) and equal to
     \( |S| = \ceil{\frac{|V|}{n_{proj} - 1}} \)
     By the corollary \ref{col:bound_num_proj_reduction} there exists such a solution \( x^* \) from the same
     equivalence class that satisfies constraints:
@@ -1185,7 +1185,7 @@ to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
         n_{proj} - 1 < n_{proj}.
     \]
 
-    \textit{The case of \( \leq \):} by the same corollary \ref{col:bound_num_proj_reduction} as in the previous case
+    \textit{The case of \( \leq \).} By the same corollary \ref{col:bound_num_proj_reduction} as in the previous case
     we obtain that there is a solution \( x^* \) that satisfies constraints:
     \[
         \forall \src{p} \in S \quad
@@ -1194,22 +1194,92 @@ to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
         n_{proj} .
     \]
 
-    \textit{The case of \( =\):}
+    \textit{The case of \( =\).} By the corollary \ref{col:bound_num_proj_reduction}
+    for any solution \( x \) from the equivalence class \( [x] \) there is
+    a feasible solution \( x^* \in [x] \) such that:
+    \begin{equation} \label{eq:red_thm_n_proj}
+        \forall \src{p} \in S \quad
+        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|} =
+        \frac{|V|}{ \ceil{\frac{|V|}{n_{proj}}}} \leq \frac{|V|}{\frac{|V|}{n_{proj}}} =
+        n_{proj} .
+    \end{equation}
+    If constraints \eqref{eq:num_proj_const} are violated then there is such a source node \( \src{\hat{p}} \)
+    for which the sum is a strong inequality:
+    \begin{equation} \label{eq:red_thm_src_that_violate_constr}
+        \exists \src{\hat{p}} \in S \quad
+        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|} <
+        n_{proj} .
+    \end{equation}
+    But then we can find such a dummy target node \( t_d \in T_{dummy} \) that:
+    \[
+        \exists t_d \in T_{dummy} \Big| \forall s \in S \quad x^*_{s,t} = 0
+    \]
+    It can be proved by contradiction to the property of the given by the corollary \ref{col:bound_num_proj_reduction}
+    and that there exists such a \( \src{\hat{p}} \):
+    \begin{align*}
+         & \nexists t_d \in T_{dummy} \Big| \forall s \in S \quad x^*_{s,t} = 0 \implies                                                             \\
+         & \forall t \in T_{dummy}, \; \exists s \in S \quad x^*_{s,t} = 1 \implies                                                                  \\
+         & \ceil{\frac{|V|}{n_{proj}}} n_{proj} = |S| n_{proj}
+        \stackrel{\eqref{eq:red_thm_n_proj}}{\geq}
+        \sum\limits_{s \in S} \sum\limits_{t \in T} x^*_{s,t} \geq |T_{dummy}| = \ceil{\frac{|V|}{n_{proj}}} n_{proj} \implies                       \\
+         & \sum\limits_{s \in S} \sum\limits_{t \in T} x^*_{s,t} = \ceil{\frac{|V|}{n_{proj}}} n_{proj} \geq |V|
+        \implies                                                                                                                                     \\
+         & \sum\limits_{s \in S \setminus \{ \src{\hat{p}} \}} \sum\limits_{t \in T} x^*_{s,t} = \ceil{\frac{|V|}{n_{proj}}} n_{proj} = |S| n_{proj}
+        \stackrel{\eqref{eq:red_thm_src_that_violate_constr}}{\implies}                                                                              \\
+         & \exists s \in S \quad
+        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} > \frac{|V|}{|S|} >
+        n_{proj}
+    \end{align*}
+    In short words always there are a "free" dummy target nodes that can be used to ensure equality constraints.
+    It was expectable just because during construction we choose the number of target dummy nodes to make it possible.
+    In order to make the solution closer to be feasible we just need to project source entity \( \src{\hat{p}} \) onto this target
+    candidate \( t_d \). So, the modified solution \( \hat{x} \) is the following:
+    \begin{align*}
+         & \forall (s,t) \in S \times T \setminus \left\{ (\src{\hat{p}}, t_d) \right\} \hat{x}_{s,t} = x^*_{s,t} \\
+         & \hat{x}_{\src{\hat{p}}, t_d} = 1
+    \end{align*}
+    By the definition of the set \( T^*_{\hat{x}} \) since we add only a projection to a dummy node
+    it won't change the equivalence class of the solution, objective value but make the number of projection
+    from the source entity \( \src{\hat{p}} \) higher:
+    \[
+        \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{\hat{p}}, \tgt{p}} =
+        \sum\limits_{\tgt{p} \in T} x^*_{\src{\hat{p}}, \tgt{p}} + 1
+        \leq n_{proj}
+    \]
+    Since dummy target nodes overlaps only with itself we have that the constraints that potentially
+    can be violated are defined by this set:
+    \begin{multline*}
+        \left\{ (\src{p_1}, \src{p_2}, t_d, \tgt{p_2}) \Big| (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \right\} = \\
+        \left\{ (\src{p_1}, \src{p_2}, t_d, t_d) \Big| \src{p_1}, \src{p_2} \in S, \src{p_1} \neq \src{p_2} \right\}
+    \end{multline*}
+    But because of the choice of \( t_d \) the constraints
+    \eqref{eq:non_overlap_const} are not violated:
+    \begin{align*}
+        \forall \src{p_1}, \src{p_2} \in S \Big| \src{p_1} \neq \src{p_2}, \src{p_1} \neq \src{\hat{p}}, \src{p_2} \neq \src{\hat{p}} \quad
+         & \hat{x}_{src{p_1}, t_d} + \hat{x}_{\src{p_2}, t_d} = x_{\src{p_1}, t_d} + x_{\src{p_2}, t_d} = 0 \\
+        \forall \src{p_2} \in S \Big| \src{\hat{p}} \neq \src{p_2} \quad
+         & \hat{x}_{\src{\hat{p}}, t_d} + \hat{x}_{\src{p_2}, t_d} = 1 + 0 = 1 \leq 1
+    \end{align*}
 
-    \textit{The case of \( >, \geq \):} we can perform a similar derivation as for the case of \( = \) type of constraints, but
+    If still there are some source entity for which constrains \eqref{eq:num_proj_const} are violated - repeat the process.
+    Repetition of the process is possible since the property \eqref{eq:red_thm_n_proj} still holds and
+    we proved that there always exists a "free" dummy target node we can project this source node onto.
+
+    \textit{The case of \( >, \geq \).} We can perform a similar derivation as for the case of \( = \) type of constraints, but
     let's note that \( \forall \src{p} \in S \):
     \begin{align*}
          & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} = n_{proj} \Leftrightarrow
         n_{proj} \geq \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \geq n_{proj}                                  \\
          & \bigvee\limits_{k=n_{proj} + 1}^{|T|} \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} = k \Leftrightarrow
-        \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} > n_{proj} \qquad
+        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} > n_{proj} \qquad
     \end{align*}
     Therefore all solutions that are feasible for the case of equality constraints are also should be
     feasible for the case of \( \geq, > \) and vice versa, so we won't lose any equivalence class.
 
     So, we have shown that for every feasible solution of the problem \eqref{eq:reduction_without_nproj} there is
     a feasible solution of the full ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} that belongs to the
-    same equivalence class, therefore the MaxIS problem can be solved as an instance of the problem \eqref{eq:objective}--\eqref{eq:binary_prog}
+    same equivalence class. And every feasible solution of the full ILP problem is a feasible solution of the problem \eqref{eq:reduction_without_nproj}.
+    Therefore the MaxIS problem can be solved as an instance of the problem \eqref{eq:objective}--\eqref{eq:binary_prog}
     and consequently the ILP problem is at least as hard as the maximum independent set problem which is NP-hard.
 \end{proof}
 
