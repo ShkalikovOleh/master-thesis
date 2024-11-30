@@ -17,59 +17,59 @@ source entity can be projected to, since usually we expect 1-to-1 correspondence
 between source entities and entities of the target sentence. Based on this simple
 properties let's build an integer linear optimization problem and study it.
 
-\begin{figure*}[h]
-    \centering
-    \begin{tikzpicture}[node distance=-0.1,
-            every node/.style={text centered,
-                    text height=2ex,
-                    text depth=.25ex,
-                },
-            loc/.style={fill=orange!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:#1-LOC}},
-            per/.style={fill=green!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:#1-PER}},
-            cand/.style={fill=blue!30, rounded rectangle},]
+\begin{figure*}[ht]
+  \centering
+  \begin{tikzpicture}[node distance=-0.1,
+      every node/.style={text centered,
+        text height=2ex,
+        text depth=.25ex,
+      },
+      loc/.style={fill=orange!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:#1-LOC}},
+      per/.style={fill=green!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:#1-PER}},
+    cand/.style={fill=blue!30, rounded rectangle},]
 
-        \node[per={B}, rounded rectangle east arc=none](George_src){George};
-        \node[per={I}, rounded rectangle west arc=none, right=of George_src](Washington_src){Washington};
-        \node[right=of Washington_src](is_src){is};
-        \node[right=of is_src](the_src){the};
-        \node[right=of the_src](first_src){first};
-        \node[right=of first_src](president_src){president};
-        \node[right=of president_src](of_src){of};
-        \node[right=of of_src](the_src){the};
-        \node[loc={B}, rounded rectangle east arc=none, right=of the_src](United_src){United};
-        \node[loc={I}, rounded rectangle west arc=none, right=of United_src](States_src){States};
+    \node[per={B}, rounded rectangle east arc=none](George_src){George};
+    \node[per={I}, rounded rectangle west arc=none, right=of George_src](Washington_src){Washington};
+    \node[right=of Washington_src](is_src){is};
+    \node[right=of is_src](the_src){the};
+    \node[right=of the_src](first_src){first};
+    \node[right=of first_src](president_src){president};
+    \node[right=of president_src](of_src){of};
+    \node[right=of of_src](the_src){the};
+    \node[loc={B}, rounded rectangle east arc=none, right=of the_src](United_src){United};
+    \node[loc={I}, rounded rectangle west arc=none, right=of United_src](States_src){States};
 
-        \node[cand, rounded rectangle east arc=none, below=of George_src, yshift=-1.5cm](George_tgt){George};
-        \node[cand, rounded rectangle west arc=none, right=of George_tgt](Washington_tgt){Washington};
-        \node[right=of Washington_tgt](ist_tgt){ist};
-        \node[right=of ist_tgt](der_tgt){die};
-        \node[right=of der_tgt](erste_tgt){erste};
-        \node[right=of erste_tgt](president_tgt){Präsident};
-        \node[right=of president_tgt](der_tgt){der};
-        \node[cand, rounded rectangle east arc=none, right=of der_tgt](Vereinigten_tgt){Vereinigten};
-        \node[cand, rounded rectangle west arc=none, right=of Vereinigten_tgt](Staaten_tgt){Staaten};
+    \node[cand, rounded rectangle east arc=none, below=of George_src, yshift=-1.5cm](George_tgt){George};
+    \node[cand, rounded rectangle west arc=none, right=of George_tgt](Washington_tgt){Washington};
+    \node[right=of Washington_tgt](ist_tgt){ist};
+    \node[right=of ist_tgt](der_tgt){die};
+    \node[right=of der_tgt](erste_tgt){erste};
+    \node[right=of erste_tgt](president_tgt){Präsident};
+    \node[right=of president_tgt](der_tgt){der};
+    \node[cand, rounded rectangle east arc=none, right=of der_tgt](Vereinigten_tgt){Vereinigten};
+    \node[cand, rounded rectangle west arc=none, right=of Vereinigten_tgt](Staaten_tgt){Staaten};
 
-        \node[text=gray, font=\scriptsize, above=of first_src, yshift=0.2cm, xshift=0.2cm](source){Source labeled sentence};
-        \node[text=gray, font=\scriptsize, below=of source, yshift=-3cm]{Original sentence with extracted candidates};
+    \node[text=gray, font=\scriptsize, above=of first_src, yshift=0.2cm, xshift=0.2cm](source){Source labeled sentence};
+    \node[text=gray, font=\scriptsize, below=of source, yshift=-3cm]{Original sentence with extracted candidates};
 
-        \draw[->] (George_src.south east) -- node[left]{\(c_{11}\)} (George_tgt.north east);
-        \draw[->] (United_src.south east) -- node[right]{\(c_{22}\)} (Vereinigten_tgt.north east);
-        \draw[->] (George_src.south east) -- node[above left, yshift=0.1cm, xshift=-0.2cm]{\(c_{12}\)} (Vereinigten_tgt.north east);
-        \draw[->] (United_src.south east) -- node[below left]{\(c_{21}\)} (George_tgt.north east);
-    \end{tikzpicture}
-    \caption{Illustration of the proposed idea of matching source entities and candidates in the target sentence}
-    \label{fig:cand_matching}
+    \draw[->] (George_src.south east) -- node[left]{\(c_{11}\)} (George_tgt.north east);
+    \draw[->] (United_src.south east) -- node[right]{\(c_{22}\)} (Vereinigten_tgt.north east);
+    \draw[->] (George_src.south east) -- node[above left, yshift=0.1cm, xshift=-0.2cm]{\(c_{12}\)} (Vereinigten_tgt.north east);
+    \draw[->] (United_src.south east) -- node[below left]{\(c_{21}\)} (George_tgt.north east);
+  \end{tikzpicture}
+  \caption{Illustration of the proposed idea of matching source entities and candidates in the target sentence}
+  \label{fig:cand_matching}
 \end{figure*}
 
 \section{Formulation of the ILP problem}
 First of all let's start with a definition of overlapping.
 
 \begin{definition}[Relation of overlapping] \label{def:overlapping}
-    We consider that target candidates \linebreak
-    \( \tgt{p_1} = (i_{\tgt{p_1}}, j_{\tgt{p_1}}), \tgt{p_2} = (i_{\tgt{p_2}}, j_{\tgt{p_2}}) \in T \) overlap if and only if
-    \( i_{\tgt{p_1}} \leq j_{\tgt{2}} \land i_{\tgt{p_2}} \leq j_{\tgt{1}} \), i. e. sets of word indices are
-    not disjoint. We will denote that candidates overlap using
-    the following notation: \( \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \).
+  We consider that target candidates \linebreak
+  \( \tgt{p_1} = (i_{\tgt{p_1}}, j_{\tgt{p_1}}), \tgt{p_2} = (i_{\tgt{p_2}}, j_{\tgt{p_2}}) \in T \) overlap if and only if
+  \( i_{\tgt{p_1}} \leq j_{\tgt{2}} \land i_{\tgt{p_2}} \leq j_{\tgt{1}} \), i. e. sets of word indices are
+  not disjoint. We will denote that candidates overlap using
+  the following notation: \( \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \).
 \end{definition}
 
 Having defined all necessary objects we can finally formulate the ILP problem for a
@@ -78,24 +78,24 @@ projection step of the XLNER pipeline that aligns with our requirements.
 Let \( S \) be a set of source entities, \( T \) -- set of target candidates and \( \cap \subset T^2 \) is
 a relation of overlapping, then the projection ILP problem is the following:
 \begin{align}
-    \label{eq:objective}
-     & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                             \\
-     & \text{subject to} \notag                                                                                                                            \\
-    \label{eq:num_proj_const}
-     & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                      & \forall \src{p} \in S                     \\
-    \label{eq:non_overlap_const}
-     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
-     & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T)                                                                            \\
-    \label{eq:binary_prog}
-     & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
+  \label{eq:objective}
+  & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                             \\
+  & \text{subject to} \notag                                                                                                                            \\
+  \label{eq:num_proj_const}
+  & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                      & \forall \src{p} \in S                     \\
+  \label{eq:non_overlap_const}
+  & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+  & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T)                                                                            \\
+  \label{eq:binary_prog}
+  & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
 \end{align}
 where \( \hat{\Pi}(S, T) \) is a set of source entities -- target candidates combinations that can not be
 projected onto together since they are overlapping. This set is defined as follows:
 \begin{equation}  \label{eq:overlapping_set}
-    \begin{aligned}
-        \hat{\Pi}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
-        (\src{p_1} \neq \src{p_2}) \lor (\tgt{p_1} \neq \tgt{p_2}) \Big\}
-    \end{aligned}
+  \begin{aligned}
+    \hat{\Pi}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
+    (\src{p_1} \neq \src{p_2}) \lor (\tgt{p_1} \neq \tgt{p_2}) \Big\}
+  \end{aligned}
 \end{equation}
 
 Here every variable \( x_{\src{p}, \tgt{p}} \) represents whether the source entity \( \src{p} \in S \)
@@ -122,28 +122,28 @@ a square with respect to the number of source entities.
 It can make this problem harder to solve. Therefore we need to try to lower number of constraints
 of this type. For this let's take a look at the overlapping relation that a basis of it.
 \begin{lemma} \label{lemma:not_transitive}
-    The relation of overlapping is not transitive.
+  The relation of overlapping is not transitive.
 \end{lemma}
 \begin{proof}
-    We will proof this by showing a counterexample.
-    Assume the following target candidates
-    \[
-        a = (2, 4) \quad b = (1, 2) \quad c = (4, 5)
-    \]
-    By the definition of the overlapping relation \( a \cap b \neq \emptyset \) and
-    \( a \cap c \neq \emptyset \) but \( b \) and \( c \) are not overlapping.
+  We will proof this by showing a counterexample.
+  Assume the following target candidates
+  \[
+    a = (2, 4) \quad b = (1, 2) \quad c = (4, 5)
+  \]
+  By the definition of the overlapping relation \( a \cap b \neq \emptyset \) and
+  \( a \cap c \neq \emptyset \) but \( b \) and \( c \) are not overlapping.
 \end{proof}
 
 This fact leads to the impossibility to split all target candidates into groups of mutually
 overlapped candidates and choice at maximum one candidate from every group to match with a source entity.
 \begin{corollary}
-    It is impossible to partition set of target candidates such that every partition consists of
-    candidates that are pairwise overlapping with each other and there are no overlapping candidates
-    that are in different partitions.
+  It is impossible to partition set of target candidates such that every partition consists of
+  candidates that are pairwise overlapping with each other and there are no overlapping candidates
+  that are in different partitions.
 \end{corollary}
 \begin{proof}
-    By Lemma \ref{lemma:not_transitive} the overlapping relation is not transitive and therefore
-    is not an equivalence relation that implies we can not construct a quotient set.
+  By Lemma \ref{lemma:not_transitive} the overlapping relation is not transitive and therefore
+  is not an equivalence relation that implies we can not construct a quotient set.
 \end{proof}
 
 Nevertheless it is possible to make number of constraints \eqref{eq:non_overlap_const} lower.
@@ -153,148 +153,148 @@ Thus we can just sum up constraints over all source entities.
 We can do it because all variables \( x_{\src{p}, \tgt{p}} \) are binary and therefore
 can not be negative.
 \begin{theorem}
-    Set of constraints \eqref{eq:non_overlap_const} is satisfied if and only if
-    the following sets of reduced constraints are satisfied:
-    \begin{align*}
-         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                                & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T) \\
-         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1
-         & \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset                                             \\
-    \end{align*}
-    where
-    \begin{equation*}
-        \Pi(T) = \left\{ (\tgt{p_1}, \tgt{p_2}) \Big| \tgt{p_1}, \tgt{p_2} \in T,
-        \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset,
-        \tgt{p_1} \neq \tgt{p_2} \right\}
-    \end{equation*}
+  Set of constraints \eqref{eq:non_overlap_const} is satisfied if and only if
+  the following sets of reduced constraints are satisfied:
+  \begin{align*}
+    & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                                & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T) \\
+    & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1
+    & \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset                                             \\
+  \end{align*}
+  where
+  \begin{equation*}
+    \Pi(T) = \left\{ (\tgt{p_1}, \tgt{p_2}) \Big| \tgt{p_1}, \tgt{p_2} \in T,
+      \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset,
+    \tgt{p_1} \neq \tgt{p_2} \right\}
+  \end{equation*}
 \end{theorem}
 \begin{proof}
-    \textit{Necessity:} Assume that constraints \eqref{eq:non_overlap_const} are satisfied, but
-    the proposed constraints are not. Then there are two options:
-    \[
-        \exists (\tgt{p_1}, \tgt{p_2}) \in \Pi(T) \Bigg| \quad
-        \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) > 1
-    \]
-    or
-    \[
-        \exists \tgt{p} \in T \Big|
-        \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
-        \Bigg| \quad \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} > 1
-    \]
+  \textit{Necessity:} Assume that constraints \eqref{eq:non_overlap_const} are satisfied, but
+  the proposed constraints are not. Then there are two options:
+  \[
+    \exists (\tgt{p_1}, \tgt{p_2}) \in \Pi(T) \Bigg| \quad
+    \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) > 1
+  \]
+  or
+  \[
+    \exists \tgt{p} \in T \Big|
+    \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
+    \Bigg| \quad \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} > 1
+  \]
 
-    Consider the first option:
-    \begin{align*}
-         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) > 1
-        \stackrel{\eqref{eq:binary_prog}}{\implies}                                                                     \\
-         & \exists \src{p_1}, \src{p_2} \in S \Big| x_{\src{p_1}, \tgt{p_1}} = 1, x_{\src{p_2}, \tgt{p_2}} = 1 \implies \\
-         & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} = 2 > 1
-    \end{align*}
-    that contradicts our assumption that constraints \eqref{eq:non_overlap_const} are satisfied.
+  Consider the first option:
+  \begin{align*}
+    & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) > 1
+    \stackrel{\eqref{eq:binary_prog}}{\implies}                                                                     \\
+    & \exists \src{p_1}, \src{p_2} \in S \Big| x_{\src{p_1}, \tgt{p_1}} = 1, x_{\src{p_2}, \tgt{p_2}} = 1 \implies \\
+    & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} = 2 > 1
+  \end{align*}
+  that contradicts our assumption that constraints \eqref{eq:non_overlap_const} are satisfied.
 
-    The same result we can obtain for the second case:
-    \begin{align*}
-         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} > 1
-        \stackrel{\eqref{eq:binary_prog}}{\implies}                                                                                           \\
-         & \exists \src{p_1}, \src{p_2} \in S, \src{p_1} \neq \src{p_2} \Big| x_{\src{p_1}, \tgt{p}} = 1, x_{\src{p_2}, \tgt{p}} = 1 \implies \\
-         & x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} = 2 > 1
-    \end{align*}
+  The same result we can obtain for the second case:
+  \begin{align*}
+    & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} > 1
+    \stackrel{\eqref{eq:binary_prog}}{\implies}                                                                                           \\
+    & \exists \src{p_1}, \src{p_2} \in S, \src{p_1} \neq \src{p_2} \Big| x_{\src{p_1}, \tgt{p}} = 1, x_{\src{p_2}, \tgt{p}} = 1 \implies \\
+    & x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} = 2 > 1
+  \end{align*}
 
-    Thus we proved necessity.
+  Thus we proved necessity.
 
-    \textit{Sufficiency:}
-    Suppose that the following constraints are satisfied:
-    \[
-        \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1
-        \qquad \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)
-    \]
-    Then the sum could be equal to \( 0 \) or \( 1 \). If it is zero then none entities are projected onto
-    any of these overlapped candidates and therefore constraints \eqref{eq:non_overlap_const} are not violated.
-    Let's look at case when the sum is equal to \( 1 \).
-    \begin{equation*} \label{eq:derivation_of_const_reduction}
-        \begin{aligned}
-             & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) = 1
-            \stackrel{\eqref{eq:binary_prog}}{\implies}                                                       \\
-             & \exists! \src{p} \in S, \exists! \tgt{p} \in \{ \tgt{p_1}, \tgt{p_2}\}
-            \Bigg| x_{\src{p}, \tgt{p}} = 1 \implies                                                          \\
-             & \forall \src{p_1}, \src{p_2} \in S, x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
-        \end{aligned}
-    \end{equation*}
-    Therefore we proved that
-    \[
-        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1 \qquad
-        \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi'}(S, T)
-    \]
-    where
-    \begin{align*}
-        \hat{\Pi'}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
-        \tgt{p_1} \neq \tgt{p_2} \Big\}
-    \end{align*}
+  \textit{Sufficiency:}
+  Suppose that the following constraints are satisfied:
+  \[
+    \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1
+    \qquad \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)
+  \]
+  Then the sum could be equal to \( 0 \) or \( 1 \). If it is zero then none entities are projected onto
+  any of these overlapped candidates and therefore constraints \eqref{eq:non_overlap_const} are not violated.
+  Let's look at case when the sum is equal to \( 1 \).
+  \begin{equation*} \label{eq:derivation_of_const_reduction}
+    \begin{aligned}
+      & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) = 1
+      \stackrel{\eqref{eq:binary_prog}}{\implies}                                                       \\
+      & \exists! \src{p} \in S, \exists! \tgt{p} \in \{ \tgt{p_1}, \tgt{p_2}\}
+      \Bigg| x_{\src{p}, \tgt{p}} = 1 \implies                                                          \\
+      & \forall \src{p_1}, \src{p_2} \in S, x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+    \end{aligned}
+  \end{equation*}
+  Therefore we proved that
+  \[
+    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1 \qquad
+    \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi'}(S, T)
+  \]
+  where
+  \begin{align*}
+    \hat{\Pi'}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
+    \tgt{p_1} \neq \tgt{p_2} \Big\}
+  \end{align*}
 
-    But it is not the same as set \eqref{eq:overlapping_set}:
-    \[
-        \hat{\Pi}(S, T) \setminus \hat{\Pi'}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \tgt{p_1} = \tgt{p_2},
-        \src{p_1} \neq \src{p_2} \Big\}
-    \]
-    So we need to check whether constraints \eqref{eq:non_overlap_const} are satisfied on this set difference.
+  But it is not the same as set \eqref{eq:overlapping_set}:
+  \[
+    \hat{\Pi}(S, T) \setminus \hat{\Pi'}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \tgt{p_1} = \tgt{p_2},
+    \src{p_1} \neq \src{p_2} \Big\}
+  \]
+  So we need to check whether constraints \eqref{eq:non_overlap_const} are satisfied on this set difference.
 
-    First of all, let's notice that
-    \begin{multline*}
-        \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)
-        \qquad
-        \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}})
-        =
-        \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p_1}} +
-        \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p_2}} \leq 1
-        \implies                        \\
-        \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
-        \quad
-        \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1
-    \end{multline*}
-    Therefore there exists at most one source entity \( \src{p} \in S \) that are projected
-    to the target candidate \( \tgt{p} \).
-    And using exactly the same derivation as above we get:
-    \begin{multline*}
-        \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
-        \quad
-        \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1
-        \stackrel{\eqref{eq:binary_prog}}{\implies}                                                                                                                                                       \\
-        \begin{aligned}
-             & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} = 0
-            \stackrel{\eqref{eq:binary_prog}}{\implies}
-            \forall \src{p} \in S, x_{\src{p}, \tgt{p}} = 0         \\
-            \text{or}                                               \\
-             & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} = 1
-            \stackrel{\eqref{eq:binary_prog}}{\implies}
-            \exists! \src{p} \in S, x_{\src{p}, \tgt{p}} = 1        \\
-        \end{aligned} \implies \\
-        x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} \leq 1 \qquad
-        \begin{aligned}
-             & \forall \src{p_1}, \src{p_1} \in S, \src{p_1} \neq \src{p_2}                                                        \\
-             & \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
-        \end{aligned}
-    \end{multline*}
-    So, only the case, when entity has no overlapped entity that are
-    not equal to it, remains. But this case is fully covered by the second part of the proposed reduced constraints:
-    \[
-        \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1 \qquad
-        \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
-    \]
-    And by considering that this sum can be either \( 0 \) or \( 1 \) and making
-    exactly the same derivation we conclude that it implies that
-    constraints \eqref{eq:non_overlap_const} are satisfied.
+  First of all, let's notice that
+  \begin{multline*}
+    \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)
+    \qquad
+    \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}})
+    =
+    \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p_1}} +
+    \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p_2}} \leq 1
+    \implies                        \\
+    \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
+    \quad
+    \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1
+  \end{multline*}
+  Therefore there exists at most one source entity \( \src{p} \in S \) that are projected
+  to the target candidate \( \tgt{p} \).
+  And using exactly the same derivation as above we get:
+  \begin{multline*}
+    \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
+    \quad
+    \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1
+    \stackrel{\eqref{eq:binary_prog}}{\implies}                                                                                                                                                       \\
+    \begin{aligned}
+      & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} = 0
+      \stackrel{\eqref{eq:binary_prog}}{\implies}
+      \forall \src{p} \in S, x_{\src{p}, \tgt{p}} = 0         \\
+      \text{or}                                               \\
+      & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} = 1
+      \stackrel{\eqref{eq:binary_prog}}{\implies}
+      \exists! \src{p} \in S, x_{\src{p}, \tgt{p}} = 1        \\
+    \end{aligned} \implies \\
+    x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} \leq 1 \qquad
+    \begin{aligned}
+      & \forall \src{p_1}, \src{p_1} \in S, \src{p_1} \neq \src{p_2}                                                        \\
+      & \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
+    \end{aligned}
+  \end{multline*}
+  So, only the case, when entity has no overlapped entity that are
+  not equal to it, remains. But this case is fully covered by the second part of the proposed reduced constraints:
+  \[
+    \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1 \qquad
+    \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
+  \]
+  And by considering that this sum can be either \( 0 \) or \( 1 \) and making
+  exactly the same derivation we conclude that it implies that
+  constraints \eqref{eq:non_overlap_const} are satisfied.
 \end{proof}
 
 The theorem allows us to reduce number of constraints and make them scale as a constant
 with respect to the number of source entities. As a result we end up with the following final formulation of the ILP problem for the projection step
 of the XLNER pipeline.
 \begin{equation} \label{eq:ilp}
-    \begin{aligned}
-         & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                                                                       \\
-         & \text{subject to}                                                                                                                                                                                                             \\
-         & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                      & \forall \src{p} \in S                                                                                               \\
-         & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                    & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)                                                                           \\
-         & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1                                                 & \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset \\
-         & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
-    \end{aligned}
+  \begin{aligned}
+    & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                                                                       \\
+    & \text{subject to}                                                                                                                                                                                                             \\
+    & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \lessgtr n_{proj}                                      & \forall \src{p} \in S                                                                                               \\
+    & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                    & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)                                                                           \\
+    & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1                                                 & \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset \\
+    & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
+  \end{aligned}
 \end{equation}
 
 \section{Candidates extraction}
@@ -316,19 +316,19 @@ if we have 3 source entities there is a real target entity that contains all wor
 
 Thus, the algorithm for candidates extraction wilt bounded maximum length of n-grams are the following.
 \begin{algorithm}
-    \KwData{\( n \in \mathbb{N} \) -- number of words in the target sentence,
-        \(M \leq n \in \mathbb{N} \) -- maximum length of a target candidate}
-    \KwResult{\( T \) -- set of target candidates}
+  \KwData{\( n \in \mathbb{N} \) -- number of words in the target sentence,
+  \(M \leq n \in \mathbb{N} \) -- maximum length of a target candidate}
+  \KwResult{\( T \) -- set of target candidates}
 
-    \( T \gets \emptyset \) \;
-    \For{\(i \gets 0 \) \KwTo \( n \)}{
-        \( m \gets \min(s + M, n) \) \;
-        \For{\(j \gets i \) \KwTo \( m \)}{
-            \( T \gets T \cup \{ (i, j) \} \) \;
-        }
+  \( T \gets \emptyset \) \;
+  \For{\(i \gets 0 \) \KwTo \( n \)}{
+    \( m \gets \min(s + M, n) \) \;
+    \For{\(j \gets i \) \KwTo \( m \)}{
+      \( T \gets T \cup \{ (i, j) \} \) \;
     }
-    \caption{Bounded length n-gram candidates extraction}
-    \label{alg:ngram_extraction}
+  }
+  \caption{Bounded length n-gram candidates extraction}
+  \label{alg:ngram_extraction}
 \end{algorithm}
 
 An alternative approach for candidates extraction is to use some model to generate candidates.
@@ -359,9 +359,9 @@ word-to-word alignments.
 
 The matching score that inspired from this idea is the following:
 \begin{equation} \label{eq:align_cost}
-    c_{\src{p}, \tgt{p}}^{align} =
-    \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
-    {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}})}
+  c_{\src{p}, \tgt{p}}^{align} =
+  \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
+  {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}})}
 \end{equation}
 
 The form of the score based on the natural properties that we can expect from score that based on word-to-word alignments.
@@ -373,50 +373,50 @@ substring of other, but total number of aligned words between words of
 source entity and these candidates are the same, we should prefer smaller candidate.
 And the score \eqref{eq:align_cost} satisfies this requirement.
 \begin{lemma} \label{lemma:align_cost_decrease}
-    Suppose that for some pair of source entity \( \src{p} \in S \) and target candidate \( \tgt{p} \in T \)
-    the score \eqref{eq:align_cost} equal to c, then if there is an extended by 1 word to left or
-    right candidate \( \tgt{\hat{p}} \in T \) such as this word is not aligned to any word of source
-    entity, the score \eqref{eq:align_cost} between source entity and this target candidate
-    will be lower than \( c \).
+  Suppose that for some pair of source entity \( \src{p} \in S \) and target candidate \( \tgt{p} \in T \)
+  the score \eqref{eq:align_cost} equal to c, then if there is an extended by 1 word to left or
+  right candidate \( \tgt{\hat{p}} \in T \) such as this word is not aligned to any word of source
+  entity, the score \eqref{eq:align_cost} between source entity and this target candidate
+  will be lower than \( c \).
 \end{lemma}
 \begin{proof}
-    Consider extension to the right, then \( \tgt{\hat{p}} = (i_{\tgt{p}}, j_{\tgt{p}} + 1) \). Since it is
-    given that this additional word is not aligned to any word of the source entity it means that:
-    \[
-        \sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} a_{k,j_{\tgt{p}} + 1} = 0
-    \]
-    Then
-    \begin{multline*}
-        c_{\src{p}, \tgt{\hat{p}}}^{align} =
-        \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}} + 1} a_{kl}}
-        {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{\hat{p}}} - i_{\tgt{\hat{p}}})} =                                \\
-        \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
-        {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} + 1 - i_{\tgt{p}})} +
-        \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} a_{k,j_{\tgt{p}} + 1}}
-        {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} + 1 - i_{\tgt{p}})} =                                        \\
-        \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
-        {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}}) + 1} <
-        \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
-        {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}})} = c
-    \end{multline*}
-    The derivation for the extension to the left where \( \tgt{\hat{p}} = (i_{\tgt{p}} - 1, j_{\tgt{p}}) \) is structurally the same, so we
-    proved the lemma.
+  Consider extension to the right, then \( \tgt{\hat{p}} = (i_{\tgt{p}}, j_{\tgt{p}} + 1) \). Since it is
+  given that this additional word is not aligned to any word of the source entity it means that:
+  \[
+    \sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} a_{k,j_{\tgt{p}} + 1} = 0
+  \]
+  Then
+  \begin{multline*}
+    c_{\src{p}, \tgt{\hat{p}}}^{align} =
+    \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}} + 1} a_{kl}}
+    {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{\hat{p}}} - i_{\tgt{\hat{p}}})} =                                \\
+    \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
+    {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} + 1 - i_{\tgt{p}})} +
+    \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} a_{k,j_{\tgt{p}} + 1}}
+    {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} + 1 - i_{\tgt{p}})} =                                        \\
+    \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
+    {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}}) + 1} <
+    \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
+    {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}})} = c
+  \end{multline*}
+  The derivation for the extension to the left where \( \tgt{\hat{p}} = (i_{\tgt{p}} - 1, j_{\tgt{p}}) \) is structurally the same, so we
+  proved the lemma.
 \end{proof}
 
 \begin{corollary} \label{col:shrink_cand}
-    The cost of the extended candidate \( \tgt{p_{+n}} \) of the target candidate \( \tgt{p} \) to the left or right with
-    \( n \in \mathbb{N} \) non-aligned to any word of the source entity \( \src{p} \in S \) words is lower than
-    the cost of the original candidate.
+  The cost of the extended candidate \( \tgt{p_{+n}} \) of the target candidate \( \tgt{p} \) to the left or right with
+  \( n \in \mathbb{N} \) non-aligned to any word of the source entity \( \src{p} \in S \) words is lower than
+  the cost of the original candidate.
 \end{corollary}
 \begin{proof} Let's prove it by the mathematical induction for the case of extension to the right (for the left it will the same).
 
-    \textit{Base:} By the lemma \ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+1}}}^{align} \).
+  \textit{Base:} By the lemma \ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+1}}}^{align} \).
 
-    \textit{Induction step:} Assume that for some \( k \in \mathbb{N} \) holds \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+k}}}^{align} \).
-    Then by the lemma~\ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p_{+k}}}^{align} > c_{\src{p}, \tgt{p_{+(k+1)}}}^{align} \) and therefore
-    \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+(k+1)}}}^{align} \).
+  \textit{Induction step:} Assume that for some \( k \in \mathbb{N} \) holds \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+k}}}^{align} \).
+  Then by the lemma~\ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p_{+k}}}^{align} > c_{\src{p}, \tgt{p_{+(k+1)}}}^{align} \) and therefore
+  \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+(k+1)}}}^{align} \).
 
-    Thus, by the mathematical induction, \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+n}}}^{align}   \)
+  Thus, by the mathematical induction, \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+n}}}^{align}   \)
 
 \end{proof}
 
@@ -424,88 +424,88 @@ The main advantages of this property is that it is possible to shrink the set of
 optimal solutions: we can consider as candidates only subranges that are between the leftmost and rightmost words that are aligned to any
 word of any source entity.
 \begin{theorem}
-    Let \( m, M \in \mathbb{N} \) be indices of a leftmost and rightmost aligned word to any source entity, then there is
-    an optimal solution for the problem \eqref{eq:ilp} where constraints \eqref{eq:num_proj_const} has a form
-    of \( < \) or \( \leq \), such that it projects source entity to a target candidate from the set \( T \) generated by the algorithm
-    \ref{alg:ngram_extraction} where any word's index is inside the range \( [m, M] \).
+  Let \( m, M \in \mathbb{N} \) be indices of a leftmost and rightmost aligned word to any source entity, then there is
+  an optimal solution for the problem \eqref{eq:ilp} where constraints \eqref{eq:num_proj_const} has a form
+  of \( < \) or \( \leq \), such that it projects source entity to a target candidate from the set \( T \) generated by the algorithm
+  \ref{alg:ngram_extraction} where any word's index is inside the range \( [m, M] \).
 \end{theorem}
 \begin{proof}
-    Suppose that there is no such an optimal solution that satisfies this requirement. It means that there exists
-    a source entity \( \src{p} \in S \) and a source candidate
-    \( \tgt{\hat{p}} \in S \) such that \( (i_{\tgt{\hat{p}}} < m) \lor (M < j_{\tgt{\hat{p}} < m}) \)
-    and \( x_{\src{p}, \tgt{\hat{p}}} = 1 \) for an optimal solution \( x \).
+  Suppose that there is no such an optimal solution that satisfies this requirement. It means that there exists
+  a source entity \( \src{p} \in S \) and a source candidate
+  \( \tgt{\hat{p}} \in S \) such that \( (i_{\tgt{\hat{p}}} < m) \lor (M < j_{\tgt{\hat{p}} < m}) \)
+  and \( x_{\src{p}, \tgt{\hat{p}}} = 1 \) for an optimal solution \( x \).
 
-    This case can be divided into two parts: when \( \tgt{\hat{p}} \) has no words that aligned to words of source entities or
-    is and vice versa.
+  This case can be divided into two parts: when \( \tgt{\hat{p}} \) has no words that aligned to words of source entities or
+  is and vice versa.
 
-    Consider the first option, then since \( \tgt{\hat{p}}  \) consists of words that are not aligned to any word
-    of source entities the alignment-based matching cost according to the definition \eqref{eq:align_cost} equals to \( 0 \).
-    Then if we take such a solution \( x^* \) that it is equal to this optimal solution \( x \) everywhere except
-    for the target candidate \( \tgt{\hat{p}}  \), i. e. \( x_{\src{p}, \tgt{\hat{p}}} = 0 \). Thus the objective function
-    remains the same because cost of matching is zero. And we don't violate non-overlapping constraints~\eqref{eq:non_overlap_const}:
-    \begin{align*}
-         & \forall \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \\
-         & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p}, \tgt{\hat{p}}} =
-        x_{\src{p_1}, \tgt{p_1}} + 1 \leq 1 \implies                                                                         \\
-         & x^*_{\src{p_1}, \tgt{p_1}} + x^*_{\src{p}, \tgt{\hat{p}}} \leq 1 =
-        x_{\src{p_1}, \tgt{p_1}} + 0 \leq 1
-    \end{align*}
-    as well as constraints \eqref{eq:num_proj_const}:
-    \begin{multline*}
-        \sum\limits_{t \in T} x_{\src{p}, t} \leq n_{proj} \implies                             \\
-        \sum\limits_{t \in T} x*_{\src{p}, t} =
-        \sum\limits_{t \in T \setminus \{ \tgt{p} \}} x_{\src{p}, t} + x^*_{\src{p}, \tgt{p}} =
-        \sum\limits_{t \in T \setminus \{ \tgt{p} \}} x_{\src{p}, t} + 0 \leq n_{proj}
-    \end{multline*}
-    Therefore such a solution \( x^* \) is optimal as well as original solution \( x \), but
-    target candidates have indices in the range \( [m, M] \).
+  Consider the first option, then since \( \tgt{\hat{p}}  \) consists of words that are not aligned to any word
+  of source entities the alignment-based matching cost according to the definition \eqref{eq:align_cost} equals to \( 0 \).
+  Then if we take such a solution \( x^* \) that it is equal to this optimal solution \( x \) everywhere except
+  for the target candidate \( \tgt{\hat{p}}  \), i. e. \( x_{\src{p}, \tgt{\hat{p}}} = 0 \). Thus the objective function
+  remains the same because cost of matching is zero. And we don't violate non-overlapping constraints~\eqref{eq:non_overlap_const}:
+  \begin{align*}
+    & \forall \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \\
+    & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p}, \tgt{\hat{p}}} =
+    x_{\src{p_1}, \tgt{p_1}} + 1 \leq 1 \implies                                                                         \\
+    & x^*_{\src{p_1}, \tgt{p_1}} + x^*_{\src{p}, \tgt{\hat{p}}} \leq 1 =
+    x_{\src{p_1}, \tgt{p_1}} + 0 \leq 1
+  \end{align*}
+  as well as constraints \eqref{eq:num_proj_const}:
+  \begin{multline*}
+    \sum\limits_{t \in T} x_{\src{p}, t} \leq n_{proj} \implies                             \\
+    \sum\limits_{t \in T} x*_{\src{p}, t} =
+    \sum\limits_{t \in T \setminus \{ \tgt{p} \}} x_{\src{p}, t} + x^*_{\src{p}, \tgt{p}} =
+    \sum\limits_{t \in T \setminus \{ \tgt{p} \}} x_{\src{p}, t} + 0 \leq n_{proj}
+  \end{multline*}
+  Therefore such a solution \( x^* \) is optimal as well as original solution \( x \), but
+  target candidates have indices in the range \( [m, M] \).
 
-    When it comes to the second option where a target candidate \( \tgt{\hat{p}} \) overlaps with some
-    candidates from the shrunk set in a way that there is some aligned word between a source entity \( \src{p} \) and these target candidate, i.e.
-    \( \left[ (i_{\tgt{\hat{p}}} < m) \lor (M < j_{\tgt{\hat{p}} < m}) \right] \land
-    \left[ (i_{\tgt{\hat{p}}} \leq M) \lor m \leq j_{\tgt{\hat{p}}} \right] \).
-    By the corollary \ref{col:shrink_cand} such a candidate \( \tgt{p} = ( \max(i_{\tgt{\hat{p}}}, m), \min(M, j_{\tgt{\hat{p}}}) ) \) will have
-    higher aligned-based matching score.
+  When it comes to the second option where a target candidate \( \tgt{\hat{p}} \) overlaps with some
+  candidates from the shrunk set in a way that there is some aligned word between a source entity \( \src{p} \) and these target candidate, i.e.
+  \( \left[ (i_{\tgt{\hat{p}}} < m) \lor (M < j_{\tgt{\hat{p}} < m}) \right] \land
+  \left[ (i_{\tgt{\hat{p}}} \leq M) \lor m \leq j_{\tgt{\hat{p}}} \right] \).
+  By the corollary \ref{col:shrink_cand} such a candidate \( \tgt{p} = ( \max(i_{\tgt{\hat{p}}}, m), \min(M, j_{\tgt{\hat{p}}}) ) \) will have
+  higher aligned-based matching score.
 
-    Let's consider a solution \( x^* \) that equals
-    to a solution \( x \) everywhere except for target candidates \( \tgt{\hat{p}}  \) and \(  \tgt{p} \),
-    i. e. \( x^*_{\src{p}, \tgt{\hat{p}}} = 0, x^*_{\src{p}, \tgt{p}} = 1 \). This solution also satisfies all constraints
-    of the ILP problem. For constraints \eqref{eq:num_proj_const} the proof is the following:
-    \begin{align*}
-         & \sum\limits_{t \in T} x_{\src{p}, t} =
-        \sum\limits_{t \in T \setminus \{ \tgt{p}, \tgt{\hat{p}} \}} x_{\src{p}, t} + x_{\src{p}, \tgt{p}} + x_{\src{p}, \tgt{\hat{p}}}  =     \\
-         & \sum\limits_{t \in T \setminus \{ \tgt{p}, \tgt{\hat{p}} \}} x_{\src{p}, t} + 0 + 1
-        \leq n_{proj} \implies                                                                                                                 \\
-         & \sum\limits_{t \in T} x*_{\src{p}, t} =
-        \sum\limits_{t \in T \setminus \{ \tgt{p}, \tgt{\hat{p}} \}} x_{\src{p}, t} + x^*_{\src{p}, \tgt{p}} + x^*_{\src{p}, \tgt{\hat{p}}}  = \\
-         & \sum\limits_{t \in T \setminus \{ \tgt{p}, \tgt{\hat{p}} \}} x_{\src{p}, t} + 1 + 0 \leq n_{proj}
-    \end{align*}
-    And for non-overlapping constraints, since \( \tgt{p} \) is a substring of \( \tgt{\hat{p}} \) by a
-    construction we have:
-    \[
-        \forall t \in T \quad t \cap \tgt{p} \neq \emptyset \implies t \cap \tgt{\hat{p}} \neq \emptyset
-    \]
-    It gets us that all constraints that should be hold for \( \tgt{p} \) should also be satisfied for \( \tgt{\hat{p}} \):
-    \begin{equation} \label{eq:overlap_substring}
-        \left\{ (\src{p_1}, \tgt{p_1}) \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \right\} \subset
-        \left\{ (\src{p_1}, \tgt{p_1}) \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \right\}
-    \end{equation}
-    Suppose that constraints \eqref{eq:non_overlap_const} are violated for the solution \( x^* \), then
-    \begin{align*}
-         & \exists \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \\
-         & x^*_{\src{p_1}, \tgt{p_1}} + x^*_{\src{p}, \tgt{p}} =
-        x_{\src{p_1}, \tgt{p_1}} + 1 > 1 \implies                                                                      \\
-         & x_{\src{p_1}, \tgt{p_1}} = 1
-        \implies                                                                                                       \\
-         & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p}, \tgt{\hat{p}}} = 1 + 1 = 2 > 1
-    \end{align*}
-    But because of \eqref{eq:overlap_substring}
-    \( (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}} ) \in \hat{\Pi}(S, T) \),
-    therefore it contradicts that the solution \( x \) was feasible.
-    Hence constraints \eqref{eq:non_overlap_const} are satisfied by the solution \( x^* \).
+  Let's consider a solution \( x^* \) that equals
+  to a solution \( x \) everywhere except for target candidates \( \tgt{\hat{p}}  \) and \(  \tgt{p} \),
+  i. e. \( x^*_{\src{p}, \tgt{\hat{p}}} = 0, x^*_{\src{p}, \tgt{p}} = 1 \). This solution also satisfies all constraints
+  of the ILP problem. For constraints \eqref{eq:num_proj_const} the proof is the following:
+  \begin{align*}
+    & \sum\limits_{t \in T} x_{\src{p}, t} =
+    \sum\limits_{t \in T \setminus \{ \tgt{p}, \tgt{\hat{p}} \}} x_{\src{p}, t} + x_{\src{p}, \tgt{p}} + x_{\src{p}, \tgt{\hat{p}}}  =     \\
+    & \sum\limits_{t \in T \setminus \{ \tgt{p}, \tgt{\hat{p}} \}} x_{\src{p}, t} + 0 + 1
+    \leq n_{proj} \implies                                                                                                                 \\
+    & \sum\limits_{t \in T} x*_{\src{p}, t} =
+    \sum\limits_{t \in T \setminus \{ \tgt{p}, \tgt{\hat{p}} \}} x_{\src{p}, t} + x^*_{\src{p}, \tgt{p}} + x^*_{\src{p}, \tgt{\hat{p}}}  = \\
+    & \sum\limits_{t \in T \setminus \{ \tgt{p}, \tgt{\hat{p}} \}} x_{\src{p}, t} + 1 + 0 \leq n_{proj}
+  \end{align*}
+  And for non-overlapping constraints, since \( \tgt{p} \) is a substring of \( \tgt{\hat{p}} \) by a
+  construction we have:
+  \[
+    \forall t \in T \quad t \cap \tgt{p} \neq \emptyset \implies t \cap \tgt{\hat{p}} \neq \emptyset
+  \]
+  It gets us that all constraints that should be hold for \( \tgt{p} \) should also be satisfied for \( \tgt{\hat{p}} \):
+  \begin{equation} \label{eq:overlap_substring}
+    \left\{ (\src{p_1}, \tgt{p_1}) \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \right\} \subset
+    \left\{ (\src{p_1}, \tgt{p_1}) \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \right\}
+  \end{equation}
+  Suppose that constraints \eqref{eq:non_overlap_const} are violated for the solution \( x^* \), then
+  \begin{align*}
+    & \exists \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \\
+    & x^*_{\src{p_1}, \tgt{p_1}} + x^*_{\src{p}, \tgt{p}} =
+    x_{\src{p_1}, \tgt{p_1}} + 1 > 1 \implies                                                                      \\
+    & x_{\src{p_1}, \tgt{p_1}} = 1
+    \implies                                                                                                       \\
+    & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p}, \tgt{\hat{p}}} = 1 + 1 = 2 > 1
+  \end{align*}
+  But because of \eqref{eq:overlap_substring}
+  \( (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}} ) \in \hat{\Pi}(S, T) \),
+  therefore it contradicts that the solution \( x \) was feasible.
+  Hence constraints \eqref{eq:non_overlap_const} are satisfied by the solution \( x^* \).
 
-    And in the same time the solution \( x^* \) has a higher objective value that implies that the original solution \( x \) was not optimal.
-    This contradicts our assumption that there is no such an optimal solution that ensures requirements of the theorem.
+  And in the same time the solution \( x^* \) has a higher objective value that implies that the original solution \( x \) was not optimal.
+  This contradicts our assumption that there is no such an optimal solution that ensures requirements of the theorem.
 \end{proof}
 Note that the theorem holds only for constraints \eqref{eq:num_proj_const} with a form of \( < \) or
 \( \leq \) just because the ILP problem can lost feasibility if we remove projections with zero scores that
@@ -544,12 +544,12 @@ for a class \( l \in L \) in a probability matrix.
 
 So the NER model-based matching score is the following:
 \begin{equation} \label{eq:ner_cost}
-    c_{\src{p}, \tgt{p}}^{ner} = \alpha^{(j_{\tgt{p}} - i_{\tgt{p}}) - 1}
-    \frac{
-        p_{i_{\tgt{p}}, B[l_{\src{p}}]} +
-        \sum\limits_{k = i_{\tgt{p}} + 1}^{j_{\tgt{p}}} p_{k, I[l_{\src{p}}]}
-    }
-    {j_\tgt{p} - i_{\tgt{p}}}
+  c_{\src{p}, \tgt{p}}^{ner} = \alpha^{(j_{\tgt{p}} - i_{\tgt{p}}) - 1}
+  \frac{
+    p_{i_{\tgt{p}}, B[l_{\src{p}}]} +
+    \sum\limits_{k = i_{\tgt{p}} + 1}^{j_{\tgt{p}}} p_{k, I[l_{\src{p}}]}
+  }
+  {j_\tgt{p} - i_{\tgt{p}}}
 \end{equation}
 where \( l_{\src{p}} \in L \) is a class of the source entity \( \src{p} \in S \) and
 \( \alpha > 0 \in \mathbb{R} \) is a length-scaling constant.
@@ -561,20 +561,20 @@ equal to the predicted entity. For example, let the set of classes contains only
 set of source entities consists of only one entity \( \src{p} \) with a class \textit{PER},
 set of target candidates be \( T =  \{ \tgt{p_1} = (1, 1), \tgt{p_2} = (1, 2) \} \) and a probability matrix predicted by the model is:
 \[
-    \begin{blockarray}{cccc}
-        & \text{\textit{B-PER}} & \text{\textit{I-PER}} & \text{\textit{O}} \\
-        \begin{block}{c(ccc)}
-            1 & 0.9 & 0.1 & 0 \\
-            2 & 0.2 & 0.8 & 0 \\
-            3 & 0   & 0   & 1 \\
-        \end{block}
-    \end{blockarray}
+  \begin{blockarray}{cccc}
+    & \text{\textit{B-PER}} & \text{\textit{I-PER}} & \text{\textit{O}} \\
+    \begin{block}{c(ccc)}
+      1 & 0.9 & 0.1 & 0 \\
+      2 & 0.2 & 0.8 & 0 \\
+      3 & 0   & 0   & 1 \\
+    \end{block}
+  \end{blockarray}
 \]
 By taking maximum over rows it turns out that the entity predicted by a model has a class \textit{PER} and
 consists of words with indices 1 and 2. But the NER model-based matching score without scaling factor
 \( \alpha \) gives the following results:
 \[
-    c_{\src{p}, \tgt{p_1}}^{ner} = 0.9 \qquad c_{\src{p}, \tgt{p_2}}^{ner} = 0.85
+  c_{\src{p}, \tgt{p_1}}^{ner} = 0.9 \qquad c_{\src{p}, \tgt{p_2}}^{ner} = 0.85
 \]
 And in this case the ILP problem will prefer projecting source entity onto a substring of the entity predicted
 by the model. Therefore, length-scaling constant \( \alpha \) can not be omitted.
@@ -582,104 +582,104 @@ by the model. Therefore, length-scaling constant \( \alpha \) can not be omitted
 If \( \alpha \) is a crucial part of the score then it make sense to evaluate the range of its values.
 For this let's notice the following fact.
 \begin{lemma} \label{lemma:maxprob_greater_than_avg}
-    Let \( p_{i}, i \in K \) be a probability distribution over a finite set \( K \) with cardinality \( k \).
-    Then
-    \[
-        \max\limits_{i \in K} p_i \geq \frac{1}{k}
-    \]
+  Let \( p_{i}, i \in K \) be a probability distribution over a finite set \( K \) with cardinality \( k \).
+  Then
+  \[
+    \max\limits_{i \in K} p_i \geq \frac{1}{k}
+  \]
 \end{lemma}
 \begin{proof}
-    Suppose that it is wrong, i.e.
-    \[
-        \max\limits_{i \in K} p_i < \frac{1}{k}
-    \]
-    Then let's sum up all probabilities:
-    \[
-        \sum\limits_{i \in K} p_i \leq \sum\limits_{i \in K} \max\limits_{j \in K} p_j =
-        k \cdot \max\limits_{j \in K} p_j < 1
-    \]
-    But the sum of all probabilities of the distribution should be equal to \( 1 \), therefore our assumption was
-    wrong that proofs the lemma.
+  Suppose that it is wrong, i.e.
+  \[
+    \max\limits_{i \in K} p_i < \frac{1}{k}
+  \]
+  Then let's sum up all probabilities:
+  \[
+    \sum\limits_{i \in K} p_i \leq \sum\limits_{i \in K} \max\limits_{j \in K} p_j =
+    k \cdot \max\limits_{j \in K} p_j < 1
+  \]
+  But the sum of all probabilities of the distribution should be equal to \( 1 \), therefore our assumption was
+  wrong that proofs the lemma.
 \end{proof}
 Having this useful fact let's finally make some estimation of the constant \( \alpha \).
 \begin{theorem}
-    Consider a source entity \( \src{p} \in S \) and two target candidates \( \tgt{p_1} = (i, j+1), \tgt{p_2} = (i, j) \).
-    Suppose the predictions \( p \) of a NER model satisfy the following constraints:
-    \[
-        B[l_{\src{p}}] = \argmax\limits_{l \in \{ 1, \dots, 2|L| + 1 \}} p_{i, l} \qquad
-        I[l_{\src{p}}] = \argmax\limits_{l \in \{ 1, \dots, 2|L| + 1 \}} p_{k, l} \; \forall k \in \{ i + 1, \dots ,j +1 \}
-    \]
-    i.e. all these candidates are parts of the predicted by the model entity.
-    Let's denote \( M = \frac{1}{2|L| + 1} \).
-    Then:
-    \[
-        \alpha > 1 + \frac{1 - M}{1 + M} \implies c_{\src{p}, \tgt{p_2}}^{ner} > c_{\src{p}, \tgt{p_1}}^{ner}
-    \]
+  Consider a source entity \( \src{p} \in S \) and two target candidates \( \tgt{p_1} = (i, j+1), \tgt{p_2} = (i, j) \).
+  Suppose the predictions \( p \) of a NER model satisfy the following constraints:
+  \[
+    B[l_{\src{p}}] = \argmax\limits_{l \in \{ 1, \dots, 2|L| + 1 \}} p_{i, l} \qquad
+    I[l_{\src{p}}] = \argmax\limits_{l \in \{ 1, \dots, 2|L| + 1 \}} p_{k, l} \; \forall k \in \{ i + 1, \dots ,j +1 \}
+  \]
+  i.e. all these candidates are parts of the predicted by the model entity.
+  Let's denote \( M = \frac{1}{2|L| + 1} \).
+  Then:
+  \[
+    \alpha > 1 + \frac{1 - M}{1 + M} \implies c_{\src{p}, \tgt{p_2}}^{ner} > c_{\src{p}, \tgt{p_1}}^{ner}
+  \]
 \end{theorem}
 \begin{proof} Let's write down a desired inequality
-    \begin{align*}
-         & c_{\src{p}, \tgt{p_2}}^{ner} > c_{\src{p}, \tgt{p_1}}^{ner} \Leftrightarrow \\
-         & \alpha^{n}
-        \frac{
-            p_{i, B[l_{\src{p}}]} +
-            \sum\limits_{k = i + 1}^{j + 1} p_{k, I[l_{\src{p}}]}
-        }
-        {n + 1} >
-        \alpha^{n - 1}
-        \frac{
-            p_{i, B[l_{\src{p}}]} +
-            \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]}
-        }
-        {n}
-        \Leftrightarrow                                                                \\
-         & \alpha >
-        \frac
-        {(n+1) \cdot \left( p_{i, B[l_{\src{p}}]} +
-            \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} \right)}
-        {
-            n \cdot \left( p_{i, B[l_{\src{p}}]} +
-            \sum\limits_{k = i + 1}^{j + 1} p_{k, I[l_{\src{p}}]} \right)}
-        =
-        \frac
-        {(n+1) \cdot \left( p_{i, B[l_{\src{p}}]} +
-            \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} \right)}
-        {
-            n \cdot \left( p_{i, B[l_{\src{p}}]} +
-            \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} + p_{j+1, I[l_{\src{p}}]} \right)}
-    \end{align*}
-    In order to simplify derivation we will introduce aliases for some quantities:
-    \[
-        S = p_{i, B[l_{\src{p}}]}  + \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} \qquad
-        s = p_{j+1, I[l_{\src{p}}]}
-    \]
-    Note, that by the lemma \ref{lemma:maxprob_greater_than_avg} the following
-    inequalities holds:
-    \begin{equation} \label{eq:ner_sum_ineq}
-        M \leq s \leq 1 \qquad nM \leq S \leq n
-    \end{equation}
-    Then we have:
-    \begin{equation*}
-        \alpha > \frac{(n + 1) S}{n (S + s)} =
-        \frac{nS + S + ns - ns}{nS + ns} =
-        1 + \frac{S - ns}{n(S + s)}
-    \end{equation*}
-    Let's compute derivatives of this expression.
-    \begin{equation*}
-        \left( 1 + \frac{S - ns}{n(S + s)} \right)_s^{'} =
-        \frac{-n^2S - nS}{n^2 (S + s)^2} < 0
-        \qquad
-        \left( 1 + \frac{S - ns}{n(S + s)} \right)_S^{'}
-        = \frac{nS + n^2s}{n^2 (S + s)^2} > 0
-    \end{equation*}
-    Hence the maximum of the function is located at the point
-    \( s = M \) and \( S = n \), then we can take \( \alpha \) such that
-    \begin{equation*}
-        \alpha > 1 + \frac{1 - M}{1 + M}
-        \stackrel{n \geq 1}{\geq}
-        1 + \frac{n - nM}{n(n + M)}
-        \stackrel{\max}{\geq}
-        1 + \frac{S - ns}{n(S + s)}
-    \end{equation*}
+  \begin{align*}
+    & c_{\src{p}, \tgt{p_2}}^{ner} > c_{\src{p}, \tgt{p_1}}^{ner} \Leftrightarrow \\
+    & \alpha^{n}
+    \frac{
+      p_{i, B[l_{\src{p}}]} +
+      \sum\limits_{k = i + 1}^{j + 1} p_{k, I[l_{\src{p}}]}
+    }
+    {n + 1} >
+    \alpha^{n - 1}
+    \frac{
+      p_{i, B[l_{\src{p}}]} +
+      \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]}
+    }
+    {n}
+    \Leftrightarrow                                                                \\
+    & \alpha >
+    \frac
+    {(n+1) \cdot \left( p_{i, B[l_{\src{p}}]} +
+    \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} \right)}
+    {
+      n \cdot \left( p_{i, B[l_{\src{p}}]} +
+    \sum\limits_{k = i + 1}^{j + 1} p_{k, I[l_{\src{p}}]} \right)}
+    =
+    \frac
+    {(n+1) \cdot \left( p_{i, B[l_{\src{p}}]} +
+    \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} \right)}
+    {
+      n \cdot \left( p_{i, B[l_{\src{p}}]} +
+    \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} + p_{j+1, I[l_{\src{p}}]} \right)}
+  \end{align*}
+  In order to simplify derivation we will introduce aliases for some quantities:
+  \[
+    S = p_{i, B[l_{\src{p}}]}  + \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} \qquad
+    s = p_{j+1, I[l_{\src{p}}]}
+  \]
+  Note, that by the lemma \ref{lemma:maxprob_greater_than_avg} the following
+  inequalities holds:
+  \begin{equation} \label{eq:ner_sum_ineq}
+    M \leq s \leq 1 \qquad nM \leq S \leq n
+  \end{equation}
+  Then we have:
+  \begin{equation*}
+    \alpha > \frac{(n + 1) S}{n (S + s)} =
+    \frac{nS + S + ns - ns}{nS + ns} =
+    1 + \frac{S - ns}{n(S + s)}
+  \end{equation*}
+  Let's compute derivatives of this expression.
+  \begin{equation*}
+    \left( 1 + \frac{S - ns}{n(S + s)} \right)_s^{'} =
+    \frac{-n^2S - nS}{n^2 (S + s)^2} < 0
+    \qquad
+    \left( 1 + \frac{S - ns}{n(S + s)} \right)_S^{'}
+    = \frac{nS + n^2s}{n^2 (S + s)^2} > 0
+  \end{equation*}
+  Hence the maximum of the function is located at the point
+  \( s = M \) and \( S = n \), then we can take \( \alpha \) such that
+  \begin{equation*}
+    \alpha > 1 + \frac{1 - M}{1 + M}
+    \stackrel{n \geq 1}{\geq}
+    1 + \frac{n - nM}{n(n + M)}
+    \stackrel{\max}{\geq}
+    1 + \frac{S - ns}{n(S + s)}
+  \end{equation*}
 \end{proof}
 As it is shown in the proof it is just an upper estimation of such an alpha for the worst possible case,
 in practice there is a sense to try even smaller \( \alpha \), but then it doesn't guarantee that the
@@ -704,9 +704,8 @@ nevertheless a correct class will be assigned to the target candidate.
 
 \subsection{Translation-based score}
 
-
 \begin{equation} \label{eq:nmt_cost}
-    c_{\src{p}, \tgt{p}}^{nmt}
+  c_{\src{p}, \tgt{p}}^{nmt}
 \end{equation}
 
 \subsection{Fused score}
@@ -716,10 +715,10 @@ Every matching score has their advantages and drawbacks, but the natural way to 
 to fuse scores together. Since all scores are real numbers one of the approaches to do it is to compute a
 weighted sum of scores of all types:
 \begin{equation} \label{eq:fused_cost}
-    c_{\src{p}, \tgt{p}}^{fused} =
-    \lambda_{align} c_{\src{p}, \tgt{p}}^{align} +
-    \lambda_{ner} c_{\src{p}, \tgt{p}}^{ner} +
-    \lambda_{nmt} c_{\src{p}, \tgt{p}}^{nmt}
+  c_{\src{p}, \tgt{p}}^{fused} =
+  \lambda_{align} c_{\src{p}, \tgt{p}}^{align} +
+  \lambda_{ner} c_{\src{p}, \tgt{p}}^{ner} +
+  \lambda_{nmt} c_{\src{p}, \tgt{p}}^{nmt}
 \end{equation}
 where \( \lambda_{align} \geq, \lambda_{ner} \geq 0, \lambda_{nmt} \geq 0 \in R\).
 
@@ -732,13 +731,13 @@ NER model-based score only evaluate how likely a given candidate can form a targ
 determine label by using other types of scores. The modified \eqref{eq:ner_cost} that implements it
 is the following:
 \begin{equation} \label{eq:ner_cost_wo_classes}
-    c_{\src{p}, \tgt{p}}^{ner} = \alpha^{(j_{\tgt{p}} - i_{\tgt{p}}) - 1}
-    \max\limits_{l \in L}
-    \frac{
-        p_{i_{\tgt{p}}, B[l]} +
-        \sum\limits_{k = i_{\tgt{p}} + 1}^{j_{\tgt{p}}} p_{k, I[l]}
-    }
-    {j_\tgt{p} - i_{\tgt{p}}}
+  c_{\src{p}, \tgt{p}}^{ner} = \alpha^{(j_{\tgt{p}} - i_{\tgt{p}}) - 1}
+  \max\limits_{l \in L}
+  \frac{
+    p_{i_{\tgt{p}}, B[l]} +
+    \sum\limits_{k = i_{\tgt{p}} + 1}^{j_{\tgt{p}}} p_{k, I[l]}
+  }
+  {j_\tgt{p} - i_{\tgt{p}}}
 \end{equation}
 
 \section{Analysis of the ILP problem}
@@ -764,74 +763,74 @@ The usual way to prove the complexity of some problem is to reduce other problem
 an instance of the studied one. Thus let's consider the maximum independent set problem \cite{pemmaraju2003computational}.
 
 \begin{figure}[ht]
-    \begin{subfigure}{.5\textwidth}
-        \centering
-        \begin{tikzpicture}[every node/.style = {draw, circle}]
-            \node[fill=green!10] (1) {1};
-            \node[right=of 1] (2) {2};
-            \node[below right=of 2, fill=green!10] (3) {3};
-            \node[below=of 1, fill=green!10] (4) {4};
-            \node[left=of 4] (5) {5};
-            \node[below right=of 4] (6) {6};
+  \begin{subfigure}{.5\textwidth}
+    \centering
+    \begin{tikzpicture}[every node/.style = {draw, circle}]
+      \node[fill=green!10] (1) {1};
+      \node[right=of 1] (2) {2};
+      \node[below right=of 2, fill=green!10] (3) {3};
+      \node[below=of 1, fill=green!10] (4) {4};
+      \node[left=of 4] (5) {5};
+      \node[below right=of 4] (6) {6};
 
-            \graph{
-                (1) -- (2) -- (4) -- (6) -- (5) -- (4),
-                (6) -- (2) -- (3)
-            };
-        \end{tikzpicture}
-        \caption{Maximum independent set problem (MaxIS). Vertices that form an optimal solution are colored in \textbf{\textcolor{green!50}{green}}}
-    \end{subfigure}
-    \begin{subfigure}{.5\textwidth}
-        \centering
-        \begin{tikzpicture}[
-                node distance=0.1,
-                realstate/.style = {draw, circle, font=\scriptsize},
-                dummystate/.style = {draw, circle, minimum width=4, inner sep=6, fill=blue!10}
-            ]
-            \node[dummystate] (src_1) {};
-            \node[right=of src_1, xshift=10, dummystate] (src_2) {};
-            \node[right=of src_2, xshift=10, dummystate] (src_3) {};
+      \graph{
+        (1) -- (2) -- (4) -- (6) -- (5) -- (4),
+        (6) -- (2) -- (3)
+      };
+    \end{tikzpicture}
+    \caption{Maximum independent set problem (MaxIS). Vertices that form an optimal solution are colored in \textbf{\textcolor{green!50}{green}}}
+  \end{subfigure}
+  \begin{subfigure}{.5\textwidth}
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.1,
+        realstate/.style = {draw, circle, font=\scriptsize},
+        dummystate/.style = {draw, circle, minimum width=4, inner sep=6, fill=blue!10}
+      ]
+      \node[dummystate] (src_1) {};
+      \node[right=of src_1, xshift=10, dummystate] (src_2) {};
+      \node[right=of src_2, xshift=10, dummystate] (src_3) {};
 
-            \node[below=of src_1, fill=green!10, xshift=-50, yshift=-1.75cm, realstate] (1) {1};
-            \node[right=of 1, realstate] (2) {2};
-            \node[right=of 2, fill=green!10, realstate] (3) {3};
-            \node[right=of 3, fill=green!10, realstate] (4) {4};
-            \node[right=of 4, realstate] (5) {5};
-            \node[right=of 5, realstate] (6) {6};
-            \node[right=of 6, dummystate](dummy_1) {};
-            \node[right=of dummy_1] (dots) {\dots};
-            \node[right=of dots, dummystate] (dummy_2) {};
+      \node[below=of src_1, fill=green!10, xshift=-50, yshift=-1.75cm, realstate] (1) {1};
+      \node[right=of 1, realstate] (2) {2};
+      \node[right=of 2, fill=green!10, realstate] (3) {3};
+      \node[right=of 3, fill=green!10, realstate] (4) {4};
+      \node[right=of 4, realstate] (5) {5};
+      \node[right=of 5, realstate] (6) {6};
+      \node[right=of 6, dummystate](dummy_1) {};
+      \node[right=of dummy_1] (dots) {\dots};
+      \node[right=of dots, dummystate] (dummy_2) {};
 
-            \node[above=of src_2, text=gray, font=\scriptsize] {Source nodes};
-            \node[below=of 5, text=gray, font=\scriptsize] {Target nodes};
+      \node[above=of src_2, text=gray, font=\scriptsize] {Source nodes};
+      \node[below=of 5, text=gray, font=\scriptsize] {Target nodes};
 
-            \draw[green] (src_1) -- (1);
-            \draw (src_1) -- node[above left, xshift=3, rotate=60, black, font=\footnotesize]{c=1} (2);
-            \draw (src_1) -- (3);
-            \draw (src_1) -- (4);
-            \draw (src_1) -- (5);
-            \draw (src_1) -- (6);
-            \draw[gray!40] (src_1) -- (dummy_1);
-            \draw[gray!40] (src_1) -- (dummy_2);
-            \draw (src_2) -- (2);
-            \draw[green] (src_2) -- (3);
-            \draw (src_2) -- (4);
-            \draw (src_2) -- (5);
-            \draw (src_2) -- (6);
-            \draw[gray!40] (src_2) -- (dummy_1);
-            \draw[gray!40] (src_2) -- (dummy_2);
-            \draw (src_3) -- (2);
-            \draw (src_3) -- (3);
-            \draw[green] (src_3) -- (4);
-            \draw (src_3) -- (5);
-            \draw (src_3) -- (6);
-            \draw[gray!40] (src_3) -- (dummy_1);
-            \draw[gray!40] (src_3) -- node[above right, black, font=\footnotesize]{c=0} (dummy_2);
-        \end{tikzpicture}
-        \caption{Reduction to the proposed ILP problem. Dummy nodes are colored in \textcolor{blue!60}{blue}}
-    \end{subfigure}
-    \caption{The diagram of the general idea of the reduction MaxIS problem to the proposed ILP problem}
-    \label{fig:maxis_reduction}
+      \draw[green] (src_1) -- (1);
+      \draw (src_1) -- node[above left, xshift=3, rotate=60, black, font=\footnotesize]{c=1} (2);
+      \draw (src_1) -- (3);
+      \draw (src_1) -- (4);
+      \draw (src_1) -- (5);
+      \draw (src_1) -- (6);
+      \draw[gray!40] (src_1) -- (dummy_1);
+      \draw[gray!40] (src_1) -- (dummy_2);
+      \draw (src_2) -- (2);
+      \draw[green] (src_2) -- (3);
+      \draw (src_2) -- (4);
+      \draw (src_2) -- (5);
+      \draw (src_2) -- (6);
+      \draw[gray!40] (src_2) -- (dummy_1);
+      \draw[gray!40] (src_2) -- (dummy_2);
+      \draw (src_3) -- (2);
+      \draw (src_3) -- (3);
+      \draw[green] (src_3) -- (4);
+      \draw (src_3) -- (5);
+      \draw (src_3) -- (6);
+      \draw[gray!40] (src_3) -- (dummy_1);
+      \draw[gray!40] (src_3) -- node[above right, black, font=\footnotesize]{c=0} (dummy_2);
+    \end{tikzpicture}
+    \caption{Reduction to the proposed ILP problem. Dummy nodes are colored in \textcolor{blue!60}{blue}}
+  \end{subfigure}
+  \caption{The diagram of the general idea of the reduction MaxIS problem to the proposed ILP problem}
+  \label{fig:maxis_reduction}
 \end{figure}
 
 The maximum independent set problem is a problem of finding a subset of vertices of some undirected
@@ -839,12 +838,12 @@ graph with maximum cardinality, such that it doesn't contain any vertices connec
 An example of the maximum independent set problem is depicted on the figure \ref{fig:maxis_reduction} (a).
 The formal definition as an ILP problem is given by \ref{def:maxis}.
 \begin{definition}[MaxIS] \label{def:maxis}
-    Let \( G=(V, E), V \neq \emptyset \) be an undirected graph, then a maximum independent set problem for the graph \( G \) is the following:
-    \begin{align*}
-         & \max \sum\limits_{v \in V} x_v                               \\
-         & x_u + x_v \leq 1               \qquad \forall \{u, v\} \in E \\
-         & x_v \in \{0, 1\}
-    \end{align*}
+  Let \( G=(V, E), V \neq \emptyset \) be an undirected graph, then a maximum independent set problem for the graph \( G \) is the following:
+  \begin{align*}
+    & \max \sum\limits_{v \in V} x_v                               \\
+    & x_u + x_v \leq 1               \qquad \forall \{u, v\} \in E \\
+    & x_v \in \{0, 1\}
+  \end{align*}
 \end{definition}
 
 The MaxIS problem is an NP-hard \cite{pemmaraju2003computational} problem since VertexCover can be reduced to an instance of
@@ -864,51 +863,47 @@ in the table \ref{tab:dummy_nodes_num} (a). The matching cost between any dummy 
 target candidate from the set \( T_V \) will make equal to \( 1 \). And finally let's link solution of the
 ILP problem to the solutions of the MaxIS problem:
 \[
-    x_v = 1 \Leftrightarrow \exists \src{p} \in S \Big| x_{\src{p}, \tgt{p_v}} = 1
+  x_v = 1 \Leftrightarrow \exists \src{p} \in S \Big| x_{\src{p}, \tgt{p_v}} = 1
 \]
 i.e. the vertex \( v \in V \) belongs to the maximum independent set if and only if there is a dummy
 source node that are projected to the target candidate \( \tgt{p_v} \) that correspond to this vertex.
 
 \begin{table}[h]
-    \begin{subtable}[t]{0.5\linewidth}
-        \centering
-        \renewcommand{\arraystretch}{1.5}
-        \begin{tabular}{|c|c|c|}
-            \hline
-            \(<\)                                 & \( \leq \), \( = \)               & \(>\), \( \geq \) \\
-            \hline
-            \( \ceil{\frac{|V|}{n_{proj} - 1}} \) & \( \ceil{\frac{|V|}{n_{proj}}} \) & 1                 \\
-            \hline
-        \end{tabular}
-        \caption{Source nodes}
-        \label{tab:src_dummy_nodes_num}
-    \end{subtable}
-    \begin{subtable}[t]{0.5\linewidth}
-        \centering
-        \renewcommand{\arraystretch}{1.5}
-        \begin{tabular}{|c|c|c|c|}
-            \hline
-            \(<\), \(\leq\) & \( = \)                                    & \(>\)          & \( \geq \)         \\
-            \hline
-            \( 0 \)         & \( \ceil{\frac{|V|}{n_{proj}}} n_{proj} \) & \( n_{proj} \) & \( n_{proj} + 1 \) \\
-            \hline
-        \end{tabular}
-        \caption{Target nodes}
-        \label{tab:tgt_dummy_nodes_num}
-    \end{subtable}
-    \caption{Number of dummy nodes for every type of constraints \eqref{eq:num_proj_const}}
-    \label{tab:dummy_nodes_num}
+  \begin{subtable}[t]{0.5\linewidth}
+    \centering
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|c|c|c|}
+      \hline
+      \(<\)                                 & \( \leq \), \( = \)               & \(>\), \( \geq \) \\
+      \hline
+      \( \ceil{\frac{|V|}{n_{proj} - 1}} \) & \( \ceil{\frac{|V|}{n_{proj}}} \) & 1                 \\
+      \hline
+    \end{tabular}
+    \caption{Source nodes}
+    \label{tab:src_dummy_nodes_num}
+  \end{subtable}
+  \begin{subtable}[t]{0.5\linewidth}
+    \centering
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|c|c|c|c|}
+      \hline
+      \(<\), \(\leq\) & \( = \)                                    & \(>\)          & \( \geq \)         \\
+      \hline
+      \( 0 \)         & \( \ceil{\frac{|V|}{n_{proj}}} n_{proj} \) & \( n_{proj} \) & \( n_{proj} + 1 \) \\
+      \hline
+    \end{tabular}
+    \caption{Target nodes}
+    \label{tab:tgt_dummy_nodes_num}
+  \end{subtable}
+  \caption{Number of dummy nodes for every type of constraints \eqref{eq:num_proj_const}}
+  \label{tab:dummy_nodes_num}
 \end{table}
 
 We will consider that target nodes \( t_u, t_v \in T_{V} \) that correspond to graph's nodes \( u, v \in V \) overlap
 if and only if there is an edge in the graph \( G \) between these nodes or \( u = v \).
 \begin{equation} \label{eq:overlap_reduction}
-    t_u \cap t_v \neq \emptyset \Leftrightarrow
-    \Biggl[
-    \begin{array}{l}
-        \{ u, v \} \in E \\
-        u = v
-    \end{array}
+  t_u \cap t_v \neq \emptyset \Leftrightarrow
+  \left( \{ u, v \} \in E \right) \lor  \left(u = v \right)
 \end{equation}
 Such a definition of overlapping allow us to match all properties, i.e. reflexivity, symmetricity and non transitivity,
 of overlapping relation on word ranges in the initial definition \ref{def:overlapping}. The fact that we consider
@@ -917,13 +912,13 @@ add the same vertex in the independent set two times which is a property of the 
 
 Hence the resulting ILP problem induced by the MaxIS problem is the following:
 \begin{equation} \label{eq:reduction_without_nproj}
-    \begin{aligned}
-         & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                             \\
-         & \text{subject to}                                                                                                                                   \\
-         & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
-         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T)                                                                            \\
-         & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
-    \end{aligned}
+  \begin{aligned}
+    & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                             \\
+    & \text{subject to}                                                                                                                                   \\
+    & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+    & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T)                                                                            \\
+    & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
+  \end{aligned}
 \end{equation}
 where set \( \hat{PI} \) defined based on the introduced above overlapping relation.
 
@@ -934,8 +929,8 @@ In order to overcome this problem, let's create dummy target nodes. The proposed
 in the table \ref{tab:dummy_nodes_num} (b). Let's denote set of all such nodes as \( T_{dummy} \) and then the set of all target candidates
 will be \( T = T_V \cup T_{dummy} \). We will consider that dummy target nodes don't overlap with any node expect itself:
 \[
-    \forall \tgt{p_1} \in T_{dummy}, \tgt{p} \in T
-    \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \Leftrightarrow \tgt{p_1} = \tgt{p_2}
+  \forall \tgt{p_1} \in T_{dummy}, \tgt{p} \in T
+  \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \Leftrightarrow \tgt{p_1} = \tgt{p_2}
 \]
 Target dummy nodes are created only to satisfy constraints \eqref{eq:num_proj_const}, so all matching scores
 between any dummy source node and any dummy target node set to be equal \( 0 \).
@@ -944,12 +939,12 @@ Since we have a one to one correspondence between vertices from the MaxIS proble
 candidates from the set \( T_V \), consider the following set that fully determine the solution of the
 MaxIS problem:
 \[
-    T^*_{x} = \{ t \in T_V | \exists s \in S, x_{s, t} = 1 \}
+  T^*_{x} = \{ t \in T_V | \exists s \in S, x_{s, t} = 1 \}
 \]
 Let's \( x_1, x_2 \) be a two feasible solutions of problem \eqref{eq:reduction_without_nproj}, then we will say that
 they are in relation~\( \sim \) if their corresponding solutions of the MaxIS problem are equal:
 \[
-    x_1 \sim x_2 \Leftrightarrow T^{*}_{x_1} = T^{*}_{x_2}
+  x_1 \sim x_2 \Leftrightarrow T^{*}_{x_1} = T^{*}_{x_2}
 \]
 Since this relation defined by an equality of sets it is reflexive, symmetric and transitive and therefore
 equivalence relation.
@@ -959,330 +954,329 @@ that differ only in matching of dummy nodes. Every such equivalence class corres
 the maximum independent set problem. Let's notice that the objective function value is equal for all
 elements within any equivalence class.
 \begin{lemma}
-    Let X be a set of feasible solution of the problem \eqref{eq:reduction_without_nproj}. Then
-    for any equivalence class in the quotient set \( \quot{X}{\sim} \) the objective
-    value is the same for every solution within this equivalence class.
+  Let X be a set of feasible solution of the problem \eqref{eq:reduction_without_nproj}. Then
+  for any equivalence class in the quotient set \( \quot{X}{\sim} \) the objective
+  value is the same for every solution within this equivalence class.
 \end{lemma}
 \begin{proof}
-    Consider an equivalence class \( [x] \) of some feasible solution \( x \).
-    Let's notice that non zero scores have only elements from the set \( T^*_x \),
-    therefore the objective determines by this set of projected target candidates:
-    \begin{multline*}
-        \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
-        \sum\limits_{(\src{p}, \tgt{p}) \in S \times T_V} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} = \\
-        \sum\limits_{(\src{p}, \tgt{p}) \in S \times T^{*}_{x}} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}
-    \end{multline*}
-    Because of non-overlapping constraints and the fact that we consider that target candidate overlaps with
-    itself only one source entity can be projected onto every target candidate from the set \( T_x^* \):
-    \[
-        \forall \tgt{p} \in T^*_x, \exists! \src{p} \in S \Big| x_{\src{p}, \tgt{p}} = 1
-    \]
-    Then the objective value equals to the cardinality of the set \( T^*_x \) that are equal for
-    any solution without the same equivalence class by the definition of the relation \( ~ \).
-    \[
-        \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
-        \sum\limits_{(\src{p}, \tgt{p}) \in S \times T^{*}_{x}} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
-        |T_x^*|
-    \]
+  Consider an equivalence class \( [x] \) of some feasible solution \( x \).
+  Let's notice that non zero scores have only elements from the set \( T^*_x \),
+  therefore the objective determines by this set of projected target candidates:
+  \begin{multline*}
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T_V} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} = \\
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T^{*}_{x}} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}
+  \end{multline*}
+  Because of non-overlapping constraints and the fact that we consider that target candidate overlaps with
+  itself only one source entity can be projected onto every target candidate from the set \( T_x^* \):
+  \[
+    \forall \tgt{p} \in T^*_x, \exists! \src{p} \in S \Big| x_{\src{p}, \tgt{p}} = 1
+  \]
+  Then the objective value equals to the cardinality of the set \( T^*_x \) that are equal for
+  any solution without the same equivalence class by the definition of the relation \( ~ \).
+  \[
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T^{*}_{x}} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
+    |T_x^*|
+  \]
 \end{proof}
 \begin{corollary} \label{col:maxis_and_ilp_objective_equal}
-    The objective function value of the ILP problem \eqref{eq:reduction_without_nproj} and the maximum independent
-    set problem are equal.
+  The objective function value of the ILP problem \eqref{eq:reduction_without_nproj} and the maximum independent
+  set problem are equal.
 \end{corollary}
 \begin{proof}
-    By construction every target candidate from the set \( T^*_x \) corresponds to one only one vertex
-    from the MaxIS problem. Therefore the objective value is equal to the cardinality of the set \(  T^*_x \).
-    In the proof of the lemma we showed that the objective value of the ILP problem~\eqref{eq:reduction_without_nproj}
-    equals to \( | T^*_x| \) as well.
+  By construction every target candidate from the set \( T^*_x \) corresponds to one only one vertex
+  from the MaxIS problem. Therefore the objective value is equal to the cardinality of the set \(  T^*_x \).
+  In the proof of the lemma we showed that the objective value of the ILP problem~\eqref{eq:reduction_without_nproj}
+  equals to \( | T^*_x| \) as well.
 \end{proof}
 
 Dummy source nodes exists only to be able to formulate the MaxIS problem as the desired ILP projection problem.
 Hence we can swap a dummy source node for a target candidate it was projected from.
 \begin{lemma} \label{lemma:swap_source_reduction}
-    Let \( x \) be a feasible solution of the problem \eqref{eq:reduction_without_nproj} such that
-    some dummy source node \( \src{p} \in S \) is projected onto \( \tgt{p} \in T \),
-    i.e. \( x_{\src{p}, \tgt{p}} = 1 \). Then for any other source node
-    \( \src{\hat{p}} \in S, \src{p} \neq \src{\hat{p}} \) a solution \( x^{*} \), such that
-    \begin{align*}
-         & x^*_{\src{\hat{p}}, \tgt{p}} = 1  \qquad
-        x^*_{\src{p}, \tgt{p}} = 0                                                                                            \\
-         & \forall s, t \in S \times T \setminus \{ (\src{p}, \tgt{p}), (\src{\hat{p}}, \tgt{p}) \} \quad x^*_{s,t} = x_{s,t}
-    \end{align*}
-    is also feasible and in the same equivalence class as \( x \).
+  Let \( x \) be a feasible solution of the problem \eqref{eq:reduction_without_nproj} such that
+  some dummy source node \( \src{p} \in S \) is projected onto \( \tgt{p} \in T \),
+  i.e. \( x_{\src{p}, \tgt{p}} = 1 \). Then for any other source node
+  \( \src{\hat{p}} \in S, \src{p} \neq \src{\hat{p}} \) a solution \( x^{*} \), such that
+  \begin{align*}
+    & x^*_{\src{\hat{p}}, \tgt{p}} = 1  \qquad
+    x^*_{\src{p}, \tgt{p}} = 0                                                                                            \\
+    & \forall s, t \in S \times T \setminus \{ (\src{p}, \tgt{p}), (\src{\hat{p}}, \tgt{p}) \} \quad x^*_{s,t} = x_{s,t}
+  \end{align*}
+  is also feasible and in the same equivalence class as \( x \).
 \end{lemma}
 \begin{proof}
-    Suppose that the solution \( x^* \) is not feasible, it means that:
-    \[
-        \exists s \in S, t \in T \Big| (s, \src{\hat{p}}, t, \tgt{p}) \in \hat{\Pi}(S, T), \; x^*_{s, t} = 1
-    \]
-    Let's notice that \( s \neq \src{p} \), since \( x^*_{\src{p}, \tgt{p}} = 0 \).
-    But then by construction:
-    \[
-        x_{\src{p}, \tgt{p}} + x_{s, t} = 1 + x^*_{s, t} = 1 + 1 > 2
-    \]
-    It contradicts with the fact that \( x \) is a feasible solution, therefore \( x^* \) should be
-    feasible.
+  Suppose that the solution \( x^* \) is not feasible, it means that:
+  \[
+    \exists s \in S, t \in T \Big| (s, \src{\hat{p}}, t, \tgt{p}) \in \hat{\Pi}(S, T), \; x^*_{s, t} = 1
+  \]
+  Let's notice that \( s \neq \src{p} \), since \( x^*_{\src{p}, \tgt{p}} = 0 \).
+  But then by construction:
+  \[
+    x_{\src{p}, \tgt{p}} + x_{s, t} = 1 + x^*_{s, t} = 1 + 1 > 2
+  \]
+  It contradicts with the fact that \( x \) is a feasible solution, therefore \( x^* \) should be
+  feasible.
 
-    And since by construction sets \( T^*_x \) and \( T^*_{x^*} \) are equal solutions are in the same equivalence
-    class and by the corollary \ref{col:maxis_and_ilp_objective_equal} the objective values for these solutions are also equal.
+  And since by construction sets \( T^*_x \) and \( T^*_{x^*} \) are equal solutions are in the same equivalence
+  class and by the corollary \ref{col:maxis_and_ilp_objective_equal} the objective values for these solutions are also equal.
 \end{proof}
 
 \begin{corollary} \label{col:bound_num_proj_reduction}
-    For any feasible solution of the problem \eqref{eq:reduction_without_nproj} there is a feasible solution  \( x^* \)
-    such that
-    \[
-        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|}
-        \qquad \forall \src{p} \in S
-    \]
-    and \( T_{x^*}^* =  T^*_x \).
+  For any feasible solution of the problem \eqref{eq:reduction_without_nproj} there is a feasible solution  \( x^* \)
+  such that
+  \[
+    \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|}
+    \qquad \forall \src{p} \in S
+  \]
+  and \( T_{x^*}^* =  T^*_x \).
 \end{corollary}
 \begin{proof}
-    Assume the solution \( \hat{x} \) such that
-    \begin{align*}
-         & \forall \src{p} \in S \; \forall \tgt{p} \in T_V \qquad \hat{x}_{\src{p}, \tgt{p}} = x_{\src{p}, \tgt{p}} \\
-         & \forall \src{p} \in S \; \forall \tgt{p} \in T_{dummy} \qquad \hat{x}_{\src{p}, \tgt{p}} = 0
-    \end{align*}
-    By construction this solution has the same objective value since all score that for dummy target nodes are equal to \( 0 \),
-    the same set \( T^*_{\hat{x}} = T^*_x \)
-    and also it doesn't violate the non-overlapping constraints:
-    \begin{align*}
-         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_2} \in T_{V} \quad
-        \hat{x}_{\src{p_1}, \tgt{p_1}} + \hat{x}_{\src{p_2}, \tgt{p_2}} =
-        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1                                                      \\
-         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_2} \in T_{dummy} \quad
-        \hat{x}_{\src{p_1}, \tgt{p_1}} + 0 \leq
-        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
-    \end{align*}
+  Assume the solution \( \hat{x} \) such that
+  \begin{align*}
+    & \forall \src{p} \in S \; \forall \tgt{p} \in T_V \qquad \hat{x}_{\src{p}, \tgt{p}} = x_{\src{p}, \tgt{p}} \\
+    & \forall \src{p} \in S \; \forall \tgt{p} \in T_{dummy} \qquad \hat{x}_{\src{p}, \tgt{p}} = 0
+  \end{align*}
+  By construction this solution has the same objective value since all score that for dummy target nodes are equal to \( 0 \),
+  the same set \( T^*_{\hat{x}} = T^*_x \)
+  and also it doesn't violate the non-overlapping constraints:
+  \begin{align*}
+    & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_2} \in T_{V} \quad
+    \hat{x}_{\src{p_1}, \tgt{p_1}} + \hat{x}_{\src{p_2}, \tgt{p_2}} =
+    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1                                                      \\
+    & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_2} \in T_{dummy} \quad
+    \hat{x}_{\src{p_1}, \tgt{p_1}} + 0 \leq
+    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+  \end{align*}
 
-    Because of non-overlapping constraints \eqref{eq:non_overlap_const} at most one source node can
-    be projected on every target node, therefore:
-    \[
-        \sum\limits_{\src{p} \in S} \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} \leq |V|
-    \]
-    Suppose there exists such a \( \src{p} \in S \) that
-    \[
-        \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} > \frac{|V|}{|S|}
-    \]
-    Then there is another source entity \( \src{\hat{p}} \) for which we have
-    \[
-        \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{\hat{p}}, \tgt{p}} < \frac{|V|}{|S|}
-    \]
-    By the lemma \ref{lemma:swap_source_reduction} there exists such an optimal solution \( x^* \)
-    where
-    \begin{align*}
-         & \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} = \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} - 1             \\
-         & \sum\limits_{\tgt{p} \in T} x^*_{\src{\hat{p}}, \tgt{p}} = 1 + \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{\hat{p}}, \tgt{p}} \\
-    \end{align*}
-    and \( T^*_x = T^*_{\hat{x}} = T^*_{x^*}  \). If this solution doesn't satisfy the desired property repeat the procedure.
+  Because of non-overlapping constraints \eqref{eq:non_overlap_const} at most one source node can
+  be projected on every target node, therefore:
+  \[
+    \sum\limits_{\src{p} \in S} \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} \leq |T_V| \leq |V|
+  \]
+  Suppose there exists such a \( \src{p} \in S \) that
+  \[
+    \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} > \frac{|V|}{|S|}
+  \]
+  Then there is another source entity \( \src{\hat{p}} \) for which we have
+  \[
+    \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{\hat{p}}, \tgt{p}} < \frac{|V|}{|S|}
+  \]
+  By the lemma \ref{lemma:swap_source_reduction} there exists such an optimal solution \( x^* \)
+  where
+  \begin{align*}
+    & \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} = \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{p}, \tgt{p}} - 1             \\
+    & \sum\limits_{\tgt{p} \in T} x^*_{\src{\hat{p}}, \tgt{p}} = 1 + \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{\hat{p}}, \tgt{p}} \\
+  \end{align*}
+  and \( T^*_x = T^*_{\hat{x}} = T^*_{x^*}  \). If this solution doesn't satisfy the desired property repeat the procedure.
 \end{proof}
 
 Let's note that all feasible solutions of the MaxIS will correspond to feasible solutions of the
 problem \ref{eq:reduction_without_nproj} and vice versa.
 
 \begin{lemma} \label{lemma:maxis_f_implies_ilp}
-    Suppose \( x_v \) is a feasible solution of the maximum independent set problem, then there is a
-    corresponding solution of the problem \eqref{eq:reduction_without_nproj}.
+  Suppose \( x_v \) is a feasible solution of the maximum independent set problem, then there is a
+  corresponding solution of the problem \eqref{eq:reduction_without_nproj}.
 \end{lemma}
 \begin{proof}
-    Suppose some a non feasible solution \( x \) that corresponds to the feasible solution of the
-    MaxIS problem. Then we have:
-    \[
-        \exists (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big|
-        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1
-    \]
-    But by construction of the set \( \hat{\Pi}(S, T) \) and the overlapping relation (dummy target nodes
-    are overlapping only with itself) if \( \tgt{p_1} \neq \tgt{p_2} \) then:
-    \begin{multline*}
-        \left\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \right\} = \\
-        \left\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T_V) \right\}
-    \end{multline*}
-    But since the solution \( x_v \) is feasible constraints with  \( \tgt{p_1} \neq \tgt{p_2} \) can not be violated:
-    \begin{align*}
-         & \forall \{ u, w \} \in E \quad x_u + x_w \leq 1 \stackrel{\eqref{eq:overlap_reduction}}{\implies}                  \\
-         & \forall \tgt{p_1} \in T^*_x \; \nexists \tgt{p_2} \in T^*_x \Big| \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \implies \\
-         & \forall \src{p_1}, \src{p_2} \in S \quad x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
-    \end{align*}
-    Therefore \( \tgt{p_1} = \tgt{p_2} \) and constraints are violated because there exists
-    at least two source nodes \( \src{p_1}, \src{p_2} \in S \) that are projected onto the same target nodes \( \tgt{p} \in T \):
-    \[
-        x_{\src{p_1}, \tgt{p}} = 1 \qquad x_{\src{p_2}, \tgt{p}} = 1
-    \]
+  Suppose some a non feasible solution \( x \) that corresponds to the feasible solution of the
+  MaxIS problem. Then we have:
+  \[
+    \exists (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big|
+    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1
+  \]
+  But by construction of the set \( \hat{\Pi}(S, T) \) and the overlapping relation (dummy target nodes
+  are overlapping only with itself) if \( \tgt{p_1} \neq \tgt{p_2} \) then:
+  \begin{multline*}
+    \left\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \right\} = \\
+    \left\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T_V) \right\}
+  \end{multline*}
+  But since the solution \( x_v \) is feasible constraints with  \( \tgt{p_1} \neq \tgt{p_2} \) can not be violated:
+  \begin{align*}
+    & \forall \{ u, w \} \in E \quad x_u + x_w \leq 1 \stackrel{\eqref{eq:overlap_reduction}}{\implies}                  \\
+    & \forall \tgt{p_1} \in T^*_x \; \nexists \tgt{p_2} \in T^*_x \Big| \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \implies \\
+    & \forall \src{p_1}, \src{p_2} \in S \quad x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+  \end{align*}
+  Therefore \( \tgt{p_1} = \tgt{p_2} \) and constraints are violated because there exists
+  at least two source nodes \( \src{p_1}, \src{p_2} \in S \) that are projected onto the same target nodes \( \tgt{p} \in T \):
+  \[
+    x_{\src{p_1}, \tgt{p}} = 1 \qquad x_{\src{p_2}, \tgt{p}} = 1
+  \]
 
-    But then consider a solution \( x^* \) such that we remove one of the projection and make this constraint :
-    \begin{align*}
-         & \forall (s,t) \in S \times T \setminus \left\{ (\src{p_1}, \tgt{p}) \right\} x^*_{s,t} = x_{s,t} \\
-         & x^*_{\src{p_2}, \tgt{p_1}} = 0
-    \end{align*}
-    Note that \( T^*_{x^*} = T^*_x  \) because there is a projection to the target node \( \tgt{p} \)
-    since \( \)  \( x^*_{\src{p_1}, \tgt{p_1}} = 1 \).
-    If the solution \( x^* \) is infeasible - repeat procedure, otherwise
-    this solution is feasible and corresponds to the same solution \( x_v \) of the MaxIS problem.
+  But then consider a solution \( x^* \) such that we remove one of the projection and make this constraint :
+  \begin{align*}
+    & \forall (s,t) \in S \times T \setminus \left\{ (\src{p_1}, \tgt{p}) \right\} x^*_{s,t} = x_{s,t} \\
+    & x^*_{\src{p_2}, \tgt{p_1}} = 0
+  \end{align*}
+  Note that \( T^*_{x^*} = T^*_x  \) because there is a projection to the target node \( \tgt{p} \)
+  since \( \)  \( x^*_{\src{p_1}, \tgt{p_1}} = 1 \).
+  If the solution \( x^* \) is infeasible - repeat procedure, otherwise
+  this solution is feasible and corresponds to the same solution \( x_v \) of the MaxIS problem.
 \end{proof}
 
 \begin{lemma} \label{lemma:ilp_f_implies_maxis}
-    Suppose \( x \) is a feasible solution of the problem \eqref{eq:reduction_without_nproj}, then
-    the corresponding solution of the maximum independent set problem is feasible as well.
+  Suppose \( x \) is a feasible solution of the problem \eqref{eq:reduction_without_nproj}, then
+  the corresponding solution of the maximum independent set problem is feasible as well.
 \end{lemma}
 \begin{proof} By construction the non-overlapping constraints of the problem \eqref{eq:reduction_without_nproj}
-    imply constraints of the MaxIS problem:
-    \begin{align*}
-         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \quad
-        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
-         & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_1}, \tgt{p_2} \in T_V \quad
-        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
-         & \forall \tgt{p_1}, \tgt{p_2} \in T_V, \tgt{p_1} \neq \tgt{p_2}, \tgt{p_1} \cap \tgt{p_2} \neq \emptyset
-        \quad \nexists \src{p_1}, \src{p_2} \in S \Big|
-        x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
-         & \nexists \tgt{p_1}, \tgt{p_2} \in T_V, \tgt{p_1} \neq \tgt{p_2}, \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \Big|
-        \tgt{p_1} \in T^*_x, \tgt{p_2} \in T^*_x \implies                                                                    \\
-         & \forall \{ v_{\tgt{p_1}}, v_{\tgt{p_2}} \} \in E \quad x_{v_{\tgt{p_1}}} + x_{v_{\tgt{p_2}}}\leq 1
-    \end{align*}
+  imply constraints of the MaxIS problem:
+  \begin{align*}
+    & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \quad
+    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
+    & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_1}, \tgt{p_2} \in T_V \quad
+    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
+    & \forall \tgt{p_1}, \tgt{p_2} \in T_V, \tgt{p_1} \neq \tgt{p_2}, \tgt{p_1} \cap \tgt{p_2} \neq \emptyset
+    \quad \nexists \src{p_1}, \src{p_2} \in S \Big|
+    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
+    & \nexists \tgt{p_1}, \tgt{p_2} \in T_V, \tgt{p_1} \neq \tgt{p_2}, \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \Big|
+    \tgt{p_1} \in T^*_x, \tgt{p_2} \in T^*_x \implies                                                                    \\
+    & \forall \{ v_{\tgt{p_1}}, v_{\tgt{p_2}} \} \in E \quad x_{v_{\tgt{p_1}}} + x_{v_{\tgt{p_2}}}\leq 1
+  \end{align*}
 \end{proof}
 
 And finally we can prove the complexity of the proposed ILP problem by reduction the MaxIS problem
 to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
 \begin{theorem}[\( MaxIS \leq_P ILP_{proj} \)]
-    The proposed ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} is NP-hard
+  The proposed ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} is NP-hard
 \end{theorem}
 \begin{proof}
-    Assume the reduction of the MaxIS problem to an instance of the projection ILP problem described above.
-    Since number of nodes in the ILP problem is linear on the number of vertices in the MaxIS problem and
-    having a solution of the ILP problem it scales at most quadratically on number of vertices time to
-    determine the solution of the MaxIS problem the reduction takes a polynomial time.
-    The only thing that it is required to check is whether the projected optimal solution of the ILP problem
-    will be always optimal solution of the MaxIS and vice versa.
+  Assume the reduction of the MaxIS problem to an instance of the projection ILP problem described above.
+  Since number of nodes in the ILP problem is linear on the number of vertices in the MaxIS problem and
+  having a solution of the ILP problem it scales at most quadratically on number of vertices time to
+  determine the solution of the MaxIS problem the reduction takes a polynomial time.
+  The only thing that it is required to check is whether the projected optimal solution of the ILP problem
+  will be always optimal solution of the MaxIS and vice versa.
 
-    By the corollary \ref{col:maxis_and_ilp_objective_equal} the objective values of two problems are equal and therefore
-    feasible solution with highest objective value will have a highest objective value in the counterpart problem.
-    And by lemmas \ref{lemma:maxis_f_implies_ilp} and \ref{lemma:ilp_f_implies_maxis} the non-overlapping constraint
-    won't make any optimal solution infeasible for their counterpart.
+  By the corollary \ref{col:maxis_and_ilp_objective_equal} the objective values of two problems are equal and therefore
+  feasible solution with highest objective value will have a highest objective value in the counterpart problem.
+  And by lemmas \ref{lemma:maxis_f_implies_ilp} and \ref{lemma:ilp_f_implies_maxis} the non-overlapping constraint
+  won't make any optimal solution infeasible for their counterpart.
 
-    But besides non-overlapping constraint the problem \eqref{eq:objective}--\eqref{eq:binary_prog} also has
-    constraints \eqref{eq:num_proj_const}. Let's check whether they won't make any optimal solution of the MaxIS
-    problem infeasible in their ILP formulation and there are no new optimal solutions.
+  But besides non-overlapping constraint the problem \eqref{eq:objective}--\eqref{eq:binary_prog} also has
+  constraints \eqref{eq:num_proj_const}. Let's check whether they won't make any optimal solution of the MaxIS
+  problem infeasible in their ILP formulation and there are no new optimal solutions.
 
-    Consider a set \( X \) of all feasible solutions of the problem \eqref{eq:reduction_without_nproj} and
-    set \( Y \) of all feasible solutions of the problem \eqref{eq:objective}--\eqref{eq:binary_prog}. Since
-    the latter problem is constrained version of the problem \eqref{eq:reduction_without_nproj} \( Y \subset X \), but then:
-    \[
-        Y \subset X \implies \forall y \in Y \quad \exists x \in X \Big| \quad [y] \subset [x],
-    \]
-    i.e. there won't be no new equivalence classes and therefore no new feasible solutions of the MaxIS problem.
-    But it turns out that for any equivalence class there is a feasible solution of the full problem that belongs to this class:
-    \[
-        \forall x \in X \quad \exists y \in Y \Big| \quad y \in [x]
-    \]
-    Let's prove it. For this we need to analyze constraints \eqref{eq:num_proj_const} for every type of inequalities.
+  Consider a set \( X \) of all feasible solutions of the problem \eqref{eq:reduction_without_nproj} and
+  set \( Y \) of all feasible solutions of the problem \eqref{eq:objective}--\eqref{eq:binary_prog}. Since
+  the latter problem is constrained version of the problem \eqref{eq:reduction_without_nproj} \( Y \subset X \), but then:
+  \[
+    Y \subset X \implies \forall y \in Y \quad \exists x \in X \Big| \quad [y] \subset [x],
+  \]
+  i.e. there won't be no new equivalence classes and therefore no new feasible solutions of the MaxIS problem.
+  But it turns out that for any equivalence class there is a feasible solution of the full problem that belongs to this class:
+  \[
+    \forall x \in X \quad \exists y \in Y \Big| \quad y \in [x]
+  \]
+  Let's prove it. For this we need to analyze constraints \eqref{eq:num_proj_const} for every type of inequalities.
 
-    \textit{The case of \( < \).} The number of dummy source nodes is given in the table \ref{tab:dummy_nodes_num} (a) and equal to
-    \( |S| = \ceil{\frac{|V|}{n_{proj} - 1}} \)
-    By the corollary \ref{col:bound_num_proj_reduction} there exists such a solution \( x^* \) from the same
-    equivalence class that satisfies constraints:
-    \[
-        \forall \src{p} \in S \quad
-        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|} =
-        \frac{|V|}{ \ceil{\frac{|V|}{n_{proj} - 1}}} \leq \frac{|V|}{\frac{|V|}{n_{proj} - 1}} =
-        n_{proj} - 1 < n_{proj}.
-    \]
+  \textit{The case of \( < \).} The number of dummy source nodes is given in the table \ref{tab:dummy_nodes_num} (a) and equal to
+  \( |S| = \ceil{\frac{|V|}{n_{proj} - 1}} \)
+  By the corollary \ref{col:bound_num_proj_reduction} there exists such a solution \( x^* \) from the same
+  equivalence class that satisfies constraints:
+  \[
+    \forall \src{p} \in S \quad
+    \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|} =
+    \frac{|V|}{ \ceil{\frac{|V|}{n_{proj} - 1}}} \leq \frac{|V|}{\frac{|V|}{n_{proj} - 1}} =
+    n_{proj} - 1 < n_{proj}.
+  \]
 
-    \textit{The case of \( \leq \).} By the same corollary \ref{col:bound_num_proj_reduction} as in the previous case
-    we obtain that there is a solution \( x^* \) that satisfies constraints:
-    \[
-        \forall \src{p} \in S \quad
-        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|} =
-        \frac{|V|}{ \ceil{\frac{|V|}{n_{proj}}}} \leq \frac{|V|}{\frac{|V|}{n_{proj}}} =
-        n_{proj} .
-    \]
+  \textit{The case of \( \leq \).} By the same corollary \ref{col:bound_num_proj_reduction} as in the previous case
+  we obtain that there is a solution \( x^* \) that satisfies constraints:
+  \[
+    \forall \src{p} \in S \quad
+    \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|} =
+    \frac{|V|}{ \ceil{\frac{|V|}{n_{proj}}}} \leq \frac{|V|}{\frac{|V|}{n_{proj}}} =
+    n_{proj} .
+  \]
 
-    \textit{The case of \( =\).} By the corollary \ref{col:bound_num_proj_reduction}
-    for any solution \( x \) from the equivalence class \( [x] \) there is
-    a feasible solution \( x^* \in [x] \) such that:
-    \begin{equation} \label{eq:red_thm_n_proj}
-        \forall \src{p} \in S \quad
-        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|} =
-        \frac{|V|}{ \ceil{\frac{|V|}{n_{proj}}}} \leq \frac{|V|}{\frac{|V|}{n_{proj}}} =
-        n_{proj} .
-    \end{equation}
-    If constraints \eqref{eq:num_proj_const} are violated then there is such a source node \( \src{\hat{p}} \)
-    for which the sum is a strong inequality:
-    \begin{equation} \label{eq:red_thm_src_that_violate_constr}
-        \exists \src{\hat{p}} \in S \quad
-        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|} <
-        n_{proj} .
-    \end{equation}
-    But then we can find such a dummy target node \( t_d \in T_{dummy} \) that:
-    \[
-        \exists t_d \in T_{dummy} \Big| \forall s \in S \quad x^*_{s,t} = 0
-    \]
-    It can be proved by contradiction to the property of the given by the corollary \ref{col:bound_num_proj_reduction}
-    and that there exists such a \( \src{\hat{p}} \):
-    \begin{align*}
-         & \nexists t_d \in T_{dummy} \Big| \forall s \in S \quad x^*_{s,t} = 0 \implies                                                             \\
-         & \forall t \in T_{dummy}, \; \exists s \in S \quad x^*_{s,t} = 1 \implies                                                                  \\
-         & \ceil{\frac{|V|}{n_{proj}}} n_{proj} = |S| n_{proj}
-        \stackrel{\eqref{eq:red_thm_n_proj}}{\geq}
-        \sum\limits_{s \in S} \sum\limits_{t \in T} x^*_{s,t} \geq |T_{dummy}| = \ceil{\frac{|V|}{n_{proj}}} n_{proj} \implies                       \\
-         & \sum\limits_{s \in S} \sum\limits_{t \in T} x^*_{s,t} = \ceil{\frac{|V|}{n_{proj}}} n_{proj} \geq |V|
-        \implies                                                                                                                                     \\
-         & \sum\limits_{s \in S \setminus \{ \src{\hat{p}} \}} \sum\limits_{t \in T} x^*_{s,t} = \ceil{\frac{|V|}{n_{proj}}} n_{proj} = |S| n_{proj}
-        \stackrel{\eqref{eq:red_thm_src_that_violate_constr}}{\implies}                                                                              \\
-         & \exists s \in S \quad
-        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} > \frac{|V|}{|S|} >
-        n_{proj}
-    \end{align*}
-    In short words always there are a "free" dummy target nodes that can be used to ensure equality constraints.
-    It was expectable just because during construction we choose the number of target dummy nodes to make it possible.
-    In order to make the solution closer to be feasible we just need to project source entity \( \src{\hat{p}} \) onto this target
-    candidate \( t_d \). So, the modified solution \( \hat{x} \) is the following:
-    \begin{align*}
-         & \forall (s,t) \in S \times T \setminus \left\{ (\src{\hat{p}}, t_d) \right\} \hat{x}_{s,t} = x^*_{s,t} \\
-         & \hat{x}_{\src{\hat{p}}, t_d} = 1
-    \end{align*}
-    By the definition of the set \( T^*_{\hat{x}} \) since we add only a projection to a dummy node
-    it won't change the equivalence class of the solution, objective value but make the number of projection
-    from the source entity \( \src{\hat{p}} \) higher:
-    \[
-        \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{\hat{p}}, \tgt{p}} =
-        \sum\limits_{\tgt{p} \in T} x^*_{\src{\hat{p}}, \tgt{p}} + 1
-        \leq n_{proj}
-    \]
-    Since dummy target nodes overlaps only with itself we have that the constraints that potentially
-    can be violated are defined by this set:
-    \begin{multline*}
-        \left\{ (\src{p_1}, \src{p_2}, t_d, \tgt{p_2}) \Big| (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \right\} = \\
-        \left\{ (\src{p_1}, \src{p_2}, t_d, t_d) \Big| \src{p_1}, \src{p_2} \in S, \src{p_1} \neq \src{p_2} \right\}
-    \end{multline*}
-    But because of the choice of \( t_d \) the constraints
-    \eqref{eq:non_overlap_const} are not violated:
-    \begin{align*}
-        \forall \src{p_1}, \src{p_2} \in S \Big| \src{p_1} \neq \src{p_2}, \src{p_1} \neq \src{\hat{p}}, \src{p_2} \neq \src{\hat{p}} \quad
-         & \hat{x}_{src{p_1}, t_d} + \hat{x}_{\src{p_2}, t_d} = x_{\src{p_1}, t_d} + x_{\src{p_2}, t_d} = 0 \\
-        \forall \src{p_2} \in S \Big| \src{\hat{p}} \neq \src{p_2} \quad
-         & \hat{x}_{\src{\hat{p}}, t_d} + \hat{x}_{\src{p_2}, t_d} = 1 + 0 = 1 \leq 1
-    \end{align*}
+  \textit{The case of \( =\).} By the corollary \ref{col:bound_num_proj_reduction}
+  for any solution \( x \) from the equivalence class \( [x] \) there is
+  a feasible solution \( x^* \in [x] \) such that:
+  \begin{equation} \label{eq:red_thm_n_proj}
+    \forall \src{p} \in S \quad
+    \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|} =
+    \frac{|V|}{ \ceil{\frac{|V|}{n_{proj}}}} \leq \frac{|V|}{\frac{|V|}{n_{proj}}} =
+    n_{proj} .
+  \end{equation}
+  If constraints \eqref{eq:num_proj_const} are violated then there is such a source node \( \src{\hat{p}} \)
+  for which the sum is a strong inequality:
+  \begin{equation} \label{eq:red_thm_src_that_violate_constr}
+    \exists \src{\hat{p}} \in S \quad
+    \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} \leq \frac{|V|}{|S|} <
+    n_{proj} .
+  \end{equation}
+  But then we can find such a dummy target node \( t_d \in T_{dummy} \) that:
+  \[
+    \exists t_d \in T_{dummy} \Big| \forall s \in S \quad x^*_{s,t} = 0
+  \]
+  It can be proved by contradiction to the property of the given by the corollary \ref{col:bound_num_proj_reduction}
+  and that there exists such a \( \src{\hat{p}} \):
+  \begin{align*}
+    & \nexists t_d \in T_{dummy} \Big| \forall s \in S \quad x^*_{s,t} = 0 \implies                                                             \\
+    & \forall t \in T_{dummy}, \; \exists s \in S \quad x^*_{s,t} = 1 \implies                                                                  \\
+    & \ceil{\frac{|V|}{n_{proj}}} n_{proj} = |S| n_{proj}
+    \stackrel{\eqref{eq:red_thm_n_proj}}{\geq}
+    \sum\limits_{s \in S} \sum\limits_{t \in T} x^*_{s,t} \geq |T_{dummy}| = \ceil{\frac{|V|}{n_{proj}}} n_{proj} \implies                       \\
+    & \sum\limits_{s \in S} \sum\limits_{t \in T} x^*_{s,t} = \ceil{\frac{|V|}{n_{proj}}} n_{proj} \geq |V|
+    \implies                                                                                                                                     \\
+    & \sum\limits_{s \in S \setminus \{ \src{\hat{p}} \}} \sum\limits_{t \in T} x^*_{s,t} = \ceil{\frac{|V|}{n_{proj}}} n_{proj} = |S| n_{proj}
+    \stackrel{\eqref{eq:red_thm_src_that_violate_constr}}{\implies}                                                                              \\
+    & \exists s \in S \quad
+    \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} > \frac{|V|}{|S|} >
+    n_{proj}
+  \end{align*}
+  In short words always there are a "free" dummy target nodes that can be used to ensure equality constraints.
+  It was expectable just because during construction we choose the number of target dummy nodes to make it possible.
+  In order to make the solution closer to be feasible we just need to project source entity \( \src{\hat{p}} \) onto this target
+  candidate \( t_d \). So, the modified solution \( \hat{x} \) is the following:
+  \begin{align*}
+    & \forall (s,t) \in S \times T \setminus \left\{ (\src{\hat{p}}, t_d) \right\} \hat{x}_{s,t} = x^*_{s,t} \\
+    & \hat{x}_{\src{\hat{p}}, t_d} = 1
+  \end{align*}
+  By the definition of the set \( T^*_{\hat{x}} \) since we add only a projection to a dummy node
+  it won't change the equivalence class of the solution, objective value but make the number of projection
+  from the source entity \( \src{\hat{p}} \) higher:
+  \[
+    \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{\hat{p}}, \tgt{p}} =
+    \sum\limits_{\tgt{p} \in T} x^*_{\src{\hat{p}}, \tgt{p}} + 1
+    \leq n_{proj}
+  \]
+  Since dummy target nodes overlaps only with itself we have that the constraints that potentially
+  can be violated are defined by this set:
+  \begin{multline*}
+    \left\{ (\src{p_1}, \src{p_2}, t_d, \tgt{p_2}) \Big| (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \right\} = \\
+    \left\{ (\src{p_1}, \src{p_2}, t_d, t_d) \Big| \src{p_1}, \src{p_2} \in S, \src{p_1} \neq \src{p_2} \right\}
+  \end{multline*}
+  But because of the choice of \( t_d \) the constraints
+  \eqref{eq:non_overlap_const} are not violated:
+  \begin{align*}
+    \forall \src{p_1}, \src{p_2} \in S \Big| \src{p_1} \neq \src{p_2}, \src{p_1} \neq \src{\hat{p}}, \src{p_2} \neq \src{\hat{p}} \quad
+    & \hat{x}_{src{p_1}, t_d} + \hat{x}_{\src{p_2}, t_d} = x_{\src{p_1}, t_d} + x_{\src{p_2}, t_d} = 0 \\
+    \forall \src{p_2} \in S \Big| \src{\hat{p}} \neq \src{p_2} \quad
+    & \hat{x}_{\src{\hat{p}}, t_d} + \hat{x}_{\src{p_2}, t_d} = 1 + 0 = 1 \leq 1
+  \end{align*}
 
-    If still there are some source entity for which constrains \eqref{eq:num_proj_const} are violated - repeat the process.
-    Repetition of the process is possible since the property \eqref{eq:red_thm_n_proj} still holds and
-    we proved that there always exists a "free" dummy target node we can project this source node onto.
+  If still there are some source entity for which constrains \eqref{eq:num_proj_const} are violated - repeat the process.
+  Repetition of the process is possible since the property \eqref{eq:red_thm_n_proj} still holds and
+  we proved that there always exists a "free" dummy target node we can project this source node onto.
 
-    \textit{The case of \( >, \geq \).} We can perform a similar derivation as for the case of \( = \) type of constraints, but
-    let's note that \( \forall \src{p} \in S \):
-    \begin{align*}
-         & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} = n_{proj} \Leftrightarrow
-        n_{proj} \geq \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \geq n_{proj}                                  \\
-         & \bigvee\limits_{k=n_{proj} + 1}^{|T|} \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} = k \Leftrightarrow
-        \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} > n_{proj} \qquad
-    \end{align*}
-    Therefore all solutions that are feasible for the case of equality constraints are also should be
-    feasible for the case of \( \geq, > \) and vice versa, so we won't lose any equivalence class.
+  \textit{The case of \( >, \geq \).} We can perform a similar derivation as for the case of \( = \) type of constraints, but
+  let's note that \( \forall \src{p} \in S \):
+  \begin{align*}
+    & \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} = n_{proj} \Leftrightarrow
+    n_{proj} \geq \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \geq n_{proj}                                  \\
+    & \bigvee\limits_{k=n_{proj} + 1}^{|T|} \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} = k \Leftrightarrow
+    \sum\limits_{\tgt{p} \in T} x^*_{\src{p}, \tgt{p}} > n_{proj} \qquad
+  \end{align*}
+  Therefore all solutions that are feasible for the case of equality constraints are also should be
+  feasible for the case of \( \geq, > \) and vice versa, so we won't lose any equivalence class.
 
-    So, we have shown that for every feasible solution of the problem \eqref{eq:reduction_without_nproj} there is
-    a feasible solution of the full ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} that belongs to the
-    same equivalence class. And every feasible solution of the full ILP problem is a feasible solution of the problem \eqref{eq:reduction_without_nproj}.
-    Therefore the MaxIS problem can be solved as an instance of the problem \eqref{eq:objective}--\eqref{eq:binary_prog}
-    and consequently the ILP problem is at least as hard as the maximum independent set problem which is NP-hard.
+  So, we have shown that for every feasible solution of the problem \eqref{eq:reduction_without_nproj} there is
+  a feasible solution of the full ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} that belongs to the
+  same equivalence class. And every feasible solution of the full ILP problem is a feasible solution of the problem \eqref{eq:reduction_without_nproj}.
+  Therefore the MaxIS problem can be solved as an instance of the problem \eqref{eq:objective}--\eqref{eq:binary_prog}
+  and consequently the ILP problem is at least as hard as the maximum independent set problem which is NP-hard.
 \end{proof}
-
 
 \subsection{Approaches to compute the solution of the problem}
 As any ILP problem the problem \eqref{eq:ilp} can be solved by branch and bound, cutting planes,
@@ -1297,38 +1291,38 @@ all target candidates that overlap with the projected candidate to enforce non-o
 Algorithm \ref{alg:ilp_greedy} is the variant of a such greedy algorithm.
 
 \begin{algorithm}
-    \caption{Approximate greedy algorithm for the proposed ILP problem} \label{alg:ilp_greedy}
-    \KwData{instance of the ILP problem \eqref{eq:ilp}}
-    \KwResult{\( x \) -- "solution" of the ILP problem}
+  \caption{Approximate greedy algorithm for the proposed ILP problem} \label{alg:ilp_greedy}
+  \KwData{instance of the ILP problem \eqref{eq:ilp}}
+  \KwResult{\( x \) -- "solution" of the ILP problem}
 
-    \( x \gets 0 \) \;
-    \( P \gets 0 \) \Comment*[r]{number of projections by source entity}
-    \While{\( \exists \src{p} \in S, \tgt{p} \in T \Big| c_{\src{p}, \tgt{p}} > 0 \)}{
-        \( s, t \gets \argmax\limits_{\src{p} \in S, \tgt{p} \in T } c_{\src{p}, \tgt{p}} \) \;
-        \( x_{s,t} \gets 1 \) \;
-        \( P_{s} \gets P_{s} + 1 \) \;
+  \( x \gets 0 \) \;
+  \( P \gets 0 \) \Comment*[r]{number of projections by source entity}
+  \While{\( \exists \src{p} \in S, \tgt{p} \in T \Big| c_{\src{p}, \tgt{p}} > 0 \)}{
+    \( s, t \gets \argmax\limits_{\src{p} \in S, \tgt{p} \in T } c_{\src{p}, \tgt{p}} \) \;
+    \( x_{s,t} \gets 1 \) \;
+    \( P_{s} \gets P_{s} + 1 \) \;
 
-        \ForAll(\tcp*[f]{remove all overlapping with \( t \) candidates}){\( \hat{t} \in T \Big| \hat{t} \cap t \neq \emptyset \)}{
-            \( c_{s, \hat{t}} \gets 0 \) \;
-        }
-
-        \Comment{ensure constraints \eqref{eq:num_proj_const}}
-        \If{constraints \eqref{eq:num_proj_const} is a type of \( =, \leq \)}{
-            \If{\( P_s = n_{proj} \)}{
-                \ForAll{\( \hat{t} \in T \)}{
-                    \( c_{s, \hat{t}} \gets 0 \) \;
-                }
-            }
-        }
-        \If{constraints \eqref{eq:num_proj_const} is a type of \( < \)}
-        {
-            \If{\( P_s = n_{proj} - 1 \)}{
-                \ForAll{\( \hat{t} \in T \)}{
-                    \( c_{s, \hat{t}} \gets 0 \) \;
-                }
-            }
-        }
+    \ForAll(\tcp*[f]{remove all overlapping with \( t \) candidates}){\( \hat{t} \in T \Big| \hat{t} \cap t \neq \emptyset \)}{
+      \( c_{s, \hat{t}} \gets 0 \) \;
     }
+
+    \Comment{ensure constraints \eqref{eq:num_proj_const}}
+    \If{constraints \eqref{eq:num_proj_const} is a type of \( =, \leq \)}{
+      \If{\( P_s = n_{proj} \)}{
+        \ForAll{\( \hat{t} \in T \)}{
+          \( c_{s, \hat{t}} \gets 0 \) \;
+        }
+      }
+    }
+    \If{constraints \eqref{eq:num_proj_const} is a type of \( < \)}
+    {
+      \If{\( P_s = n_{proj} - 1 \)}{
+        \ForAll{\( \hat{t} \in T \)}{
+          \( c_{s, \hat{t}} \gets 0 \) \;
+        }
+      }
+    }
+  }
 \end{algorithm}
 
 From the steps of the algorithm \ref{alg:ilp_greedy} it implies that after removing all
@@ -1357,9 +1351,9 @@ Consider the ILP problem \eqref{eq:ilp} with \( n_{proj} = 2 \) and \( \leq \) t
 Let \( T = \{ \tgt{p_1} = (1, 2), \tgt{p_2} = (2, 3), \tgt{p_3} = (3, 5) \}, S = \{ \src{p} \} \) and
 the matching scores are the following:
 \[
-    c_{\src{p}, \tgt{p_1}} = 0.2 \qquad
-    c_{\src{p}, \tgt{p_2}} = 0.3 \qquad
-    c_{\src{p}, \tgt{p_3}} = 0.2
+  c_{\src{p}, \tgt{p_1}} = 0.2 \qquad
+  c_{\src{p}, \tgt{p_2}} = 0.3 \qquad
+  c_{\src{p}, \tgt{p_3}} = 0.2
 \]
 The output of the algorithm \ref{alg:ilp_greedy} is the solution \( \src{p} \) with only one
 non zero variable where \( x_{\src, \tgt{p_2}} = 1 \). It has an objective value \( 0.3 \).
