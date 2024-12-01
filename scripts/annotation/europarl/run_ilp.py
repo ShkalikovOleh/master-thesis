@@ -29,71 +29,70 @@ lang_code_map = {"de": "deu_Latn", "it": "ita_Latn", "es": "spa_Latn"}
 def main(cfg: argparse.Namespace):
     constraints = make_constraints_option_list(cfg)
 
-    for lang in cfg.langs:
-        ds_params = [
-            "pipeline.load_ds.transform.dataset_path=ShkalikovOleh/europarl-ner",
-            "pipeline.load_ds.transform.split=test",
-            f"pipeline.load_ds.transform.cfg_name={lang}",
-            f"pipeline.load_entities.transform.dataset_path={cfg.src_entities_path}",
-            f"pipeline.load_alignments.transform.dataset_path={cfg.align_path}",
+    ds_params = [
+        "pipeline.load_ds.transform.dataset_path=ShkalikovOleh/europarl-ner",
+        "pipeline.load_ds.transform.split=test",
+        f"pipeline.load_ds.transform.cfg_name={cfg.lang}",
+        f"pipeline.load_entities.transform.dataset_path={cfg.src_entities_path}",
+        f"pipeline.load_alignments.transform.dataset_path={cfg.align_path}",
+    ]
+
+    for pipeline, solver, constraint in product(
+        cfg.pipelines, cfg.solvers, constraints
+    ):
+        pipe_param = f"pipeline=annotation/partial/ranges/{pipeline}"
+        solver_param = f"pipeline.project.transform.solver={solver}"
+        constr_type_param = (
+            f"pipeline.project.transform.proj_constraint={constraint.type}"
+        )
+        constr_n_proj_param = (
+            f"pipeline.project.transform.n_projected={constraint.n_proj}"
+        )
+
+        additional_params = [
+            f"++pipeline.cand_extraction.transform.max_words={cfg.max_cand_length}"
+        ]
+        if pipeline == "ner":
+            curr_ds_params = ds_params[:-1]
+            additional_params.append(
+                f"pipeline.cand_eval.transform.model_path={cfg.ner_model}"
+            )
+            additional_params.append(
+                f"pipeline.cand_eval.transform.batch_size={cfg.ner_batch_size}"
+            )
+        elif pipeline == "nmtscore":
+            curr_ds_params = ds_params[:-1]
+            additional_params.append(
+                (
+                    "pipeline.project.transform.cost_params.0.tgt_lang="
+                    f"{lang_code_map[cfg.lang]}"
+                )
+            )
+            additional_params.append(
+                (
+                    "pipeline.project.transform.cost_params.0.batch_size="
+                    f"{cfg.trans_batch_size}"
+                )
+            )
+        else:
+            curr_ds_params = ds_params
+
+        python_call = [
+            "python",
+            "-m",
+            "src.pipeline.run_pipeline",
+            f"tgt_lang={cfg.lang}",
+            *curr_ds_params,
+            pipe_param,
+            solver_param,
+            constr_type_param,
+            constr_n_proj_param,
+            *additional_params,
         ]
 
-        for pipeline, solver, constraint in product(
-            cfg.pipelines, cfg.solvers, constraints
-        ):
-            pipe_param = f"pipeline=annotation/partial/ranges/{pipeline}"
-            solver_param = f"pipeline.project.transform.solver={solver}"
-            constr_type_param = (
-                f"pipeline.project.transform.proj_constraint={constraint.type}"
-            )
-            constr_n_proj_param = (
-                f"pipeline.project.transform.n_projected={constraint.n_proj}"
-            )
-
-            additional_params = [
-                f"++pipeline.cand_extraction.transform.max_words={cfg.max_cand_length}"
-            ]
-            if pipeline == "ner":
-                curr_ds_params = ds_params[:-1]
-                additional_params.append(
-                    f"pipeline.cand_eval.transform.model_path={cfg.ner_model}"
-                )
-                additional_params.append(
-                    f"pipeline.cand_eval.transform.batch_size={cfg.ner_batch_size}"
-                )
-            elif pipeline == "nmtscore":
-                curr_ds_params = ds_params[:-1]
-                additional_params.append(
-                    (
-                        "pipeline.project.transform.cost_params.0.tgt_lang="
-                        f"{lang_code_map[lang]}"
-                    )
-                )
-                additional_params.append(
-                    (
-                        "pipeline.project.transform.cost_params.0.batch_size="
-                        f"{cfg.trans_batch_size}"
-                    )
-                )
-            else:
-                curr_ds_params = ds_params
-
-            python_call = [
-                "python",
-                "-m",
-                "src.pipeline.run_pipeline",
-                f"tgt_lang={lang}",
-                *curr_ds_params,
-                pipe_param,
-                solver_param,
-                constr_type_param,
-                constr_n_proj_param,
-                *additional_params,
-            ]
-
-            match cfg.executor:
-                case "python":
-                    subprocess.run(python_call)
+        match cfg.executor:
+            case "python":
+                subprocess.run(python_call)
 
 
 if __name__ == "__main__":
@@ -164,11 +163,10 @@ if __name__ == "__main__":
         default=[],
     )
     parser.add_argument(
-        "--langs",
+        "--lang",
         nargs="+",
         type=str,
         choices=["de", "es", "it"],
-        default=["de", "es", "it"],
     )
     parser.add_argument(
         "--solvers",
