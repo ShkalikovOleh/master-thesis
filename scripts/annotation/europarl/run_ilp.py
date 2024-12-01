@@ -34,7 +34,7 @@ def main(cfg: argparse.Namespace):
             "pipeline.load_ds.transform.dataset_path=ShkalikovOleh/europarl-ner",
             "pipeline.load_ds.transform.split=test",
             f"pipeline.load_ds.transform.cfg_name={lang}",
-            f"pipeline.load_entities.transform.dataset_path={cfg.src_entities_path}"
+            f"pipeline.load_entities.transform.dataset_path={cfg.src_entities_path}",
             f"pipeline.load_alignments.transform.dataset_path={cfg.align_path}",
         ]
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         "--n-proj-leq",
         nargs="*",
         type=int,
-        default=[1],
+        default=[1, 2],
     )
     parser.add_argument(
         "--n-proj-less",
