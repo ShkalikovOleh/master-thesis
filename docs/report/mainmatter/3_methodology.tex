@@ -929,7 +929,7 @@ In order to overcome this problem, let's create dummy target nodes. The proposed
 in the table \ref{tab:dummy_nodes_num} (b). Let's denote set of all such nodes as \( T_{dummy} \) and then the set of all target candidates
 will be \( T = T_V \cup T_{dummy} \). We will consider that dummy target nodes don't overlap with any node expect itself:
 \[
-  \forall \tgt{p_1} \in T_{dummy}, \tgt{p} \in T
+  \forall \tgt{p_1} \in T_{dummy}, \; \tgt{p} \in T \quad
   \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \Leftrightarrow \tgt{p_1} = \tgt{p_2}
 \]
 Target dummy nodes are created only to satisfy constraints \eqref{eq:num_proj_const}, so all matching scores
@@ -970,7 +970,7 @@ elements within any equivalence class.
   Because of non-overlapping constraints and the fact that we consider that target candidate overlaps with
   itself only one source entity can be projected onto every target candidate from the set \( T_x^* \):
   \[
-    \forall \tgt{p} \in T^*_x, \exists! \src{p} \in S \Big| x_{\src{p}, \tgt{p}} = 1
+    \forall \tgt{p} \in T^*_x, \; \exists! \src{p} \in S \Big| x_{\src{p}, \tgt{p}} = 1
   \]
   Then the objective value equals to the cardinality of the set \( T^*_x \) that are equal for
   any solution without the same equivalence class by the definition of the relation \( ~ \).
@@ -1001,14 +1001,15 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
   \begin{align*}
     & x^*_{\src{\hat{p}}, \tgt{p}} = 1  \qquad
     x^*_{\src{p}, \tgt{p}} = 0                                                                                            \\
-    & \forall s, t \in S \times T \setminus \{ (\src{p}, \tgt{p}), (\src{\hat{p}}, \tgt{p}) \} \quad x^*_{s,t} = x_{s,t}
+    & \forall (s, t) \in S \times T \setminus \{ (\src{p}, \tgt{p}), (\src{\hat{p}}, \tgt{p}) \} \quad x^*_{s,t} = x_{s,t}
   \end{align*}
   is also feasible and in the same equivalence class as \( x \).
 \end{lemma}
 \begin{proof}
   Suppose that the solution \( x^* \) is not feasible, it means that:
   \[
-    \exists s \in S, t \in T \Big| (s, \src{\hat{p}}, t, \tgt{p}) \in \hat{\Pi}(S, T), \; x^*_{s, t} = 1
+    \exists s \in S, t \in T \Big| (s, \src{\hat{p}}, t, \tgt{p}) \in \hat{\Pi}(S, T)
+    \quad x^*_{s, t} = 1
   \]
   Let's notice that \( s \neq \src{p} \), since \( x^*_{\src{p}, \tgt{p}} = 0 \).
   But then by construction:
@@ -1034,8 +1035,8 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
 \begin{proof}
   Assume the solution \( \hat{x} \) such that
   \begin{align*}
-    & \forall \src{p} \in S \; \forall \tgt{p} \in T_V \qquad \hat{x}_{\src{p}, \tgt{p}} = x_{\src{p}, \tgt{p}} \\
-    & \forall \src{p} \in S \; \forall \tgt{p} \in T_{dummy} \qquad \hat{x}_{\src{p}, \tgt{p}} = 0
+    & \forall \src{p} \in S \;\; \forall \tgt{p} \in T_V \qquad \hat{x}_{\src{p}, \tgt{p}} = x_{\src{p}, \tgt{p}} \\
+    & \forall \src{p} \in S \;\; \forall \tgt{p} \in T_{dummy} \qquad \hat{x}_{\src{p}, \tgt{p}} = 0
   \end{align*}
   By construction this solution has the same objective value since all score that for dummy target nodes are equal to \( 0 \),
   the same set \( T^*_{\hat{x}} = T^*_x \)
@@ -1122,9 +1123,9 @@ problem \ref{eq:reduction_without_nproj} and vice versa.
   imply constraints of the MaxIS problem:
   \begin{align*}
     & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \quad
-    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
+    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1 \implies                                                     \\
     & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big| \tgt{p_1}, \tgt{p_2} \in T_V \quad
-    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
+    x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1 \implies                                                     \\
     & \forall \tgt{p_1}, \tgt{p_2} \in T_V, \tgt{p_1} \neq \tgt{p_2}, \tgt{p_1} \cap \tgt{p_2} \neq \emptyset
     \quad \nexists \src{p_1}, \src{p_2} \in S \Big|
     x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1 \implies                                                     \\
