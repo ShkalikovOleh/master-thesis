@@ -180,8 +180,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--pipelines",
         nargs="*",
-        choices=["ngrams", "aligned_ngrams", "ner", "nmtscore"],
-        default=["aligned_ngrams", "ner", "nmtscore"],
+        choices=["ngrams", "aligned_subranges", "ner", "nmtscore"],
+        default=["aligned_subranges", "ner", "nmtscore"],
     )
 
     cfg = parser.parse_args()
