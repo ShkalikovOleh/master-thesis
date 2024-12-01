@@ -1106,11 +1106,12 @@ problem \ref{eq:reduction_without_nproj} and vice versa.
 
   But then consider a solution \( x^* \) such that we remove one of the projection and make this constraint :
   \begin{align*}
-    & \forall (s,t) \in S \times T \setminus \left\{ (\src{p_1}, \tgt{p}) \right\} x^*_{s,t} = x_{s,t} \\
-    & x^*_{\src{p_2}, \tgt{p_1}} = 0
+    & \forall (s,t) \in S \times T \setminus \left\{ (\src{p_2}, \tgt{p}) \right\}
+    \quad x^*_{s,t} = x_{s,t} \\
+    & x^*_{\src{p_2}, \tgt{p}} = 0
   \end{align*}
   Note that \( T^*_{x^*} = T^*_x  \) because there is a projection to the target node \( \tgt{p} \)
-  since \( \)  \( x^*_{\src{p_1}, \tgt{p_1}} = 1 \).
+  since \( \)  \( x^*_{\src{p_1}, \tgt{p}} = 1 \).
   If the solution \( x^* \) is infeasible - repeat procedure, otherwise
   this solution is feasible and corresponds to the same solution \( x_v \) of the MaxIS problem.
 \end{proof}
