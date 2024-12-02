@@ -573,23 +573,29 @@ utilize the original form of the alignment-based matching score.
 
 \subsection{NER model-based score}
 
-An other way to evaluate matching scores between source entities and target candidates is to
-use a multilingual NER model. The idea is the following: a model for every word of the target candidate
-predicts probability distribution over a set of classes that a word has a specific label. In order to compute
-a matching score that a source entity with a class \( l \) should be projected onto a target candidate,
-we compute an average probability of the class \( l \) over all words of the candidate.
+Another approach to evaluate matching scores between source entities
+and target candidates is to utilize a multilingual NER model.
+The underlying concept is as follows: for each word in the target
+candidate, the model predicts a probability distribution over a
+set of classes to determine the likelihood that a word has a
+specific label. To compute the matching score indicating how likely a source
+entity classified as \( l \) should be projected onto a target candidate,
+we calculate the average probability of class \( l \) across all words in
+the candidate.
 
-Let \( L \) be a set of classes. Since a NER model predicts output in the IOB format, i.e. the first word of a predicted
-entity with class \( l \in L \) has a label \textit{B-l} and other words of this entity have labels \textit{I-l},
-the output of a model can be represented as a matrix \( p_{m, o} \) where \( m \in \mathbb{N} \) is an index of a word and
-\( o \in \{ 1, 2|L| + 1 \} \) is an index of a label (assume that the label \( O \), i. e. a word doesn't belong to any class,
-has an index \( 2|L| + 1 \)).
+Let \( L \) denote a set of classes. Since a NER model outputs results in the IOB format,
+where the first word of a predicted entity with class \( l \in L \) is labeled as
+\textit{B-l}, and subsequent words in the entity are labeled as \textit{I-l}, the
+model's output can be represented as a matrix \( p_{m, o} \). In this representation,
+\( m \in \mathbb{N} \) is the index of a word, and \( o \in \{ 1, 2|L| + 1 \} \) is the
+index of a label. We will assume that the label \( O \), which indicates that a word does not
+belong to any class, has an index of \( 2|L| + 1 \).
 
-Then let's introduce mappings \( B[l]: L \rightarrow \{ 1, \dots, 2|L| \} \) and
-\( I[l]: L \rightarrow \{ 1, \dots, 2|L| \} \) that returns index of B and I labels respectively
-for a class \( l \in L \) in a probability matrix.
+Next, we introduce mappings \( B[l]: L \rightarrow \{ 1, \dots, 2|L| \} \) and
+\( I[l]: L \rightarrow \{ 1, \dots, 2|L| \} \), which return the indices of the
+B and I labels, respectively, for a class \( l \in L \) in the probability matrix.
 
-So the NER model-based matching score is the following:
+Therefore, the NER model-based matching score can be expressed as follows:
 \begin{equation} \label{eq:ner_cost}
   c_{\src{p}, \tgt{p}}^{ner} = \alpha^{(j_{\tgt{p}} - i_{\tgt{p}}) - 1}
   \frac{
@@ -598,15 +604,19 @@ So the NER model-based matching score is the following:
   }
   {j_\tgt{p} - i_{\tgt{p}}}
 \end{equation}
-where \( l_{\src{p}} \in L \) is a class of the source entity \( \src{p} \in S \) and
-\( \alpha > 0 \in \mathbb{R} \) is a length-scaling constant.
+where \( l_{\src{p}} \in L \) denotes the class of the source entity
+\( \src{p} \in S \) and \( \alpha > 0 \in \mathbb{R} \) is a length-scaling constant.
 
-The factor \( \alpha \) is necessary to align matching scores with NER model predictions.
-We naturally expect from the matching cost that if a target candidate is a substring of a predicted
-by a NER model entity, then its score should be lower that a score of the target candidate that
-equal to the predicted entity. For example, let the set of classes contains only class \textit{PER}: \( L = \{ PER \}\),
-set of source entities consists of only one entity \( \src{p} \) with a class \textit{PER},
-set of target candidates be \( T =  \{ \tgt{p_1} = (1, 1), \tgt{p_2} = (1, 2) \} \) and a probability matrix predicted by the model is:
+The factor \( \alpha \) is necessary to align the matching scores with the NER model
+predictions, i.e it is naturally expected that the matching cost should be lower if a
+target candidate is a substring of a target candidate that is identical to the predicted
+by the NER model entity.
+
+For example, let the set of classes contain only the class \textit{PER},
+so \( L = \{ \text{PER} \} \). Assume the set of source entities consists of
+only one entity \( \src{p} \) with the class \textit{PER}. Let the set of target
+candidates be \( T = \{ \tgt{p_1} = (1, 1), \tgt{p_2} = (1, 2) \} \), and the
+probability matrix predicted by the model is as follows:
 \[
   \begin{blockarray}{cccc}
     & \text{\textit{B-PER}} & \text{\textit{I-PER}} & \text{\textit{O}} \\
@@ -617,17 +627,20 @@ set of target candidates be \( T =  \{ \tgt{p_1} = (1, 1), \tgt{p_2} = (1, 2) \}
     \end{block}
   \end{blockarray}
 \]
-By taking maximum over rows it turns out that the entity predicted by a model has a class \textit{PER} and
-consists of words with indices 1 and 2. But the NER model-based matching score without scaling factor
-\( \alpha \) gives the following results:
+By taking the maximum over the rows, it is revealed that the entity predicted by
+the model has the class \textit{PER} and consists of words with indices 1 and 2.
+However, the NER model-based matching score, computed without the scaling factor
+\( \alpha \), yields the following results:
 \[
   c_{\src{p}, \tgt{p_1}}^{ner} = 0.9 \qquad c_{\src{p}, \tgt{p_2}}^{ner} = 0.85
 \]
-And in this case the ILP problem will prefer projecting source entity onto a substring of the entity predicted
-by the model. Therefore, length-scaling constant \( \alpha \) can not be omitted.
+In this case, the ILP problem will preferentially project the source entity onto a
+substring of the entity predicted by the model. Therefore, the length-scaling
+constant \( \alpha \) cannot be omitted.
 
-If \( \alpha \) is a crucial part of the score then it make sense to evaluate the range of its values.
-For this let's notice the following fact.
+If \( \alpha \) is a crucial component of the score, then it is worthwhile to
+evaluate the range of its possible values. To this end, let us notice the
+following observation.
 \begin{lemma} \label{lemma:maxprob_greater_than_avg}
   Let \( p_{i}, i \in K \) be a probability distribution over a finite set \( K \) with cardinality \( k \).
   Then
@@ -640,30 +653,31 @@ For this let's notice the following fact.
   \[
     \max\limits_{i \in K} p_i < \frac{1}{k}
   \]
-  Then let's sum up all probabilities:
+  Then the sum of all probabilities:
   \[
     \sum\limits_{i \in K} p_i \leq \sum\limits_{i \in K} \max\limits_{j \in K} p_j =
     k \cdot \max\limits_{j \in K} p_j < 1
   \]
-  But the sum of all probabilities of the distribution should be equal to \( 1 \), therefore our assumption was
-  wrong that proofs the lemma.
+  However, since the sum of all probabilities in the distribution must equal \( 1 \),
+  our assumption was incorrect, which proves the lemma.
 \end{proof}
-Having this useful fact let's finally make some estimation of the constant \( \alpha \).
+Having this useful fact it is possible to provide some estimates for the constant \( \alpha \).
 \begin{theorem}
-  Consider a source entity \( \src{p} \in S \) and two target candidates \( \tgt{p_1} = (i, j+1), \tgt{p_2} = (i, j) \).
-  Suppose the predictions \( p \) of a NER model satisfy the following constraints:
+  Consider a source entity \( \src{p} \in S \) and two target candidates \( \tgt{p_1} = (i, j+1) \)
+  and \( \tgt{p_2} = (i, j) \). Suppose the predictions \( p \) from a NER model satisfy
+  the following constraints:
   \[
     B[l_{\src{p}}] = \argmax\limits_{l \in \{ 1, \dots, 2|L| + 1 \}} p_{i, l} \qquad
     I[l_{\src{p}}] = \argmax\limits_{l \in \{ 1, \dots, 2|L| + 1 \}} p_{k, l} \; \forall k \in \{ i + 1, \dots ,j +1 \}
   \]
-  i.e. all these candidates are parts of the predicted by the model entity.
-  Let's denote \( M = \frac{1}{2|L| + 1} \).
-  Then:
+  i.e all these candidates are substrings of the entity predicted by the model.
+  Let \( M = \frac{1}{2|L| + 1} \) and \( n = j - i \). Then:
   \[
     \alpha > 1 + \frac{1 - M}{1 + M} \implies c_{\src{p}, \tgt{p_2}}^{ner} > c_{\src{p}, \tgt{p_1}}^{ner}
   \]
 \end{theorem}
-\begin{proof} Let's write down a desired inequality
+\begin{proof}
+  Starting with the desired inequality we have:
   \begin{align*}
     & c_{\src{p}, \tgt{p_2}}^{ner} > c_{\src{p}, \tgt{p_1}}^{ner} \Leftrightarrow \\
     & \alpha^{n}
@@ -694,13 +708,13 @@ Having this useful fact let's finally make some estimation of the constant \( \a
       n \cdot \left( p_{i, B[l_{\src{p}}]} +
     \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} + p_{j+1, I[l_{\src{p}}]} \right)}
   \end{align*}
-  In order to simplify derivation we will introduce aliases for some quantities:
+  To simplify the derivation, we will introduce aliases for certain quantities:
   \[
     S = p_{i, B[l_{\src{p}}]}  + \sum\limits_{k = i + 1}^{j} p_{k, I[l_{\src{p}}]} \qquad
     s = p_{j+1, I[l_{\src{p}}]}
   \]
-  Note, that by the lemma \ref{lemma:maxprob_greater_than_avg} the following
-  inequalities holds:
+  Note that, according to lemma \ref{lemma:maxprob_greater_than_avg},
+  the following inequalities hold:
   \begin{equation} \label{eq:ner_sum_ineq}
     M \leq s \leq 1 \qquad nM \leq S \leq n
   \end{equation}
@@ -710,7 +724,7 @@ Having this useful fact let's finally make some estimation of the constant \( \a
     \frac{nS + S + ns - ns}{nS + ns} =
     1 + \frac{S - ns}{n(S + s)}
   \end{equation*}
-  Let's compute derivatives of this expression.
+  The derivatives of this expression are the following:
   \begin{equation*}
     \left( 1 + \frac{S - ns}{n(S + s)} \right)_s^{'} =
     \frac{-n^2S - nS}{n^2 (S + s)^2} < 0
@@ -718,8 +732,8 @@ Having this useful fact let's finally make some estimation of the constant \( \a
     \left( 1 + \frac{S - ns}{n(S + s)} \right)_S^{'}
     = \frac{nS + n^2s}{n^2 (S + s)^2} > 0
   \end{equation*}
-  Hence the maximum of the function is located at the point
-  \( s = M \) and \( S = n \), then we can take \( \alpha \) such that
+  Hence, the maximum of the function is located at the point \( s = M \) and
+  \( S = n \). Thus, we can select \( \alpha \) such that:
   \begin{equation*}
     \alpha > 1 + \frac{1 - M}{1 + M}
     \stackrel{n \geq 1}{\geq}
@@ -728,26 +742,32 @@ Having this useful fact let's finally make some estimation of the constant \( \a
     1 + \frac{S - ns}{n(S + s)}
   \end{equation*}
 \end{proof}
-As it is shown in the proof it is just an upper estimation of such an alpha for the worst possible case,
-in practice there is a sense to try even smaller \( \alpha \), but then it doesn't guarantee that the
-desired property are satisfied.
+As demonstrated in the proof, this represents just an upper estimate of such an
+\( \alpha \) for the worst-case scenario. In practice, it may be reasonable to attempt
+even smaller values of \( \alpha \). However, doing so does not guarantee that the
+desired properties will be satisfied.
 
-The main difference between a plain model transfer and XLNER pipeline with the ILP projection problem that uses NER model-based
-matching cost is that during latter we project labels from source entities. Therefore some, possibly wrong, predictions of the
-NER model could be ignored since in the solution of the ILP problem there is no source entity that projects
-to this target entity.
+The primary distinction between a standard model transfer and the XLNER pipeline,
+which employs the ILP projection problem utilizing NER model-based matching costs,
+lies in the fact that in the latter, we project labels from source entities.
+Consequently, certain predictions made by the NER model, which may be incorrect,
+can be disregarded since the solution to the ILP problem does not include a
+source entity projecting onto that specific target entity.
 
-One of the problem when it comes to using some model is the fact that models tend to be overconfident in their
-predictions, i.e. outputs high probabilities for every, sometimes even wrong, prediction. And since the
-proposed score directly uses these probabilities it can affects it. In order to overcome this issue the
-calibration of the model should be applied. The simplest approach to do it is to scale output's logits of the
-model by some temperature. Nevertheless, in further chapter we will use the NER model without any calibration.
+One of the challenges associated with using models is that they often exhibit
+overconfidence in their predictions, producing high probabilities for each output,
+including those that may be incorrect. Since the proposed score directly relies on
+these probabilities, it can be adversely affected. To mitigate this issue, calibration
+of the model can be implemented. The simplest method to achieve this is to scale
+the model's output logits by a temperature factor. Nevertheless, in the subsequent chapters,
+we will utilize the NER model without any calibration.
 
-The NER model-based matching score \eqref{eq:ner_cost} also has another property that is worth to mention.
-Since the computation of the score involves only the class of the source entity, scores will be equal
-for all source entities that have the same class. And from the point of view of the ILP problem
-\eqref{eq:ilp} it can lead to a solution where a source entity is projected onto a semantically wrong candidate, but
-nevertheless a correct class will be assigned to the target candidate.
+The NER model-based matching score \eqref{eq:ner_cost} possesses another noteworthy
+property. Since the computation of the score relies solely on the class of the source
+entity, the scores will be identical for all source entities sharing the same class.
+From the perspective of the ILP problem \eqref{eq:ilp}, this can result in a solution
+where a source entity is projected onto a semantically incorrect candidate;
+nonetheless, a correct class will still be assigned to the target candidate.
 
 \subsection{Translation-based score}
 
@@ -756,11 +776,12 @@ nevertheless a correct class will be assigned to the target candidate.
 \end{equation}
 
 \subsection{Fused score}
-The performance of alignment, NER and translation models that were used for computation of
-scores above varies depending on the language, domain, set of classes, etc.
-Every matching score has their advantages and drawbacks, but the natural way to minimize fails is
-to fuse scores together. Since all scores are real numbers one of the approaches to do it is to compute a
-weighted sum of scores of all types:
+The performance of the alignment, NER, and translation models utilized for the
+computation of the scores discussed above varies based on factors such as language,
+domain, and the set of classes. Each matching score has its own advantages and
+drawbacks; however, a natural way to minimize failures is to combine the scores.
+Since all scores are real numbers, one approach to achieve this is to compute a
+weighted sum of scores across all types:
 \begin{equation} \label{eq:fused_cost}
   c_{\src{p}, \tgt{p}}^{fused} =
   \lambda_{align} c_{\src{p}, \tgt{p}}^{align} +
@@ -769,14 +790,16 @@ weighted sum of scores of all types:
 \end{equation}
 where \( \lambda_{align} \geq, \lambda_{ner} \geq 0, \lambda_{nmt} \geq 0 \in R\).
 
-Moreover, the fused score can extend possibilities to handle issues of basic scores.
-A NER model that is used in the NER-based cost \eqref{eq:ner_cost} sometimes can properly
-predict spans of entities in the target sentence, but confuse classes.
-We assume that labels are predicted correctly during computation of the NER model-based cost because
-we have no way to correct them. But when the cost consists of different basic score, we can leverage a
-NER model-based score only evaluate how likely a given candidate can form a target entity of any class and
-determine label by using other types of scores. The modified \eqref{eq:ner_cost} that implements it
-is the following:
+Furthermore, the fused score enhances the ability to address issues associated with
+the individual scores. For instance, the NER model used in the NER-based cost
+\eqref{eq:ner_cost} may occasionally correctly predict the spans of entities in the
+target sentence but misclassify their labels. During the computation of the NER
+model-based cost, we assume that the labels are predicted accurately, as there is
+no method to amend them. However, when the cost is comprised of various basic scores,
+we can utilize the NER model-based score solely to evaluate the likelihood that a
+given candidate can represent a target entity of any class, while determining the
+label through other types of scores. The modified version of \eqref{eq:ner_cost} that
+implements this concept is as follows:
 \begin{equation} \label{eq:ner_cost_wo_classes}
   c_{\src{p}, \tgt{p}}^{ner} = \alpha^{(j_{\tgt{p}} - i_{\tgt{p}}) - 1}
   \max\limits_{l \in L}
