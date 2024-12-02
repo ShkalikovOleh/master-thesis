@@ -913,18 +913,21 @@ vertex:
 \[
   w_v = \max\limits_{s \in S} c_{s, t_v}
 \]
-The link between the solutions of the ILP problem \eqref{eq:ilp_without_nproj} and
+The conversion between the solutions of the ILP problem \eqref{eq:ilp_without_nproj} and
 the solutions of the MaxIS problem can be established as follows:
 \begin{equation} \label{eq:link_variables}
   \begin{aligned}
     &s^*_v = \argmax\limits_{s \in S} x_{s, t_v} \\
     &
+    x_v = 1 \implies
     \begin{cases}
       x_{s^*, t_v} = 1 \\
       x_{s, t_v} = 0 \quad \forall s \in S \setminus \{ s^* \} \\
     \end{cases}
-    \Leftrightarrow x_v = 1
   \end{aligned}
+  \qquad
+  \exists s \in S \Big| x_{s, t_v} = 1 \implies
+  x_v = 1
 \end{equation}
 That is, the vertex \( v \in V \) belongs to the maximum independent set if and only
 if the source entity with the highest matching score is projected onto the target
@@ -956,8 +959,8 @@ and vice versa.
   \eqref{eq:ilp_without_nproj}.
 \end{lemma}
 \begin{proof}
-  Suppose there exists a non-feasible solution \( x \) that corresponds to a feasible
-  solution of the MaxWIS problem. Then, we have:
+  Suppose that a solution \( x \) that corresponds to a feasible
+  solution \( x_v \) of the MaxWIS problem is non-feasible. Then, we have:
   \[
     \exists (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big|
     x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1
@@ -1009,7 +1012,44 @@ algorithm.
   from each source entity, can be solved in polynomial time.
 \end{theorem}
 \begin{proof}
+  Let \( x \) denote the corresponding solution to the optimal solution \( x_v \) of
+  the MaxWIS problem, which has been constructed through the reduction from the ILP
+  problem. If \( x \) is always an optimal solution for the problem
+  \eqref{eq:ilp_without_nproj} then this would establish that we can reduce this
+  problem to an instance of the maximum weighted independent set problem, which has a
+  polynomial time algorithm.
 
+  By Lemma \ref{lemma:maxis_f_implies_ilp}, the feasibility of the solution for the
+  MaxWIS problem ensures the feasibility of the corresponding solution for the ILP
+  problem. The objective function for the solution \( x \) is, by construction as
+  indicated in \eqref{eq:link_variables}, equal to the objective function of the
+  MaxWIS problem:
+  \[
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
+    \sum\limits_{v \in V} w_v x_v
+  \]
+
+  Assume that there exists an optimal solution \( x^* \) of the problem \eqref{eq:ilp_without_nproj}
+  such that it is better than \( x \):
+  \[
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} <
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x^*_{\src{p}, \tgt{p}}
+  \]
+  Consequently, for the corresponding solution \( x^*_v \) of the MaxWIS problem, we obtain:
+  \[
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x^*_{\src{p}, \tgt{p}} \leq
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} \max\limits_{s \in S} c_{s, \tgt{p}} x^*_{\src{p}, \tgt{p}} =
+    \sum\limits_{v \in V} w_v x^*_v
+  \]
+  By Lemma \ref{lemma:ilp_f_implies_maxis}, it follows that \( x^*_v \) will be a
+  feasible solution. However, this contradicts the fact that \( x_v \) was an optimal
+  solution:
+  \[
+    \sum\limits_{v \in V} w_v x_v =
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} <
+    \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x^*_{\src{p}, \tgt{p}} \leq
+    \sum\limits_{v \in V} w_v x^*_v
+  \]
 \end{proof}
 
 Thus, the question of whether the problem \eqref{eq:ilp} is NP-hard remains open.
