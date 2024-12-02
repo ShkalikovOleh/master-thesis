@@ -1,21 +1,22 @@
 \chapter{Methodology}
 \label{sec:methodology}
-The overall idea of formalization the projection step of the XLNER pipeline
-is to represent it as a matching the source entities and ranges of words
-of the target sentence, called candidates. It is shown on the figure \ref{fig:cand_matching}.
-The set of source entities that we need to project is given, so let's take some set of
-continuous word ranges from the original sentence in the target language
-and consider them as a possible projection of some entities. Then compute
-quantities how likely a source entity should be projected onto every candidate.
-And then we should take such a combination of source entities-target candidates
-that maximize overall sum of selected tuples. But we need to take in mind
-natural constraints that should be ensured. Assume two source entities
-projects onto overlapping candidates, then we cannot precisely answer which source
-entity overlapped words are projected to, therefore we should prohibit projection
-onto overlapped candidates. Also, it makes sense to limit how many candidates every
-source entity can be projected to, since usually we expect 1-to-1 correspondence
-between source entities and entities of the target sentence. Based on this simple
-properties let's build an integer linear optimization problem and study it.
+The overall idea of formalizing the projection step of the XLNER pipeline is
+to formulate it as a matching process between source entities and ranges
+of words in the target sentence, referred to as target candidates. This process is
+illustrated in Figure \ref{fig:cand_matching}. Whereas a predetermined set of source entities
+for projection is provided; a subset of continuous word ranges from the original
+sentence in the target language can be selected and considered as potential
+projections for source entities. The likelihood scores that each source entity
+should be projected onto each candidate will be computed. The goal is to identify a
+combination of source entities and target candidates that maximizes the overall
+sum of the selected tuples. However, natural constraints must also be taken into account.
+For instance, when two source entities project onto overlapping candidates, it becomes
+ambiguous to which source entity the overlapping words pertain; therefore, projections
+onto overlapping candidates should be prohibited. Furthermore, it is logical to
+restrict the number of candidates to which each source entity can be projected,
+as a one-to-one correspondence between source entities and entities in the
+target sentence is typically anticipated. Based on these fundamental properties,
+an integer linear optimization problem can be established for further analysis.
 
 \begin{figure*}[ht]
   \centering
@@ -62,19 +63,18 @@ properties let's build an integer linear optimization problem and study it.
 \end{figure*}
 
 \section{Formulation of the ILP problem}
-First of all let's start with a definition of overlapping.
+First and foremost, a definition of overlapping candidate should be established.
 
 \begin{definition}[Relation of overlapping] \label{def:overlapping}
-  We consider that target candidates \linebreak
-  \( \tgt{p_1} = (i_{\tgt{p_1}}, j_{\tgt{p_1}}), \tgt{p_2} = (i_{\tgt{p_2}}, j_{\tgt{p_2}}) \in T \) overlap if and only if
-  \( i_{\tgt{p_1}} \leq j_{\tgt{2}} \land i_{\tgt{p_2}} \leq j_{\tgt{1}} \), i. e. sets of word indices are
-  not disjoint. We will denote that candidates overlap using
-  the following notation: \( \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \).
+  Target candidates \( \tgt{p_1} = (i_{\tgt{p_1}}, j_{\tgt{p_1}}) \) and \linebreak
+  \( \tgt{p_2} = (i_{\tgt{p_2}}, j_{\tgt{p_2}}) \in T \) are considered to overlap
+  if and only if \( ( i_{\tgt{p_1}} \leq j_{\tgt{p_2}} ) \land ( i_{\tgt{p_2}} \leq j_{\tgt{p_1}} ) \),
+  which indicates that the sets of word indices are not disjoint. Overlapping candidates
+  will be denoted using the following notation: \( \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \).
 \end{definition}
 
-Having defined all necessary objects we can finally formulate the ILP problem for a
-projection step of the XLNER pipeline that aligns with our requirements.
-
+Having defined all necessary objects, the ILP problem for the projection step of the XLNER pipeline that
+aligns with our requirements can now be formulated.
 Let \( S \) be a set of source entities, \( T \) -- set of target candidates and \( \cap \subset T^2 \) is
 a relation of overlapping, then the projection ILP problem is the following:
 \begin{align}
@@ -89,8 +89,9 @@ a relation of overlapping, then the projection ILP problem is the following:
   \label{eq:binary_prog}
   & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
 \end{align}
-where \( \hat{\Pi}(S, T) \) is a set of source entities -- target candidates combinations that can not be
-projected onto together since they are overlapping. This set is defined as follows:
+where \( \hat{\Pi}(S, T) \) represents a set of combinations of
+source entities and target candidates that cannot be projected onto
+together due to overlapping. This set is defined as follows:
 \begin{equation}  \label{eq:overlapping_set}
   \begin{aligned}
     \hat{\Pi}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
@@ -98,35 +99,36 @@ projected onto together since they are overlapping. This set is defined as follo
   \end{aligned}
 \end{equation}
 
-Here every variable \( x_{\src{p}, \tgt{p}} \) represents whether the source entity \( \src{p} \in S \)
-is projected to the target candidates \( \tgt{p} \in T \).
-The set of constraints \eqref{eq:non_overlap_const} ensures that it is impossible to have a situation when
-two or one source entity are being projected onto overlapping target candidates.
-And other set of constraints \eqref{eq:num_proj_const} limits number of projections
-for every source entity. Note, that the inequality sign is not fixed since any form
-could make sense: less, less or equal and equal can be used to ensure that we don't
-project a source entity to as much available candidates as possible as long as it
-increase the objection value, and great or great or equal can be a way to enforce
-that a source entiry will be projected at least specified number of times, e.g. once,
-and solver will not simply ignore it. It is clear that \( n_{proj} = 0 \) is a corner
-case and usually doesn't make sense except greater inequality when it simply
-eliminates any limits and equivalent to not have any constraints of such type.
+Here, each variable \( x_{\src{p}, \tgt{p}} \) indicates whether
+the source entity \( \src{p} \in S \) is projected onto the target
+candidates \( \tgt{p} \in T \). The set of constraints \eqref{eq:non_overlap_const}
+ensures that it is impossible for one or more source entities to be
+projected onto overlapping target candidates. Additionally, another
+set of constraints \eqref{eq:num_proj_const} limits the number of
+projections for each source entity. It should be noted that the
+inequality sign is not fixed, as various forms may be relevant: "less,"
+"less than or equal," and "equal" can be used to ensure that a source entity
+is not projected onto as many available candidates as possible solely to increase
+the objective value. Conversely, "greater" or "greater than or equal" can be
+employed to enforce that a source entity will be projected at least a specified
+number of times, e.g., once, ensuring that the solver does not simply ignore it.
+It is evident that \( n_{proj} = 0 \) represents a corner case that typically
+lacks meaning, except in the case of a "greater" or "greater or equal" inequality, which effectively
+eliminates any limits and is equivalent to having no constraints of this type.
 
-Also it is worth to note that definition of the ILP problem is not bounded to a specific form of sets \( S, T \)
-and overlapping relation \( \cap \subset T^2 \), so given any sets and overlapping relation with the same properties
-as for \ref{def:overlapping}, the ILP problem won't change since it doesn't use explicitly word indices.
-
-However the number of constraints \eqref{eq:non_overlap_const} scales as a cube with respect to
-length of the target sentence, assuming that we use all possible continuous subranges as candidates, and as
-a square with respect to the number of source entities.
-It can make this problem harder to solve. Therefore we need to try to lower number of constraints
-of this type. For this let's take a look at the overlapping relation that a basis of it.
+However, the number of constraints \eqref{eq:non_overlap_const} scales as
+\( \Theta(n^3 m^2) \) where \( m \) is the the number of source entities and
+\( n \) is the length of the target sentence, assuming that all possible continuous subranges are utilized as candidates.
+This considerable growth in constraints can complicate the problem-solving process.
+Consequently, it is essential to explore methods to reduce the number of such
+constraints. To begin, let us examine the overlapping relation that forms the
+basis of this issue.
 \begin{lemma} \label{lemma:not_transitive}
   The relation of overlapping is not transitive.
 \end{lemma}
 \begin{proof}
-  We will proof this by showing a counterexample.
-  Assume the following target candidates
+  This will be demonstrated by providing a counterexample.
+  Assume the following target candidates:
   \[
     a = (2, 4) \quad b = (1, 2) \quad c = (4, 5)
   \]
@@ -134,8 +136,9 @@ of this type. For this let's take a look at the overlapping relation that a basi
   \( a \cap c \neq \emptyset \) but \( b \) and \( c \) are not overlapping.
 \end{proof}
 
-This fact leads to the impossibility to split all target candidates into groups of mutually
-overlapped candidates and choice at maximum one candidate from every group to match with a source entity.
+This fact leads to the conclusion that it is impossible to partition all target
+candidates into groups of mutually overlapping candidates and therefore select at most
+one candidate from each group to match with a source entity.
 % \begin{corollary}
 %   It is impossible to partition set of target candidates such that every partition consists of
 %   candidates that are pairwise overlapping with each other and there are no overlapping candidates
@@ -146,14 +149,16 @@ overlapped candidates and choice at maximum one candidate from every group to ma
 %   is not an equivalence relation that implies we can not construct a quotient set.
 % \end{proof}
 
-Nevertheless it is possible to make number of constraints \eqref{eq:non_overlap_const} lower.
-The idea behind the reduction is that if it is impossible to project one or any two source entities to
-overlapped candidates it means that it impossible to project any number of source entities to these candidates.
-Thus we can just sum up constraints over all source entities.
-We can do it because all variables \( x_{\src{p}, \tgt{p}} \) are binary and therefore
-can not be negative.
+Nevertheless, it is possible to reduce the number of constraints
+\eqref{eq:non_overlap_const}. The underlying idea for this reduction is that
+if it is impossible to project one or any two source entities onto overlapping
+candidates, then it is also impossible to project any number of source entities
+onto these candidates. Consequently, it suffices to sum the constraints across
+all source entities. This approach is feasible because all variables
+\( x_{\src{p}, \tgt{p}} \) are binary, and therefore, they cannot be
+negative.
 \begin{theorem}
-  Set of constraints \eqref{eq:non_overlap_const} is satisfied if and only if
+  The set of constraints \eqref{eq:non_overlap_const} is satisfied if and only if
   the following sets of reduced constraints are satisfied:
   \begin{align*}
     & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1                                & \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T) \\
@@ -188,7 +193,7 @@ can not be negative.
     & \exists \src{p_1}, \src{p_2} \in S \Big| x_{\src{p_1}, \tgt{p_1}} = 1, x_{\src{p_2}, \tgt{p_2}} = 1 \implies \\
     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} = 2 > 1
   \end{align*}
-  that contradicts our assumption that constraints \eqref{eq:non_overlap_const} are satisfied.
+  This situation contradicts our initial assumption that the constraints \eqref{eq:non_overlap_const} are satisfied.
 
   The same result we can obtain for the second case:
   \begin{align*}
@@ -198,7 +203,7 @@ can not be negative.
     & x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} = 2 > 1
   \end{align*}
 
-  Thus we proved necessity.
+  Thus, the necessity has been established.
 
   \textit{Sufficiency:}
   Suppose that the following constraints are satisfied:
@@ -206,9 +211,10 @@ can not be negative.
     \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) \leq 1
     \qquad \forall (\tgt{p_1}, \tgt{p_2}) \in \Pi(T)
   \]
-  Then the sum could be equal to \( 0 \) or \( 1 \). If it is zero then none entities are projected onto
-  any of these overlapped candidates and therefore constraints \eqref{eq:non_overlap_const} are not violated.
-  Let's look at case when the sum is equal to \( 1 \).
+  Therefore, the sum can take on values of \( 0 \) or \( 1 \).
+  If the sum is zero, then no entities are projected onto any of the overlapping
+  candidates, and consequently, the constraints \eqref{eq:non_overlap_const} are
+  not violated. Now, let us consider the case when the sum is equal to \( 1 \).
   \begin{equation*} \label{eq:derivation_of_const_reduction}
     \begin{aligned}
       & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) = 1
@@ -283,9 +289,9 @@ can not be negative.
   constraints \eqref{eq:non_overlap_const} are satisfied.
 \end{proof}
 
-The theorem allows us to reduce number of constraints and make them scale as a constant
-with respect to the number of source entities. As a result we end up with the following final formulation of the ILP problem for the projection step
-of the XLNER pipeline.
+The theorem allows to reduce number of constraints, ensuring that they scale scale as a constant
+with respect to the number of source entities. Consequently, we arrive at the following final
+formulation of the ILP problem for the projection step of the XLNER pipeline.
 \begin{equation} \label{eq:ilp}
   \begin{aligned}
     & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                                                                                                       \\
@@ -298,23 +304,28 @@ of the XLNER pipeline.
 \end{equation}
 
 \section{Candidates extraction}
-Whereas the set \( S \) of source entities are given, since all source entities have been
-extracted on the previous step of the XLNER pipeline, the construction of the set \( T \)
-of target candidates is an open question.
+Whereas the set \( S \) of source entities is given, as all source entities have been
+extracted in the previous step of the XLNER pipeline, the construction of the set
+\( T \) of target candidates remains an open question.
 
-The simplest way for candidates extraction is to consider all possible n-grams
-(continuous ranges of words) of the target sentence as candidates. This approach ensures
-that there won't be any possibility that we don't include any actual target entity in the set
-target candidates. But when it comes to the computational point of view it can be a problem since
-number of all n-grams scales quadratically. And from the application point of view most of
-the candidates generated in such way are not good nominee to be a real target entity.
+The simplest method for candidate extraction is to consider all possible n-grams
+(continuous ranges of words) from the target sentence as candidates. This approach
+guarantees that no actual target entity will be excluded from the set of target
+candidates. However, from a computational perspective, this can pose a challenge,
+as the number of all n-grams scales quadratically. Furthermore, from an application
+standpoint, the majority of candidates generated in this manner are unlikely to
+represent valid target entities.
 
-One of the simplest idea to handle this problem is to limit the maximum possible length of the candidate.
-From the point of NER it is natural to expect that real target entities usually do not exceed some
-predefined number. For example it is unlikely that a person's name will contain more than 10 words or
-if we have 3 source entities there is a real target entity that contains all words of the target sentence.
+One of the simplest strategies to address this problem is to limit the maximum
+possible length of the candidates. From the perspective of Named Entity Recognition,
+it is reasonable to expect that actual target entities typically do not exceed a
+certain predefined length. For instance, it is unlikely for a person's name to consist
+of more than 10 words, and if there are three source entities, it is unlikely
+that there exists a single target entity that consists of all words of the target
+sentence.
 
-Thus, the algorithm for candidates extraction wilt bounded maximum length of n-grams are the following.
+Thus, the algorithm for candidates extraction wilt a bounded maximum length of n-grams
+is the following.
 \begin{algorithm}
   \KwData{\( n \in \mathbb{N} \) -- number of words in the target sentence,
   \(M \leq n \in \mathbb{N} \) -- maximum length of a target candidate}
@@ -331,31 +342,37 @@ Thus, the algorithm for candidates extraction wilt bounded maximum length of n-g
   \label{alg:ngram_extraction}
 \end{algorithm}
 
-An alternative approach for candidates extraction is to use some model to generate candidates.
-TProjection uses fine-tuned T5 model with beam-search to generate candidates. In theory any LLM can be finetuned
-to do it. But the main drawback of this approach is that we need to finetune these models for which we need
-a labeled dataset in a target language or rely on cross-lingual model transfer.
-But in this case it will be easier and more effective to train a model to label
-target entities itself rather than generate candidates for the projection step of the
-XLNER pipeline. In addition, autoregressive models are very resource consuming and it is
-inefficient to use them only for candidates extraction.
+An alternative approach for candidate extraction is to employ a model to generate
+candidates. In this regard, TProjection \cite{garcia-ferrero-etal-2023-projection} utilizes a fine-tuned T5 model with beam
+search for candidate generation. In theory, any large language model can be
+fine-tuned for this purpose. However, the primary drawback of this approach is
+the necessity to fine-tune these models, which requires a labeled dataset in
+the target language or relies on cross-lingual model transfer. In this context,
+it may be more feasible and effective to train a model specifically to label target
+entities rather than to generate candidates for the projection step of the
+XLNER pipeline. Moreover, autoregressive models tend to be resource-intensive,
+making it inefficient to utilize them solely for candidate extraction.
 
-Therefore it make sense also consider multilingual encoder-only Transformer model with a high recall,
-but we still need to train these model to extract candidates. In the following chapters we will not consider all
-these alternatives and leave for further works.
+It also makes sense to consider a multilingual encoder-only Transformer \cite{vaswani2017attention}
+model with high recall. However, these models still require training to extract candidates
+effectively. In the following chapters, these alternatives will not be discussed
+and will remain as topics for future work.
 
 \section{Matching scores}
-So far we have formulated and discussed the ILP problem \eqref{eq:ilp} that projects source entities onto
-target candidates using a matching score \( c_{\src{p}, \tgt{p}} \). This score represents
-how likely given source entity \( \src{p} \in S \) should be projected onto the target candidate \( \tgt{p} \in T \).
-But the question how to compute all these scores remains unanswered. In this section we will propose
-some options to evaluate them.
+Thus far, the ILP problem \eqref{eq:ilp} has been formulated and discussed,
+which involves projecting source entities onto target candidates using a matching
+score \( c_{\src{p}, \tgt{p}} \). This score represents the likelihood that a given
+source entity \( \src{p} \in S \) should be projected onto the corresponding target
+candidate \( \tgt{p} \in T \). However, the question of how to compute all these
+scores remains unresolved. In this section, various options for evaluating these
+scores will be proposed.
 
 \subsection{Alignment-based score}
-In the chapter \ref{sec:background} it has been showed that word-to-word alignments can be used
-for the projection step of the XLNER pipeline. But it was done by the heuristic algorithm.
-Nevertheless we can try incorporate them into the proposed ILP problem by calculating scores of matching with use of
-word-to-word alignments.
+In Chapter \ref{sec:background}, it was demonstrated that word-to-word alignments
+can be utilized for the projection step of the XLNER pipeline. However this was
+achieved through a heuristic algorithm. Nonetheless, an attempt can be made to
+incorporate these alignments into the proposed ILP problem by calculating matching
+scores using word-to-word alignments.
 
 The matching score that inspired from this idea is the following:
 \begin{equation} \label{eq:align_cost}
@@ -364,28 +381,33 @@ The matching score that inspired from this idea is the following:
   {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}})}
 \end{equation}
 
-The form of the score based on the natural properties that we can expect from score that based on word-to-word alignments.
-First of all, the more aligned words between source entity and target candidates the higher should be a score.
-Secondly, we can not divide number of aligned word by length of only source entity then
-score will be higher for just longer target candidates.
-And the third property is especially useful: if we consider two candidates where one is a
-substring of other, but total number of aligned words between words of
-source entity and these candidates are the same, we should prefer smaller candidate.
-And the score \eqref{eq:align_cost} satisfies this requirement.
+The form of the score is grounded in the natural properties expected from a score
+based on word-to-word alignments. First, the greater the number of aligned words
+between the source entity and the target candidates, the higher the score should be.
+Second, it is insufficient to simply divide the number of aligned words by the length
+of the source entity, as this would lead to a higher score for longer target candidates.
+Lastly, the third property is particularly beneficial: when considering two candidates,
+where one is a substring of the other, if the total number of aligned words between the
+source entity and these candidates is the same, preference should be given to the
+smaller candidate. The score defined in equation \eqref{eq:align_cost} fulfills this
+requirement.
 \begin{lemma} \label{lemma:align_cost_decrease}
-  Suppose that for some pair of source entity \( \src{p} \in S \) and target candidate \( \tgt{p} \in T \)
-  the score \eqref{eq:align_cost} equal to c, then if there is an extended by 1 word to left or
-  right candidate \( \tgt{\hat{p}} \in T \) such as this word is not aligned to any word of source
-  entity, the score \eqref{eq:align_cost} between source entity and this target candidate
-  will be lower than \( c \).
+  Suppose that for a specific pair of source entity \( \src{p} \in S \) and
+  target candidate \( \tgt{p} \in T \), the score defined in equation
+  \eqref{eq:align_cost} is equal to \( c \). If there exists an extended
+  candidate \( \tgt{\hat{p}} \in T \) that is increased by one word to the
+  left or right, such that this additional word is not aligned with any word
+  of the source entity, then the score \eqref{eq:align_cost} between the source
+  entity and this target candidate will be lower than \( c \).
 \end{lemma}
 \begin{proof}
-  Consider extension to the right, then \( \tgt{\hat{p}} = (i_{\tgt{p}}, j_{\tgt{p}} + 1) \). Since it is
-  given that this additional word is not aligned to any word of the source entity it means that:
+  Considering the extension to the right, let \( \tgt{\hat{p}} = (i_{\tgt{p}}, j_{\tgt{p}} + 1) \).
+  Given that this additional word is not aligned with any word of the source entity,
+  it implies that:
   \[
     \sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} a_{k,j_{\tgt{p}} + 1} = 0
   \]
-  Then
+  Then:
   \begin{multline*}
     c_{\src{p}, \tgt{\hat{p}}}^{align} =
     \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}} + 1} a_{kl}}
@@ -399,16 +421,20 @@ And the score \eqref{eq:align_cost} satisfies this requirement.
     \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
     {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}})} = c
   \end{multline*}
-  The derivation for the extension to the left where \( \tgt{\hat{p}} = (i_{\tgt{p}} - 1, j_{\tgt{p}}) \) is structurally the same, so we
-  proved the lemma.
+  The derivation for the extension to the left, where
+  \( \tgt{\hat{p}} = (i_{\tgt{p}} - 1, j_{\tgt{p}}) \), is structurally analogous.
+  Thus, the lemma has been proven.
 \end{proof}
 
 \begin{corollary} \label{col:shrink_cand}
-  The cost of the extended candidate \( \tgt{p_{+n}} \) of the target candidate \( \tgt{p} \) to the left or right with
-  \( n \in \mathbb{N} \) non-aligned to any word of the source entity \( \src{p} \in S \) words is lower than
-  the cost of the original candidate.
+  The cost of the extended candidate \( \tgt{p_{+n}} \) derived from the target
+  candidate \( \tgt{p} \), when extended to the left or right by
+  \( n \in \mathbb{N} \) non-aligned words that do not correspond to any word
+  of the source entity \( \src{p} \in S \), is lower than the cost of the original
+  candidate.
 \end{corollary}
-\begin{proof} Let's prove it by the mathematical induction for the case of extension to the right (for the left it will the same).
+\begin{proof}
+  Let us prove this statement using mathematical induction for the case of extension to the right (the proof for the left extension will follow a similar structure).
 
   \textit{Base:} By the lemma \ref{lemma:align_cost_decrease} \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+1}}}^{align} \).
 
@@ -417,32 +443,41 @@ And the score \eqref{eq:align_cost} satisfies this requirement.
   \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+(k+1)}}}^{align} \).
 
   Thus, by the mathematical induction, \( c_{\src{p}, \tgt{p}}^{align} > c_{\src{p}, \tgt{p_{+n}}}^{align}   \)
-
 \end{proof}
 
-The main advantages of this property is that it is possible to shrink the set of target candidates without losing
-optimal solutions: we can consider as candidates only subranges that are between the leftmost and rightmost words that are aligned to any
-word of any source entity.
+The main advantage of this property is that it allows for the reduction of the set of
+target candidates without compromising optimal solutions. Specifically, it permits
+the consideration of candidates only from the subrange between the leftmost and
+rightmost words aligned with any word of any source entity.
 \begin{theorem}
-  Let \( m, M \in \mathbb{N} \) be indices of a leftmost and rightmost aligned word to any source entity, then there is
-  an optimal solution for the problem \eqref{eq:ilp} where constraints \eqref{eq:num_proj_const} has a form
-  of \( < \) or \( \leq \), such that it projects source entity to a target candidate from the set \( T \) generated by the algorithm
-  \ref{alg:ngram_extraction} where any word's index is inside the range \( [m, M] \).
+  Let \( m, M \in \mathbb{N} \) denote the indices of the leftmost and rightmost
+  aligned words corresponding to any source entity. Then there exists
+  an optimal solution for the problem \eqref{eq:ilp} where the constraints
+  \eqref{eq:num_proj_const} take the form of \( < \) or \( \leq \), such that
+  all source entity are projected onto a target candidates from the set \( T \)
+  generated by the algorithm \ref{alg:ngram_extraction}, where all word indices
+  are contained within the range \( [m, M] \).
 \end{theorem}
 \begin{proof}
-  Suppose that there is no such an optimal solution that satisfies this requirement. It means that there exists
-  a source entity \( \src{p} \in S \) and a source candidate
-  \( \tgt{\hat{p}} \in S \) such that \( (i_{\tgt{\hat{p}}} < m) \lor (M < j_{\tgt{\hat{p}} < m}) \)
+  Suppose that there is no optimal solution that satisfies this requirement.
+  This implies the existence of a source entity \( \src{p} \in S \) and a target
+  candidate \( \tgt{\hat{p}} \in T \) such that \( (i_{\tgt{\hat{p}}} < m) \lor (M < j_{\tgt{\hat{p}}}) \)
   and \( x_{\src{p}, \tgt{\hat{p}}} = 1 \) for an optimal solution \( x \).
 
-  This case can be divided into two parts: when \( \tgt{\hat{p}} \) has no words that aligned to words of source entities or
-  is and vice versa.
+  This case can be divided into two parts: one where \( \tgt{\hat{p}} \) contains
+  no words aligned with any words of the source entities, and the other where it
+  does have such alignments.
 
-  Consider the first option, then since \( \tgt{\hat{p}}  \) consists of words that are not aligned to any word
-  of source entities the alignment-based matching cost according to the definition \eqref{eq:align_cost} equals to \( 0 \).
-  Then if we take such a solution \( x^* \) that it is equal to this optimal solution \( x \) everywhere except
-  for the target candidate \( \tgt{\hat{p}}  \), i. e. \( x_{\src{p}, \tgt{\hat{p}}} = 0 \). Thus the objective function
-  remains the same because cost of matching is zero. And we don't violate non-overlapping constraints~\eqref{eq:non_overlap_const}:
+  Considering the first scenario, if \( \tgt{\hat{p}} \) consists entirely of
+  words that are not aligned with any word from the source entities, then the
+  alignment-based matching cost, according to the definition in \eqref{eq:align_cost},
+  equals \( 0 \).
+
+  In this situation, we can take a solution \( x^* \) that is identical to the
+  optimal solution \( x \), except for the target candidate \( \tgt{\hat{p}} \);
+  that is, we set \( x_{\src{p}, \tgt{\hat{p}}} = 0 \). Consequently, the objective
+  function remains unchanged because the cost of matching is zero. Additionally,
+  we do not violate the non-overlapping constraints \eqref{eq:non_overlap_const}:
   \begin{align*}
     & \forall \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \\
     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p}, \tgt{\hat{p}}} =
@@ -450,27 +485,30 @@ word of any source entity.
     & x^*_{\src{p_1}, \tgt{p_1}} + x^*_{\src{p}, \tgt{\hat{p}}} \leq 1 =
     x_{\src{p_1}, \tgt{p_1}} + 0 \leq 1
   \end{align*}
-  as well as constraints \eqref{eq:num_proj_const}:
+  As well as constraints \eqref{eq:num_proj_const}:
   \begin{multline*}
     \sum\limits_{t \in T} x_{\src{p}, t} \leq n_{proj} \implies                             \\
     \sum\limits_{t \in T} x^*_{\src{p}, t} =
     \sum\limits_{t \in T \setminus \{ \tgt{p} \}} x_{\src{p}, t} + x^*_{\src{p}, \tgt{p}} =
     \sum\limits_{t \in T \setminus \{ \tgt{p} \}} x_{\src{p}, t} + 0 \leq n_{proj}
   \end{multline*}
-  Therefore such a solution \( x^* \) is optimal as well as original solution \( x \), but
-  target candidates have indices in the range \( [m, M] \).
+  Therefore, such a solution \( x^* \) is also optimal, just like the original solution \( x \),
+  but with target candidates constrained to have indices within the range \( [m, M] \).
 
-  When it comes to the second option where a target candidate \( \tgt{\hat{p}} \) overlaps with some
-  candidates from the shrunk set in a way that there is some aligned word between a source entity \( \src{p} \) and these target candidate, i.e.
+  Considering the second option, where a target candidate \( \tgt{\hat{p}} \) contains words
+  that are aligned with words from a source entity \( \src{p} \), i.e.,
   \( \left[ (i_{\tgt{\hat{p}}} < m) \lor (M < j_{\tgt{\hat{p}} < m}) \right] \land
   \left[ (i_{\tgt{\hat{p}}} \leq M) \lor m \leq j_{\tgt{\hat{p}}} \right] \).
-  By the corollary \ref{col:shrink_cand} such a candidate \( \tgt{p} = ( \max(i_{\tgt{\hat{p}}}, m), \min(M, j_{\tgt{\hat{p}}}) ) \) will have
-  higher aligned-based matching score.
+  By corollary \ref{col:shrink_cand}, the candidate \( \tgt{p} = ( \max(i_{\tgt{\hat{p}}}, m), \min(M, j_{\tgt{\hat{p}}}) ) \),
+  which is a substring of \( \tgt{\hat{p}} \), will have a higher alignment-based
+  matching score.
 
-  Let's consider a solution \( x^* \) that equals
-  to a solution \( x \) everywhere except for target candidates \( \tgt{\hat{p}}  \) and \(  \tgt{p} \),
-  i. e. \( x^*_{\src{p}, \tgt{\hat{p}}} = 0, x^*_{\src{p}, \tgt{p}} = 1 \). This solution also satisfies all constraints
-  of the ILP problem. For constraints \eqref{eq:num_proj_const} the proof is the following:
+  Let us consider a solution \( x^* \) that is identical to the solution \( x \)
+  everywhere except for the target candidates \( \tgt{\hat{p}} \) and \( \tgt{p} \);
+  specifically, \( x^*_{\src{p}, \tgt{\hat{p}}} = 0 \) and \( x^*_{\src{p}, \tgt{p}} = 1 \).
+  This solution also satisfies all constraints of the ILP problem.
+
+  For the constraints \eqref{eq:num_proj_const}, the proof is as follows:
   \begin{align*}
     & \sum\limits_{t \in T} x_{\src{p}, t} =
     \sum\limits_{t \in T \setminus \{ \tgt{p}, \tgt{\hat{p}} \}} x_{\src{p}, t} + x_{\src{p}, \tgt{p}} + x_{\src{p}, \tgt{\hat{p}}}  =     \\
@@ -481,7 +519,7 @@ word of any source entity.
     & \sum\limits_{t \in T \setminus \{ \tgt{p}, \tgt{\hat{p}} \}} x_{\src{p}, t} + 1 + 0 \leq n_{proj}
   \end{align*}
   And for non-overlapping constraints, since \( \tgt{p} \) is a substring of \( \tgt{\hat{p}} \) by a
-  construction we have:
+  construction, we have:
   \[
     \forall t \in T \quad t \cap \tgt{p} \neq \emptyset \implies t \cap \tgt{\hat{p}} \neq \emptyset
   \]
@@ -490,7 +528,7 @@ word of any source entity.
     \left\{ (\src{p_1}, \tgt{p_1}) \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \right\} \subset
     \left\{ (\src{p_1}, \tgt{p_1}) \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \right\}
   \end{equation}
-  Suppose that constraints \eqref{eq:non_overlap_const} are violated for the solution \( x^* \), then
+  This implies that all constraints that must hold for \( \tgt{p} \) should also be satisfied for \( \tgt{\hat{p}} \):
   \begin{align*}
     & \exists \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \\
     & x^*_{\src{p_1}, \tgt{p_1}} + x^*_{\src{p}, \tgt{p}} =
@@ -499,30 +537,39 @@ word of any source entity.
     \implies                                                                                                       \\
     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p}, \tgt{\hat{p}}} = 1 + 1 = 2 > 1
   \end{align*}
-  But because of \eqref{eq:overlap_substring}
-  \( (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}} ) \in \hat{\Pi}(S, T) \),
-  therefore it contradicts that the solution \( x \) was feasible.
-  Hence constraints \eqref{eq:non_overlap_const} are satisfied by the solution \( x^* \).
+  However, due to \eqref{eq:overlap_substring}, it follows that
+  \( (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \).
+  This contradiction indicates that the solution \( x \) was feasible.
+  Consequently, the constraints \eqref{eq:non_overlap_const} are satisfied by the
+  solution \( x^* \).
 
-  And in the same time the solution \( x^* \) has a higher objective value that implies that the original solution \( x \) was not optimal.
-  This contradicts our assumption that there is no such an optimal solution that ensures requirements of the theorem.
+  At the same time, the solution \( x^* \) has a higher objective value, which
+  implies that the original solution \( x \) was not optimal. This leads to a
+  contradiction with our assumption that there is no optimal solution that satisfies
+  the requirements of the theorem.
 \end{proof}
-Note that the theorem holds only for constraints \eqref{eq:num_proj_const} with a form of \( < \) or
-\( \leq \) just because the ILP problem can lost feasibility if we remove projections with zero scores that
-exist only to ensure these constraints and has no application sense.
+It is important to note that the theorem applies only to the constraints
+\eqref{eq:num_proj_const} in the forms of \( < \) or \( \leq \). This is due to
+the fact that the ILP problem may lose feasibility if projections with zero
+scores—those that exist solely to satisfy these constraints and have no practical
+application—are removed.
 
-In comparison to the heuristic algorithm that uses word-to-word alignment the formulation of the optimization
-problem with matching scores \eqref{eq:align_cost} has an important advantage: we can evaluate the confidence of
-every particular projection, since we have a score of it, whereas heuristics provide us only with labelling of the target
-sentence. In the same time the prediction of this formulation and heuristics are not always the same, e.g.
-the heuristic algorithm merges every continuous ranges of aligned words separated but at most some fixed number of non-aligned words,
-but for the ILP formulation it will be so only for some specific cases.
+In comparison to the heuristic algorithm that employs word-to-word alignment,
+the formulation of the optimization problem with matching scores \eqref{eq:align_cost}
+presents a significant advantage: it allows for the evaluation of the confidence
+associated with each specific projection, as a score is available for each one.
+In contrast, heuristics only provide a labeling of the target sentence. Additionally,
+the predictions made by this formulation and the heuristics are not always the same.
+For example, the heuristic algorithm merges all continuous ranges of aligned words
+that are separated by at most a fixed number of non-aligned words, whereas the
+ILP formulation will only do so under certain specific conditions.
 
-Also it worth to mention that for the alignment-based score there is no fixed upper bound, since
-the maximum value of the denominator is a product of length of a source entity and a target candidate.
-It is possible to overcome it if we exchange one of the summation operation in the denominator from the
-equation \eqref{eq:align_cost} with a logical OR. Nevertheless, during experiments we will use the
-original form of the alignment-based matching score.
+It is also worth mentioning that, for the alignment-based score, there is no fixed
+upper bound, as the maximum value of the denominator is the product of the lengths of
+the source entity and the target candidate. This limitation may be addressed by
+replacing one of the summation operations in the denominator of equation
+\eqref{eq:align_cost} with a logical OR. Nevertheless, in our experiments, we will
+utilize the original form of the alignment-based matching score.
 
 \subsection{NER model-based score}
 
