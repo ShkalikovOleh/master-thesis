@@ -811,25 +811,31 @@ implements this concept is as follows:
 \end{equation}
 
 \section{Analysis of the ILP problem}
-Despite the fact that the proposed ILP problem is just a particular case
-of well-studied the general binary programming problem it doesn't imply that
-it inherits all properties of it. For example, maximum bipartite matching problem
-can be formulated as an instance of the ILP problem, but still can be solved in a
-polynomial time, whereas general case of ILP is NP-hard. That motivates a deeper analysis
-of the proposed formulation.
+Although the proposed ILP problem is a specific instance of the
+well-studied general binary programming problem, it does not
+necessarily inherit all properties associated with it. For instance,
+while the maximum bipartite matching problem \cite{pemmaraju2003computational} can be formulated as an
+instance of the ILP problem, it can still be solved in polynomial
+time, whereas the general case of ILP is NP-hard. This distinction
+necessitates a more in-depth analysis of the proposed formulation.
 
 \subsection{Complexity}
-Constraints play a crucial role in a complexity of the proposed problem. In the case if all candidates are not overlapping and constraints
-\eqref{eq:num_proj_const} has a form of equalities with \( n_{proj} = 1 \) the problem reduces to
-an instance of the weighted bipartite matching problem \cite{pemmaraju2003computational}, that is in complexity class \( P \).
-But let's study more general case.
+Constraints play a critical role in determining the complexity of the proposed problem.
+In the scenario where all candidates are non-overlapping and the constraints
+\eqref{eq:num_proj_const} take the form of equalities with \( n_{proj} = 1 \),
+the problem simplifies to an instance of the weighted bipartite matching problem
+\cite{pemmaraju2003computational}, which belongs to complexity class \( P \).
+However, let us explore the more general case.
 
-For the sake of convenience we will use the first form \eqref{eq:objective}--\eqref{eq:binary_prog}
-of the ILP problem in this section, but since it equivalent to the \eqref{eq:ilp} it doesn't affect
-the results of the analysis.
+For the sake of convenience, we will utilize the first formulation of the ILP
+problem \eqref{eq:objective}--\eqref{eq:binary_prog} in this section. However,
+since it is equivalent to the formulation in \eqref{eq:ilp}, this choice does not
+impact the results of the analysis.
 
-The usual way to prove the complexity of some problem is to reduce other problem with known complexity to
-an instance of the studied one. Thus let's consider the maximum weigh independent set problem \cite{pemmaraju2003computational}.
+A common approach to establishing the complexity of a problem is to reduce another
+problem with a known complexity to an instance of the problem under study.
+Therefore, let us consider the maximum weight independent set problem
+\cite{pemmaraju2003computational}.
 
 \begin{figure}[ht]
   \centering
@@ -850,10 +856,11 @@ an instance of the studied one. Thus let's consider the maximum weigh independen
   \label{fig:maxwis}
 \end{figure}
 
-The maximum weigh independent set problem (MaxWIS) is a problem of finding a subset of vertices of some undirected
-graph with maximum cardinality, such that it doesn't contain any vertices connected by edges of the graph.
-An example of the maximum weigh independent set problem is depicted on the figure \ref{fig:maxwis_reduction}.
-The formal definition as an ILP problem is given by \ref{def:maxwis}.
+The maximum weight independent set problem (MaxWIS) involves finding a subset of
+vertices in an undirected graph with maximum total weight, such that no two vertices in
+the subset are connected by edges in the graph. An example of the maximum weight
+independent set problem is illustrated in Figure \ref{fig:maxwis}.
+The formal definition of MaxWIS as an ILP problem is provided in Definition \ref{def:maxwis}.
 \begin{definition}[MaxWIS] \label{def:maxwis}
   Let \( G=(V, E, w), V \neq \emptyset, \; w: V \rightarrow \mathbb{R} \) be an undirected weighted graph, then a maximum weigh
   independent set problem for the graph \( G \) is the following:
@@ -864,25 +871,28 @@ The formal definition as an ILP problem is given by \ref{def:maxwis}.
   \end{align*}
 \end{definition}
 
-In the case when all weighs are equal to \( 1 \) the problem called a maximum independent set (MaxIS) problem and
-the objective is equal to a cardinality of the independent set with maximum number of vertices.
+In the scenario where all weights are equal to \( 1 \), the problem is referred to as
+the maximum independent set (MaxIS) problem. In this case, the objective is to maximize
+the cardinality of the independent set.
 
-It can be showed, that the generalized form the the projection ILP problem
-\eqref{eq:objective}--\eqref{eq:binary_prog} where the relation \( \cap \) is an arbitrary
-reflexive, symmetric, non-transitive relation is NP-hard. The reduction of the maximum independent
-set problem to the instance of the generalized ILP problem that proved it is given in the
-Appendix~\ref{sec:gen_ilp_is_np_hard}. But unfortunately, the overlapping relation \ref{def:overlapping}
-of word ranges that is used in the projection ILP problem is a particular case of overlapping relation
-for which induced graph of the MaxIS problem is an interval graph, i.e. reduction from the proof
-is no longer valid. And it is known that for interval graphs the maximum independent
-set problem can be solver in a polynomial time \cite{bhattacharya2014maximum}.
+It can be demonstrated that the generalized form of the projection ILP problem
+\eqref{eq:objective}--\eqref{eq:binary_prog}, where the relation \( \cap \) is an
+arbitrary reflexive, symmetric, and non-transitive relation, is NP-hard. The
+reduction of the maximum independent set problem to the instance of the generalized
+ILP problem that proves this is presented in Appendix~\ref{sec:gen_ilp_is_np_hard}.
+However, the overlapping relation defined in \ref{def:overlapping}, which is
+employed in the projection ILP problem, represents a specific case in which
+the induced graph of the MaxIS problem is an interval graph. Consequently, the
+reduction from the proof is no longer valid. Moreover, it is known that for interval graphs,
+the maximum independent set problem can be solved in polynomial time \cite{bhattacharya2014maximum}.
 
-Nevertheless, this results motivates the further analysis. It turns out that the maximum weight
-independent set problem on interval graphs can also be solved in a polynomial time \cite{PalB96}.
-So, we can prove that the non-overlapping constrains itself don't make the whole projection
-ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} hard.
+Nevertheless, these results motivate further analysis. It turns out that the maximum
+weight independent set problem on interval graphs can also be solved in polynomial
+time \cite{PalB96}. So, we can prove that the non-overlapping constraints themselves
+do not make the entire projection ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog}
+computationally hard.
 
-Consider the projection ILP problem without constraints \eqref{eq:num_proj_const}:
+Consider the projection ILP problem without the constraints \eqref{eq:num_proj_const}:
 \begin{equation} \label{eq:ilp_without_nproj}
   \begin{aligned}
     & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                             \\
@@ -892,18 +902,19 @@ Consider the projection ILP problem without constraints \eqref{eq:num_proj_const
     & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
   \end{aligned}
 \end{equation}
-It is possible to reduce this problem to an instance of the MaxWIS problem on an
-interval graph.
+It is possible to reduce this problem to an instance of the maximum weight
+independent set problem on an interval graph.
 
-The idea of the reduction is straightforward. For every target candidate vertex \( t_v \in T \) of the MaxIS problem
-we will create one distinct vertex \( v \in V \) that corresponds to this candidate.
-The weight of every vertex \( v \) is computed based on matching cost between any source entity and
-target candidate that corresponds to this vertex:
+The idea of the reduction is straightforward. For every target candidate
+\( t_v \in T \), we will create a distinct vertex \( v \in V \) that corresponds
+to this candidate. The weight of each vertex \( v \) is computed based on the matching
+scores between all source entities and the target candidate that corresponds to this
+vertex:
 \[
   w_v = \max\limits_{s \in S} c_{s, t_v}
 \]
-And finally let's link solution of the ILP problem \eqref{eq:ilp_without_nproj}
-to the solutions of the MaxIS problem:
+The link between the solutions of the ILP problem \eqref{eq:ilp_without_nproj} and
+the solutions of the MaxIS problem can be established as follows:
 \begin{equation} \label{eq:link_variables}
   \begin{aligned}
     &s^*_v = \argmax\limits_{s \in S} x_{s, t_v} \\
@@ -915,68 +926,67 @@ to the solutions of the MaxIS problem:
     \Leftrightarrow x_v = 1
   \end{aligned}
 \end{equation}
-i.e. the vertex \( v \in V \) belongs to the maximum independent set if and only if source entity with
-a highest matching score are projected to the target candidate \( \tgt{p_v} \) that correspond to this vertex. In the case
-when several source entities has equal maximum score we choose only the one entity.
-In the instance of the MaxWIS problem nodes \( v, u \in V, u != v \) are connected if and only
-if their corresponding target candidates are overlapping:
+That is, the vertex \( v \in V \) belongs to the maximum independent set if and only
+if the source entity with the highest matching score is projected onto the target
+candidate \( \tgt{p_v} \) corresponding to this vertex. In the event that several source
+entities have equal maximum scores, we select only one entity.
+
+In the instance of the MaxWIS problem, nodes \( v \) and \( u \in V \), where \( u \neq v \),
+are connected if and only if their corresponding target candidates overlap:
 \[
   \{ v, u \} \in E \Leftrightarrow t_u \cap t_v \neq \emptyset
-\].
+\]
+Furthermore, since the set of target candidates is, by definition, a set of intervals,
+the corresponding graph will indeed be an interval graph.
 
-Since we have a one to one correspondence between vertices from the MaxWIS problem and target
-candidates from the set \( T \), consider the following set that fully determined by the solution of the
-MaxWIS problem:
+Given the one-to-one correspondence between the vertices in the MaxWIS problem and
+the target candidates from the set \( T \), we can consider the following set that
+is completely determined by and determines the solution of the MaxWIS problem:
 \[
   T^*_{x} = \{ t \in T | \exists s \in S, x_{s, t} = 1 \}
 \]
-% Let's \( x_1, x_2 \) be a two feasible solutions of problem \eqref{eq:ilp_without_nproj}, then we will say that
-% they are in relation~\( \sim \) if their corresponding solutions of the MaxWIS problem are equal:
-% \[
-%   x_1 \sim x_2 \Leftrightarrow T^{*}_{x_1} = T^{*}_{x_2}
-% \]
-% Since this relation defined by an equality of sets it is reflexive, symmetric and transitive and therefore
-% equivalence relation.
 
-% Then quotient set \( \quot{X}{\sim} \) will consist of all equivalence classes of feasible solutions
-% that differ only in matching with source entities. Every such equivalence class corresponds to one feasible solution of
-% the maximum weight independent set problem.
-
-Let's note that all feasible solutions of the MaxWIS will correspond to feasible solutions of the
-problem \ref{eq:ilp_without_nproj} and vice versa.
+It is important to note that all feasible solutions of the MaxWIS will
+correspond to feasible solutions of the ILP problem \eqref{eq:ilp_without_nproj}
+and vice versa.
 
 \begin{lemma} \label{lemma:maxis_f_implies_ilp}
-  Suppose \( x_v \) is a feasible solution of the maximum weight independent set problem, then there is a
-  corresponding feasible solution of the problem \eqref{eq:ilp_without_nproj}.
+  Suppose \( x_v \) is a feasible solution of the maximum weight independent set
+  problem; then, there exists a corresponding feasible solution for the problem
+  \eqref{eq:ilp_without_nproj}.
 \end{lemma}
 \begin{proof}
-  Suppose some non feasible solution \( x \) that corresponds to the feasible solution of the
-  MaxWIS problem. Then we have:
+  Suppose there exists a non-feasible solution \( x \) that corresponds to a feasible
+  solution of the MaxWIS problem. Then, we have:
   \[
     \exists (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big|
     x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} > 1
   \]
-  But since the solution \( x_v \) is feasible constraints with  \( \tgt{p_1} \neq \tgt{p_2} \) can not be violated:
+  However, since the solution \( x_v \) is feasible, the constraints
+  involving \( \tgt{p_1} \neq \tgt{p_2} \) cannot be violated:
   \begin{align*}
     & \forall \{ u, w \} \in E \quad x_u + x_w \leq 1 \stackrel{\eqref{eq:overlap_reduction}}{\implies}                  \\
     & \forall \tgt{p_1} \in T^*_x \; \nexists \tgt{p_2} \in T^*_x \Big| \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \implies \\
     & \forall \src{p_1}, \src{p_2} \in S \quad x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
   \end{align*}
-  Therefore \( \tgt{p_1} = \tgt{p_2} \) and constraints are violated because there exists
-  at least two source nodes \( \src{p_1}, \src{p_2} \in S \) that are projected onto the same target nodes \( \tgt{p} \in T \):
+  Therefore, \( \tgt{p_1} = \tgt{p_2} \), and the constraints are violated because
+  there exist at least two source entities \( \src{p_1}, \src{p_2} \in S \) that are
+  projected onto the same target candidate \( \tgt{p} \in T \):
   \[
     x_{\src{p_1}, \tgt{p}} = 1 \qquad x_{\src{p_2}, \tgt{p}} = 1
   \]
-  But it contradict the fact that by construction of the corresponding solution of the ILP problem \eqref{eq:link_variables}
-  there is only one source entity that is projected on every target candidates.
+  However, this contradicts the fact that, by the construction of the
+  corresponding solution to the ILP problem \eqref{eq:link_variables}, there is
+  only one source entity projected onto each target candidate.
 \end{proof}
 
 \begin{lemma} \label{lemma:ilp_f_implies_maxis}
-  Suppose \( x \) is a feasible solution of the problem \eqref{eq:ilp_without_nproj}, then
-  the corresponding solution of the maximum weight independent set problem is feasible as well.
+  Suppose \( x \) is a feasible solution of the problem \eqref{eq:ilp_without_nproj};
+  then, the corresponding solution to the maximum weight independent set problem is also feasible.
 \end{lemma}
-\begin{proof} By construction the non-overlapping constraints of the problem \eqref{eq:ilp_without_nproj}
-  imply constraints of the MaxWIS problem:
+\begin{proof}
+  By construction, the non-overlapping constraints of the problem
+  \eqref{eq:ilp_without_nproj} imply the constraints of the MaxWIS problem:
   \begin{align*}
     & \forall (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \quad
     x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1 \implies                                                     \\
@@ -989,30 +999,38 @@ problem \ref{eq:ilp_without_nproj} and vice versa.
   \end{align*}
 \end{proof}
 
-And finally we can show that it is possible to reduce the projection ILP problem without constraints \eqref{eq:num_proj_const}
-to an instance of maximum weight independent set problem and therefore it can be solved by a polynomial-time algorithm.
+Finally, we can demonstrate that it is possible to reduce the projection ILP problem, without the
+constraints \eqref{eq:num_proj_const}, to an instance of the maximum weight
+independent set problem. Consequently, it can be solved using a polynomial-time
+algorithm.
 \begin{theorem}
-  The form \eqref{eq:ilp_without_nproj} of the projection ILP problem without constraints on number of target candidates projected from
-  every source entity can be solved in a polynomial-time.
+  The formulation \eqref{eq:ilp_without_nproj} of the projection ILP problem,
+  which does not include constraints on the number of target candidates projected
+  from each source entity, can be solved in polynomial time.
 \end{theorem}
 \begin{proof}
 
 \end{proof}
 
-Thus, The question whether the problem \eqref{eq:ilp} is NP-hard still remains open, but if it is,
-constraints \eqref{eq:num_proj_const} are responsible for that.
+Thus, the question of whether the problem \eqref{eq:ilp} is NP-hard remains open.
+However, if it is NP-hard, the constraints \eqref{eq:num_proj_const} are
+principal factor to that complexity.
 
 \subsection{Approaches to compute the solution of the problem}
-As any ILP problem the problem \eqref{eq:ilp} can be solved by branch and bound, cutting planes,
-branch and cut methods, other exact algorithms. Nevertheless it can take a lot of time to find an optimal solution and
-it can make such formulation inefficient from the application point of view where it is required to
-solve instances of this problem for thousands sentences in a limited time.
+Like any ILP problem, the problem \eqref{eq:ilp} can be solved using methods such as
+branch and bound, cutting planes, branch and cut techniques, and other exact algorithms.
+However, these approaches may require significant time to find an optimal solution,
+which can render such formulations inefficient from an application standpoint,
+particularly when it is necessary to solve instances of this problem for thousands
+of sentences within a limited timeframe.
 
-It motivates the necessity of the approximate algorithm that can compute a solution that is not always
-optimal, but don't violate crucial constraints. One of the approach for such an algorithm for the problem
-\eqref{eq:ilp} is to iteratively assign \( 1 \) to a variable with the highest matching score and then remove
-all target candidates that overlap with the projected candidate to enforce non-overlapping constraints.
-Algorithm \ref{alg:ilp_greedy} is the variant of a such greedy algorithm.
+This situation highlights the need for an approximate algorithm capable of computing
+a solution that may not always be optimal but adheres to crucial constraints. One
+approach for developing such an algorithm for the problem \eqref{eq:ilp} involves
+iteratively assigning \( 1 \) to the variable with the highest matching score and
+then removing all target candidates that overlap with the selected candidate to
+enforce non-overlapping constraints. Algorithm \ref{alg:ilp_greedy} represents a
+variant of this greedy algorithm.
 
 \begin{algorithm}
   \caption{Approximate greedy algorithm for the proposed ILP problem} \label{alg:ilp_greedy}
@@ -1049,37 +1067,43 @@ Algorithm \ref{alg:ilp_greedy} is the variant of a such greedy algorithm.
   }
 \end{algorithm}
 
-From the steps of the algorithm \ref{alg:ilp_greedy} it implies that after removing all
-overlapping target candidates by making their costs equal to zero the algorithm ensures the
-constants \eqref{eq:num_proj_const} on a number of projected from every source entity candidates.
-But only for the case where constraints have a form of \( <, \leq \).
+The steps of Algorithm \ref{alg:ilp_greedy} imply that by removing all overlapping
+target candidates—thereby setting their costs to zero—the algorithm maintains the non-overlapping constraints.c
+Constraints \eqref{eq:num_proj_const} regarding the number of candidates projected from
+each source entity are ensured by removing all source entities that reach maximum allowed number
+of projections.  However, this holds true only in cases where the constraints are of
+the form \( < \) or \( \leq \).
 
-In the case of \( =, >, \geq \) the algorithm will output a "solution" that violates constraint
-\eqref{eq:num_proj_const} only in two cases. The first one is when there is a source entity for which
-all target candidates, that are not overlapping with already projected ones, initially have zero matching cost. But then,
-from the application point of view it doesn't make sense to project the source entity onto these candidates
-since it is definitely not a counterpart of the source entity in the target sentence, otherwise it would not
-have a matching cost equal to \( 0 \). The second option is the situation where target candidates
-that could potentially be projected onto have been removed on the previous iterations of the algorithm.
-And it is hard to handle this issue without backtracking and losing feasibility on
-non-overlapping constraints \eqref{eq:non_overlap_const}.
+In the cases of \( =, >, \) or \( \geq \), the algorithm may produce a "solution" that
+violates the constraint \eqref{eq:num_proj_const} under two specific circumstances.
+The first occurs when there is a source entity for which all target candidates,
+which do not overlap with the already projected ones, initially have a matching
+cost of zero. However, in such cases, it does not make sense from an application standpoint
+to project the source entity onto these candidates, as they are definitively not
+counterparts of the source entity in the target sentence; otherwise, their
+matching cost would not be zero.
 
-Nevertheless, the algorithm \ref{alg:ilp_greedy} is linear on a number of variables and therefore can
-solve the ILP problem significantly faster than the exact ILP solver in a general case.
+The second situation arises when target candidates that could potentially be
+projected onto have been eliminated in previous iterations of the algorithm.
+Addressing this issue is challenging without backtracking or violating the
+feasibility of the non-overlapping constraints \eqref{eq:non_overlap_const}.
 
-Even in the case when the output of the greedy algorithm is a feasible solution it does not
-necessary mean that the solution is optimal, i.e. there may exists a feasible solution with higher objective
-value. This facts leads from the fact that the proposed ILP problem is NP-hard and therefore polynomial
-algorithm can not solve it in a general case unless P=NP. But also it can be easily shown on an example.
-Consider the ILP problem \eqref{eq:ilp} with \( n_{proj} = 2 \) and \( \leq \) type of constraints \eqref{eq:num_proj_const}.
-Let \( T = \{ \tgt{p_1} = (1, 2), \tgt{p_2} = (2, 3), \tgt{p_3} = (3, 5) \}, S = \{ \src{p} \} \) and
-the matching scores are the following:
+Nevertheless, Algorithm \ref{alg:ilp_greedy} operates in linear time with respect to
+the number of variables and, thus, can solve the ILP problem significantly faster than
+an exact ILP solver in general cases.
+
+Even in cases where the output of the greedy algorithm is a feasible solution, it does not necessarily imply that the solution is optimal; there may exist another feasible solution with a higher objective value. This can be easily illustrated with an example.
+
+Consider the ILP problem \eqref{eq:ilp} with \( n_{proj} = 2 \) and the \( \leq \)
+type of constraints \eqref{eq:num_proj_const}. Let \( T = \{ \tgt{p_1} = (1, 2), \tgt{p_2} = (2, 3), \tgt{p_3} = (3, 5) \} \)
+and \( S = \{ \src{p} \} \), and let the matching scores be as follows:
 \[
   c_{\src{p}, \tgt{p_1}} = 0.2 \qquad
   c_{\src{p}, \tgt{p_2}} = 0.3 \qquad
   c_{\src{p}, \tgt{p_3}} = 0.2
 \]
-The output of the algorithm \ref{alg:ilp_greedy} is the solution \( \src{p} \) with only one
-non zero variable where \( x_{\src, \tgt{p_2}} = 1 \). It has an objective value \( 0.3 \).
-While the optimal solution is the one where source entity is projected onto \( \tgt{p_1} \) and
-\( \tgt{p_2} \) with the objective value equal to \( 0.4 \).
+The output of Algorithm \ref{alg:ilp_greedy} is the solution \( x \) with only one
+non-zero variable, \( x_{\src{p}, \tgt{p_2}} = 1 \). This solution has an objective
+value of \( 0.3 \). In contrast, the optimal solution involves projecting the source
+entity onto both \( \tgt{p_1} \) and \( \tgt{p_2} \), yielding an objective value
+of \( 0.4 \).
