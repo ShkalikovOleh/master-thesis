@@ -936,11 +936,13 @@ entities have equal maximum scores, we select only one entity.
 
 In the instance of the MaxWIS problem, nodes \( v \) and \( u \in V \), where \( u \neq v \),
 are connected if and only if their corresponding target candidates overlap:
-\[
+\begin{equation} \label{eq:edge_reduction}
   \{ v, u \} \in E \Leftrightarrow t_u \cap t_v \neq \emptyset
-\]
+\end{equation}
 Furthermore, since the set of target candidates is, by definition, a set of intervals,
 the corresponding graph will indeed be an interval graph.
+This completes the reduction procedure. It is important to note that the reduction
+is executed in polynomial time.
 
 Given the one-to-one correspondence between the vertices in the MaxWIS problem and
 the target candidates from the set \( T \), we can consider the following set that
@@ -968,7 +970,7 @@ and vice versa.
   However, since the solution \( x_v \) is feasible, the constraints
   involving \( \tgt{p_1} \neq \tgt{p_2} \) cannot be violated:
   \begin{align*}
-    & \forall \{ u, w \} \in E \quad x_u + x_w \leq 1 \stackrel{\eqref{eq:overlap_reduction}}{\implies}                  \\
+    & \forall \{ u, w \} \in E \quad x_u + x_w \leq 1 \stackrel{\eqref{eq:edge_reduction}}{\implies}                  \\
     & \forall \tgt{p_1} \in T^*_x \; \nexists \tgt{p_2} \in T^*_x \Big| \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \implies \\
     & \forall \src{p_1}, \src{p_2} \in S \quad x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
   \end{align*}
