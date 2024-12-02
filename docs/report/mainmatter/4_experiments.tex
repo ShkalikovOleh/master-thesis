@@ -10,13 +10,21 @@ SRC NER model
 \section{Isolated evaluation of the projection step}
 europarl
 
+\begin{table}
+  \centering
+  \input{mainmatter/tables/europarl_heuristic}
+  \caption{Overall F1 scores for word-to-word alignments-based heuristic
+  algorithm with different hyperparameter  on the Europarl NER dataset}
+  \label{tab:europarl_heur_f1}
+\end{table}
+
 fix hyperparams for heuristics and ILP constraints
 
 \section{Intrinsic evaluation within a full pipeline}
 masakhaner2 results
 
 \begin{table}
-  \include{mainmatter/tables/mashkaner2}
+  \input{mainmatter/tables/mashkaner2}
   \caption{Overall F1 scores for different projection steps on the
   MasakhaNER2 dataset}
   \label{tab:masakhaner2_f1}

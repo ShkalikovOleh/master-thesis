@@ -1077,10 +1077,10 @@ problem \ref{eq:reduction_without_nproj} and vice versa.
 
 \begin{lemma} \label{lemma:maxis_f_implies_ilp}
   Suppose \( x_v \) is a feasible solution of the maximum independent set problem, then there is a
-  corresponding solution of the problem \eqref{eq:reduction_without_nproj}.
+  corresponding feasible solution of the problem \eqref{eq:reduction_without_nproj}.
 \end{lemma}
 \begin{proof}
-  Suppose some a non feasible solution \( x \) that corresponds to the feasible solution of the
+  Suppose some non feasible solution \( x \) that corresponds to the feasible solution of the
   MaxIS problem. Then we have:
   \[
     \exists (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big|
@@ -1104,7 +1104,8 @@ problem \ref{eq:reduction_without_nproj} and vice versa.
     x_{\src{p_1}, \tgt{p}} = 1 \qquad x_{\src{p_2}, \tgt{p}} = 1
   \]
 
-  But then consider a solution \( x^* \) such that we remove one of the projection and make this constraint :
+  But then consider a solution \( x^* \) such that we remove one of the projection that
+  make this constraint violated:
   \begin{align*}
     & \forall (s,t) \in S \times T \setminus \left\{ (\src{p_2}, \tgt{p}) \right\}
     \quad x^*_{s,t} = x_{s,t} \\
