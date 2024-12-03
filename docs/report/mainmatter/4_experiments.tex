@@ -193,12 +193,6 @@ It should be noted that this model supports only 18 of the 20 languages included
 in the MasakhaNER2 dataset; therefore, only these languages will be considered in
 our evaluation.
 
-In comparison to the isolated evaluation of the projection step presented in the
-previous section, this evaluation also includes fused scores \eqref{eq:fused_cost},
-which represent a weighted sum of the basic matching scores. All ILP-based pipelines
-that have been evaluated are characterized in terms of fused scores, with the
-corresponding weights provided in Table \ref{tab:ilp_pipeline_explation}.
-
 \begin{table}[ht]
   \centering
   \begin{tabular}{lrrrr}
@@ -220,6 +214,12 @@ corresponding weights provided in Table \ref{tab:ilp_pipeline_explation}.
   of the general fused score}
   \label{tab:ilp_pipeline_explation}
 \end{table}
+
+In comparison to the isolated evaluation of the projection step presented in the
+previous section, this evaluation also includes fused scores \eqref{eq:fused_cost},
+which represent a weighted sum of the basic matching scores. All ILP-based pipelines
+that have been evaluated are characterized in terms of fused scores, with the
+corresponding weights provided in Table \ref{tab:ilp_pipeline_explation}.
 
 The results of the evaluation of all these pipelines, along with the heuristic
 word-to-word alignment-based algorithm and the model transfer approach, are presented
