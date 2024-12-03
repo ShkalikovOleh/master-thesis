@@ -1,4 +1,4 @@
-\chapter{Experiments}
+\chapter{Evaluation}
 \label{sec:experiments}
 
 The evaluation of the XLNER pipelines can be classified into two groups: extrinsic and
@@ -43,7 +43,15 @@ betas set to \( (0.9,0.999) \) and a learning rate of \( 2 \cdot 10^{-5} \). The
 is publicly accessible on the HuggingFace Hub\footnote{\url{https://huggingface.co/ShkalikovOleh/mdeberta-v3-base-conll2003-en}}.
 
 \section{Isolated evaluation of the projection step}
-europarl
+The XLNER pipeline comprises three steps: forward translation, source NER labeling,
+and projection. Each of these steps can introduce errors. The new ILP-based approach for the
+projection step has been proposed, and it is essential to evaluate the performance
+of this step independently from errors associated with the preceding steps.
+
+This necessitates the availability of a labelled dataset for parallel text,
+which would enable the exclusion of the translation and source labeling phases.
+The Europarl-NER dataset \cite{agerri-etal-2018-building} serves as such a dataset.
+This dataset consists of 799 parallel sentences derived from the Europarl corpus \cite{koehn2005europarl}, manually annotated according to four entity types, adhering to the CoNLL 2002 and 2003 guidelines for four languages: English, German, Italian, and Spanish.
 
 \begin{table}[ht]
   \centering
@@ -53,20 +61,104 @@ europarl
   \label{tab:europarl_heur_f1}
 \end{table}
 
-\begin{table}
+Consequently, it becomes feasible to evaluate the performance of the proposed
+projection step as the ILP problem in isolation. Prior to this, however, it is
+important to investigate the performance of the heuristic word-to-word alignment-based
+algorithm \ref{alg:heuristics} to determine the optimal combination of hyperparameters
+and the resulting performance metrics for comparison with the proposed projection step.
+The F1 scores for the heuristic algorithm, assessed with varying hyperparameters, are
+presented in Table \ref{tab:europarl_heur_f1}.
+
+The results indicate that the optimal combination of hyperparameters for the majority of
+languages is as follows: a merging distance \( d = 1 \), an unrestricted maximum number
+of aligned subranges sorted by length that can be projected (i.e., \( k \) should not be
+limited), merging of aligned ranges should disregard whether the first word of the
+right-aligned range is aligned to the first word of a source entity, and a word length
+ratio threshold of \( 0.8 \)  between the source entity and the target range of words.
+Hence, these hyperparameters will be employed for subsequent experiments.
+
+The overall results are as follows. The most significant improvement in performance
+occurs when the algorithm is permitted to merge aligned ranges together, provided
+that only one non-aligned word exists between them. This enhancement is attributed to
+the algorithm's ability to fill gaps in imperfect or missed alignments. Concurrently,
+imposing a limit \( k \) on the number of projected target ranges for any source entity
+results in a slight decrease in performance. Additionally, due to errors in alignments,
+the merging of aligned subranges, which only occurs when the right range begins with a
+word aligned to the first word of a source entity, leads to outcomes that are less
+favorable in comparison to scenarios without such a limit. Finally, applying a threshold
+based on the ratio of length between the source entity and the ranges of aligned target
+words enhances performance. This improvement is attributed to the filtering out of
+incorrect alignments involving single words, which would otherwise be incorrectly part of projections.
+
+\begin{table}[t]
   \centering
   \input{mainmatter/tables/europarl_ilp}
   \caption{Overall F1 scores for the model transfer and ILP based projection pipelines
-  on the Europarl NER dataset}
+    on the Europarl NER dataset. Here \textit{align} refers to the alignment-based score,
+    \textit{ner} denotes the NER model-based score, and \textit{nmt} corresponds to
+  the translation-based score.}
   \label{tab:europarl_ilp_f1}
 \end{table}
 
-fix hyperparams for heuristics and ILP constraints
+The subsequent step involves evaluating the performance of the proposed ILP
+formulation \eqref{eq:ilp} for the projection step and identifying which type
+of constraints \eqref{eq:num_proj_const} yield superior results. Additionally, a
+comparison was made among all proposed matching scores, excluding fused scores,
+as well as between greedy and exact solvers. The results including the model transfer pipeline
+are presented in Table \ref{tab:europarl_ilp_f1}. It is important to note that, given the
+the variables in the ILP problem are binary, certain constraint types can be
+omitted from testing, for example,
+\( \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} < n_{proj} \Leftrightarrow \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \leq n_{proj} - 1 \).
+
+First and foremost, the best results obtained for all languages utilizing the
+proposed ILP formulation surpass the highest results achieved with the heuristic
+word-to-word alignment-based algorithm. In the case of the Italian and Spanish languages,
+this improved performance is attributed to the superior effectiveness of the
+translation-based cost, whereas alignment-based matching scores exhibit inferior results.
+This discrepancy can be explained by the heuristic algorithm's capability to merge aligned
+ranges if only one misaligned word exists between them, while the ILP formulation with
+alignment-based scoring can achieve similar merging only under specific circumstances.
+Nevertheless, for the German language, the proposed alignment-based matching score
+within the ILP-based projection step pipeline demonstrated superior results across
+all experimental evaluations.
+
+In the comparison between the greedy algorithm \ref{alg:ilp_greedy} and the exact solver
+GUROBI, it is observed that, in most cases, the greedy algorithm performs better.
+There are two primary reasons for this outcome. The first reason is that the exact
+ILP solver may enforce or misuse constraints, leading to suboptimal solutions from an
+application perspective. When constraints are of the type \( = \), the solver may
+include incorrect projections in an effort to satisfy the constraints. When constraints
+are \( \leq 2 \), it tends to favor smaller, non-overlapping candidates with a higher
+overall cost rather than opting for a longer candidate with high cost. In cases where
+constraints are \( \geq \), the solver attempts to project the source entity to as many
+target candidates as possible, given that all scores are non-negative.
+Conversely, the greedy algorithm consistently selects the candidate with the maximum score
+for projection and does not generally adhere to the constraints \eqref{eq:num_proj_const}
+for the cases of \( =, \geq, > \).
+
+However, this does not account for why, in certain experiments involving the Italian and
+Spanish languages with constraints of type \( \leq 1 \), the greedy algorithm still
+outperforms the exact solver. This discrepancy can be attributed to the fact that all
+matching score calculations involve models that may themselves introduce errors,
+resulting in scores that are not always aligned with the application problem of projection.
+Nonetheless, it is noteworthy that for the best solutions, the GUROBI optimizer
+outperformed the greedy algorithm in all cases.
+
+Furthermore, it is important to note the runtimes of the various pipelines.
+The pipeline employing the greedy algorithm is up to two times faster than that
+utilizing the exact solver and is comparable to the runtime of the heuristic-based
+algorithm. Conversely, the runtime for the pipelines that incorporate the
+translation-based score, despite yielding the best metrics, is significantly longer
+than that of all other pipelines, as it necessitates the execution of a translation
+model to compute the scores. The runtimes are detailed in the Appendix \ref{sec:appendix}, specifically
+in Tables \ref{tab:europarl_heur_runtime} and \ref{tab:europarl_ilp_runtime}.
+
+
 
 \section{Intrinsic evaluation within a full pipeline}
 masakhaner2 results
 
-\begin{table}
+\begin{table}[ht]
   \input{mainmatter/tables/mashkaner2}
   \caption{Overall F1 scores for different projection steps on the
   MasakhaNER2 dataset}
