@@ -1,12 +1,82 @@
 \chapter{Introduction}
 \label{sec:introduction}
-what is ner?
+\ac{NER} is one of the fundamental problems in natural language processing. It is important in
+itself, but it also plays a crucial role in information extraction pipelines, for example for knowledge
+graph construction \cite{weikum2021machine, zhang-etal-2022-efficient-robust}. Given a sentence and a set of classes, the goal is to predict a class for every
+word and then aggregate entities, which are defined as continuous sequences of words that belong to
+a single object. Typically, this aggregation is accomplished using a specialized labeling format
+called IOB2, where the label \textit{O} is assigned to all words that do not belong to any class.
+For the first word of an entity with class C, the label \textit{B-C} is assigned, and for subsequent
+words within that entity, the label \textit{I-C} is assigned. An example of such labeling is
+provided in Figure \ref{fig:ner}.
+
+\begin{figure*}[ht]
+  \centering
+  \begin{tikzpicture}[node distance=-0.1,
+      every node/.style={text centered,
+        text height=2ex,
+        text depth=.25ex,
+      },
+      loc/.style={fill=orange!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:#1-LOC}},
+      per/.style={fill=green!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:#1-PER}},
+      O/.style={rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:O}}
+    ]
+
+    \node[per={B}, rounded rectangle east arc=none](Mark){Mark};
+    \node[per={I}, rounded rectangle west arc=none, right=of Mark](Twain){Twain};
+    \node[O, right=of Twain](was){was};
+    \node[O, right=of was](born){born};
+    \node[O, right=of born](in){in};
+    \node[loc={B}, right=of in]{Florida};
+  \end{tikzpicture}
+  \caption{Example of NER labeling in IOB2 format}
+  \label{fig:ner}
+\end{figure*}
+
+To address this problem, there are currently two main classes of models: pretrained encoder-only
+Transformers \cite{vaswani2017attention}, such as BERT \cite{devlin-etal-2019-bert}, and autoregressive
+large language models (LLMs) \cite{gpt3, zhou2023universalner}. While the latter formulates NER as a
+generation problem within the context of general question answering, the former requires specially
+labeled datasets for training.
 
 \section{Motivation}
-No one formalize, w2w are heuristics based
+For high-resource languages for which a lot of data is available, the NER problem can be addressed
+with a high degree of quality. However, challenges arise when dealing with low-resource languages or
+specialized domains where training data is limited. The multilingual capabilities of large language
+models (LLMs), particularly their performance on low-resource languages, are limited and represent
+an active area of research at present \cite{lai-etal-2024-llms}. A multitude of approaches have
+been proposed to tackle the NER problem for low-resource languages, which can be categorized
+into two groups: model-based and data-based methods.
+
+An important subset of the latter category is known as projection-based methods, which decompose
+the NER labeling problem into three steps: translating to high-resource languages, labeling the
+translated sentence, and projecting the labels back onto the original sentence. While many methods
+for the projection step have been proposed, the projection step itself has not been explicitly formalized
+as an optimization problem and, as a result, has not been analyzed. Consequently, some of these
+methods rely solely on heuristics. This highlights the necessity of formulating the projection
+step as an integer linear optimization problem and evaluating whether such a formulation is
+sensible from an application standpoint and whether it can help enhance the performance of the
+projection step.
 
 \section{Goal}
-Formalize projection as an ILP problem, study ILP, go beyond w2w alignments
+The primary goal of this thesis is to formulate the projection step of the \ac{XLNER} pipeline as
+an \ac{ILP}. This entails a comprehensive analysis of the problem, the establishment of relationships
+and connections between existing methods and the proposed formulation, and an evaluation
+of the proposed formalization in comparison to existing methods that have demonstrated
+consistent results.
 
 \section{Structure of the Work}
-Here the structure can be \emph{briefly} explained.
+This work consists of five chapters and two appendices. Chapter \ref{sec:background} provides
+an overview of existing XLNER pipelines, with a particular focus on projection-based methods.
+In Chapter \ref{sec:methodology}, the projection step is formulated as an ILP problem, various
+matching costs and target candidate extraction methods are proposed, and insights regarding the
+complexity of the problem are discussed, alongside with an approximate greedy
+algorithm aimed to efficiently solve this problem. Chapter \ref{sec:experiments} evaluates
+the proposed formulation in isolation, focusing solely on the projection step, as well as
+within the full XLNER pipeline in intrinsic settings using the MasakhaNER2 dataset.
+Chapter \ref{sec:conclusion} presents the conclusions derived from this work and suggests
+directions for further research.
+
+Appendix \ref{sec:appendix} includes the runtimes for certain experiments, which may be useful for
+comparing different methods, while Appendix \ref{sec:gen_ilp_is_np_hard} demonstrates that the
+generalized version of the proposed ILP problem is NP-hard.

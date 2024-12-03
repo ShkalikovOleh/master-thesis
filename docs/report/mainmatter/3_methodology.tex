@@ -9,14 +9,14 @@ sentence in the target language can be selected and considered as potential
 projections for source entities. The likelihood scores that each source entity
 should be projected onto each candidate will be computed. The goal is to identify a
 combination of source entities and target candidates that maximizes the overall
-sum of the selected tuples. However, natural constraints must also be taken into account.
+sum of the corresponding scores. However, natural constraints must also be taken into account.
 For instance, when two source entities project onto overlapping candidates, it becomes
-ambiguous to which source entity the overlapping words pertain; therefore, projections
+ambiguous to which source entity the overlapping words pertain. Therefore, projections
 onto overlapping candidates should be prohibited. Furthermore, it is logical to
 restrict the number of candidates to which each source entity can be projected,
 as a one-to-one correspondence between source entities and entities in the
 target sentence is typically anticipated. Based on these fundamental properties,
-an integer linear optimization problem can be established for further analysis.
+we can establish an integer linear optimization problem.
 
 \begin{figure*}[ht]
   \centering
@@ -1107,7 +1107,8 @@ principal factor to that complexity.
 
 \subsection{Approaches to compute the solution of the problem}
 Like any ILP problem, the problem \eqref{eq:ilp} can be solved using methods such as
-branch and bound, cutting planes, branch and cut techniques, and other exact algorithms.
+branch-and-bound \cite{land2010automatic}, cutting planes \cite{gilmore1963linear, dyckhoff1981new},
+branch-and-cut \cite{branchAndCut}, and other exact algorithms.
 However, these approaches may require significant time to find an optimal solution,
 which can render such formulations inefficient from an application standpoint,
 particularly when it is necessary to solve instances of this problem for thousands
