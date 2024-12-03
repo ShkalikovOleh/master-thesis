@@ -1,16 +1,51 @@
 \chapter{Experiments}
 \label{sec:experiments}
 
-link to impl
+The evaluation of the XLNER pipelines can be classified into two groups: extrinsic and
+intrinsic. Extrinsic evaluation involves utilizing the XLNER pipeline to produce a
+labeled dataset in the target language, followed by training a NER model on this dataset.
+In this context, the performance of the trained NER model serves as a measure of quality.
+A primary concern with this approach is its dependency on the training procedure; that is,
+results may vary due to different random sampling of batches, alterations in batch size,
+mixing of generated data with manually labeled data, other factors. Furthermore,
+this process demands substantial computational resources to train a model, which becomes
+problematic when conducting hundreds of experiments.
 
-GUROBI + hyperparams
+Consequently, the results of intrinsic evaluation will be presented in this chapter.
+This entails taking a manually labeled dataset in the target language, feeding it to
+the pipeline to generate labels, and comparing the predictions with the ground truth
+labels. It is reasonable to anticipate that superior intrinsic performance will
+correlate with improved extrinsic performance, assuming a consistent training setup.
 
-SRC NER model
+To assess the proposed formulation of the projection step of the XLNER pipeline as an
+ILP problem, as delineated in \eqref{eq:ilp}, and to analyze various forms of it, two
+sets of experiments have been conducted. The first set evaluates the performance of
+the projection step in isolation. The second set of experiments confirms the quality
+of projections within the complete XLNER pipeline on the MasakhaNER2 dataset
+\cite{adelani-etal-2022-masakhaner}. The source code utilized for conducting all
+experiments is made publicly available on GitHub\footnote{\url{https://github.com/ShkalikovOleh/master-thesis}}.
+The GUROBI optimizer \cite{gurobi}, employed under an academic license, served as the
+ILP solver for all experiments.
+
+Word-to-word alignments for all experiments were computed using a non-fine-tuned
+AWESOME aligner with the following default hyperparameters: extraction method set
+to softmax, softmax\_threshold of \( 0.001 \), and align\_layer is \( 8 \).
+
+For source labeling, candidate evaluation, and model transfer, the MDeBERTa-v3-base
+model, fine-tuned on the English split of the CONLL-2003 dataset \cite{tjong-kim-sang-de-meulder-2003-introduction-conll},
+was utilized. This selection is based by the findings of the original study in which
+MasakhaNER2 was introduced, demonstrating that MDeBERTa-v3 achieves superior performance
+compared to other multilingual non-African-centric models, despite being smaller than
+XLM-RoBERTA-Large \cite{conneau-etal-2020-unsupervised-xlmr}. The model was trained
+for 5 epochs, with a total batch size of \( 32 \) (consisting of \( 16 \) with gradient
+accumulation every 2 steps), utilizing the Adam optimizer \cite{Kingma2014AdamAM} with
+betas set to \( (0.9,0.999) \) and a learning rate of \( 2 \cdot 10^{-5} \). The model
+is publicly accessible on the HuggingFace Hub\footnote{\url{https://huggingface.co/ShkalikovOleh/mdeberta-v3-base-conll2003-en}}.
 
 \section{Isolated evaluation of the projection step}
 europarl
 
-\begin{table}
+\begin{table}[ht]
   \centering
   \input{mainmatter/tables/europarl_heuristic}
   \caption{Overall F1 scores for word-to-word alignments-based heuristic
