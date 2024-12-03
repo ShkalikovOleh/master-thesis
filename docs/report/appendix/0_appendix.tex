@@ -21,6 +21,10 @@ the computation of alignments will demand a duration comparable
 to that of executing a NER model; thus, the runtimes for the
 NER and alignment-based pipelines are expected to be similar.
 
+Additionally, it is worth to point out, that according to Theorem \ref{thm:reduce_T_for_align},
+the set of candidates \( T \) has been reduced for all ILP-based experiments that
+utilize only word-to-word alignments, resulting in reduced runtimes.
+
 \begin{table}[t]
   \centering
   \input{mainmatter/tables/europarl_ilp_runtime}

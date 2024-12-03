@@ -47,6 +47,8 @@ in order to simplify the problem (by making scores matrix sparse) and based on t
 (where small values indicate a poor projection), all \eqref{eq:ner_cost} scores were
 thresholded at \( 0.05 \) and all \eqref{eq:nmt_cost} scores were thresholded
 at \( 0.1 \). The \( \alpha \) parameter fo the NER model-based score was set to \( 1.15 \).
+The translation model utilized for the computation of the NMTScore, and consequently
+for the translation-based matching scores, is the distilled 600M version of the NLLB-200 \cite{nllbteam2022languageleftbehindscaling}.
 
 \section{Isolated evaluation of the projection step}
 The XLNER pipeline comprises three steps: forward translation, source NER labelling,
