@@ -31,7 +31,7 @@ Word-to-word alignments for all experiments were computed using a non-fine-tuned
 AWESOME aligner with the following default hyperparameters: extraction method set
 to softmax, softmax\_threshold of \( 0.001 \), and align\_layer is \( 8 \).
 
-For source labeling, candidate evaluation, and model transfer, the MDeBERTa-v3-base
+For source labelling, candidate evaluation, and model transfer, the MDeBERTa-v3-base
 model, fine-tuned on the English split of the CONLL-2003 dataset \cite{tjong-kim-sang-de-meulder-2003-introduction-conll},
 was utilized. This selection is based by the findings of the original study in which
 MasakhaNER2 was introduced, demonstrating that MDeBERTa-v3 achieves superior performance
@@ -42,14 +42,20 @@ accumulation every 2 steps), utilizing the Adam optimizer \cite{Kingma2014AdamAM
 betas set to \( (0.9,0.999) \) and a learning rate of \( 2 \cdot 10^{-5} \). The model
 is publicly accessible on the HuggingFace Hub\footnote{\url{https://huggingface.co/ShkalikovOleh/mdeberta-v3-base-conll2003-en}}.
 
+In all experiments involving NER model-based and translation-based matching scores,
+in order to simplify the problem (by making scores matrix sparse) and based on the interpretation of the scores
+(where small values indicate a poor projection), all \eqref{eq:ner_cost} scores were
+thresholded at \( 0.05 \) and all \eqref{eq:nmt_cost} scores were thresholded
+at \( 0.1 \). The \( \alpha \) parameter fo the NER model-based score was set to \( 1.15 \).
+
 \section{Isolated evaluation of the projection step}
-The XLNER pipeline comprises three steps: forward translation, source NER labeling,
+The XLNER pipeline comprises three steps: forward translation, source NER labelling,
 and projection. Each of these steps can introduce errors. The new ILP-based approach for the
 projection step has been proposed, and it is essential to evaluate the performance
 of this step independently from errors associated with the preceding steps.
 
 This necessitates the availability of a labelled dataset for parallel text,
-which would enable the exclusion of the translation and source labeling phases.
+which would enable the exclusion of the translation and source labelling phases.
 The Europarl-NER dataset \cite{agerri-etal-2018-building} serves as such a dataset.
 This dataset consists of 799 parallel sentences derived from the Europarl corpus \cite{koehn2005europarl}, manually annotated according to four entity types, adhering to the CoNLL 2002 and 2003 guidelines for four languages: English, German, Italian, and Spanish.
 
@@ -90,16 +96,6 @@ based on the ratio of length between the source entity and the ranges of aligned
 words enhances performance. This improvement is attributed to the filtering out of
 incorrect alignments involving single words, which would otherwise be incorrectly part of projections.
 
-\begin{table}[t]
-  \centering
-  \input{mainmatter/tables/europarl_ilp}
-  \caption{Overall F1 scores for the model transfer and ILP based projection pipelines
-    on the Europarl NER dataset. Here \textit{align} refers to the alignment-based score,
-    \textit{ner} denotes the NER model-based score, and \textit{nmt} corresponds to
-  the translation-based score.}
-  \label{tab:europarl_ilp_f1}
-\end{table}
-
 The subsequent step involves evaluating the performance of the proposed ILP
 formulation \eqref{eq:ilp} for the projection step and identifying which type
 of constraints \eqref{eq:num_proj_const} yield superior results. Additionally, a
@@ -109,6 +105,16 @@ are presented in Table \ref{tab:europarl_ilp_f1}. It is important to note that, 
 the variables in the ILP problem are binary, certain constraint types can be
 omitted from testing, for example,
 \( \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} < n_{proj} \Leftrightarrow \sum\limits_{\tgt{p} \in T} x_{\src{p}, \tgt{p}} \leq n_{proj} - 1 \).
+
+\begin{table}[t]
+  \centering
+  \input{mainmatter/tables/europarl_ilp}
+  \caption{Overall F1 scores for the model transfer and ILP based projection pipelines
+    on the Europarl NER dataset. Here \textit{align} refers to the alignment-based score,
+    \textit{ner} denotes the NER model-based score, and \textit{nmt} corresponds to
+  the translation-based score.}
+  \label{tab:europarl_ilp_f1}
+\end{table}
 
 First and foremost, the best results obtained for all languages utilizing the
 proposed ILP formulation surpass the highest results achieved with the heuristic
@@ -138,7 +144,7 @@ for the cases of \( =, \geq, > \).
 
 However, this does not account for why, in certain experiments involving the Italian and
 Spanish languages with constraints of type \( \leq 1 \), the greedy algorithm still
-outperforms the exact solver. This discrepancy can be attributed to the fact that all
+slightly outperforms the exact solver. This discrepancy can be attributed to the fact that all
 matching score calculations involve models that may themselves introduce errors,
 resulting in scores that are not always aligned with the application problem of projection.
 Nonetheless, it is noteworthy that for the best solutions, the GUROBI optimizer
@@ -153,14 +159,119 @@ than that of all other pipelines, as it necessitates the execution of a translat
 model to compute the scores. The runtimes are detailed in the Appendix \ref{sec:appendix}, specifically
 in Tables \ref{tab:europarl_heur_runtime} and \ref{tab:europarl_ilp_runtime}.
 
+Another important observation is that the ILP-based projection pipeline utilizing NER
+model-based matching costs significantly outperforms the model transfer approach,
+despite the fact that the model that has been used and, consequently, the outputs of the model
+were identical. The improvement in F1 score can be attributed to the fact that projection
+pipelines project source entities, thereby filtering out any predictions from the model
+that correspond to classes not present among the source entities. And in addition, the
+application of constraints \eqref{eq:num_proj_const} imposes limitations on the number
+of entities of each class, which explains the circumstances under which the metric
+for the \( \geq 2 \) type of constraints appears lower to that of model transfer.
 
+Thus, for the subsequent experiments, the constraints \eqref{eq:num_proj_const} will
+be fixed in the form of \( \leq 1 \). Additionally, it is noted that the translation-based
+matching scores yield the best results and should consequently dominate in all fused scores.
 
 \section{Intrinsic evaluation within a full pipeline}
-masakhaner2 results
+It is crucial to evaluate the proposed ILP-based projection step not only in isolated
+settings but also within the complete pipeline, as errors introduced by the translation
+and source NER labeling may accumulate and negate the advantages of the proposed
+formulation. Therefore, the projection step of the XLNER pipeline
+in the form of the ILP problem \eqref{eq:ilp} has been evaluated  using the MasakhaNER2
+dataset. This dataset comprises labeled sentences in 20 African low-resource
+languages and classifies all entities into four categories: person (\textit{PER}),
+organization (\textit{ORG}), location (\textit{LOC}), and date (\textit{DATE}).
+However, since the source NER model employed does not support the DATE class, this
+particular class was disregarded during the metric computation.
+
+English has been selected as the source language. The forward translation model used
+for all experiments is NLLB-200-3.3B \cite{nllbteam2022languageleftbehindscaling}.
+It should be noted that this model supports only 18 of the 20 languages included
+in the MasakhaNER2 dataset; therefore, only these languages will be considered in
+our evaluation.
+
+In comparison to the isolated evaluation of the projection step presented in the
+previous section, this evaluation also includes fused scores \eqref{eq:fused_cost},
+which represent a weighted sum of the basic matching scores. All ILP-based pipelines
+that have been evaluated are characterized in terms of fused scores, with the
+corresponding weights provided in Table \ref{tab:ilp_pipeline_explation}.
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{lrrrr}
+    \toprule
+    \( \lambda \) & align \eqref{eq:align_cost} & ner \eqref{eq:ner_cost} & ner \eqref{eq:ner_cost_wo_classes} & nmt \eqref{eq:nmt_cost} \\
+    Pipeline & & & & \\
+    \midrule
+    align & 1 & 0 & 0 & 0 \\
+    ner & 0 & 1 & 0 & 0 \\
+    nmt & 0 & 0 & 0 & 1 \\
+    align\_ner & 0.5 & 0.5 & 0 & 0 \\
+    align\_ner\_spans & 0.5 & 0 & 0.5 & 0 \\
+    align\_nmt & 0.5 & 0 & 0 & 1 \\
+    ner\_spans\_nmt & 0 & 0 & 0.5 & 1 \\
+    all\_fusion & 0.5 & 0 & 0.5 & 1 \\
+    \bottomrule
+  \end{tabular}
+  \caption{A description of each tested ILP-based pipeline in a form of weights
+  of the general fused score}
+  \label{tab:ilp_pipeline_explation}
+\end{table}
+
+The results of the evaluation of all these pipelines, along with the heuristic
+word-to-word alignment-based algorithm and the model transfer approach, are presented
+in Table \ref{tab:masakhaner2_f1}. \textbf{Bold} text indicates the best overall result for a
+language, while \underline{underlined} text signifies the best result among the pipelines featuring
+the ILP-based projection step. The hyperparameters for the heuristic and the type of
+constraints \eqref{eq:num_proj_const} have been selected based on the findings from the
+previous section, specifically corresponding to the best results from the experiments
+denoted in Tables \ref{tab:europarl_heur_f1} and \ref{tab:europarl_ilp_f1}.
 
 \begin{table}[ht]
   \input{mainmatter/tables/mashkaner2}
-  \caption{Overall F1 scores for different projection steps on the
+  \caption{Overall F1 scores for XLNER pipelines with different projection steps on the
   MasakhaNER2 dataset}
   \label{tab:masakhaner2_f1}
 \end{table}
+
+The results indicate that the proposed ILP-based projection step within the full
+XLNER pipeline performs overall better than both the best heuristic word-to-word
+alignment-based and model transfer approaches. This advantage is evident in both
+the number of languages where the proposed pipeline outperforms the others and in
+the average metrics across all tested languages. Specifically, for only 5 of the 18
+languages, the proposed projection formulation yields worse results than the previous
+methods, although the gap in metrics remains small. In instances where the proposed
+method performs better, the differences in metrics can be significant, as illustrated
+by the case of isiXhosa (xho), Yorùbá (yor) and isiZulu (zul) languages.
+
+Among the various matching scores, the \textit{all\_fusion} score, which employs a
+combination of all proposed matching costs, demonstrates the best results. This can
+be attributed to the fact that the \textit{all\_fusion} matching score integrates the advantages
+of each individual score, thereby providing a more accurate representation of whether
+a source entity should be projected onto a target candidate. In situations where the
+\textit{all\_fusion} score performs worse than any other ILP-based pipeline, it
+suggests that one of the individual compound scores make from the overall
+fused matching score worse due to its inherent drawbacks.
+
+Similar to the isolated evaluation, the results for the heuristic word-to-word
+alignment-based algorithm are slightly superior to those for the ILP-based projection
+utilizing alignment-based matching scores, attributable to the same rationale: the
+heuristic algorithm can consistently merge two aligned word ranges that are separated
+by only one non-aligned word to any source entity.
+
+At the same time, the pipeline \textit{ner}, which utilizes the NER model-based matching
+score, consistently outperforms (sometimes in 1.5 times) the \textit{Model transfer} approach when provided with the same
+NER model outputs, for the same reasons described in the previous section. However,
+being projection-based, it may be susceptible to errors from the preceding steps, namely
+translation and source NER model labeling errors, which can adversely impact performance,
+as observed in the cases of the Chichewa (nya) and Kiswahili (swa) languages.
+
+Additionally, the score \eqref{eq:ner_cost_wo_classes}, referred to as \textit{ner\_spans},
+involves utilizing the predictions of the NER model solely to assess the likelihood
+that a given candidate may represent a valid target entity of any class. This approach
+leverages other scores to assign the appropriate label to this span.
+It demonstrates results that are comparable to those of other pipelines.
+Notably, for the Bambara (bam) and Mossi (mos) languages, it performs the best, as
+it is capable of disregarding incorrectly predicted NER model labels for spans that
+correspond to actual target entities.
