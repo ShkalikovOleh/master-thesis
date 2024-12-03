@@ -2,11 +2,11 @@
 \label{sec:gen_ilp_is_np_hard}
 
 Consider the generalized ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} where
-the relation \( \cap \) is an arbitrary non-transitive, symmetric and reflexive relation.
-In a general case it makes the initial ILP problem harder, i.e. it can be showed that the problem
+the relation \( \cap \) is an arbitrary non-transitive, symmetric, and reflexive relation.
+In a general case, it makes the initial ILP problem harder, i.e. it can be shown that the problem
 \eqref{eq:objective}--\eqref{eq:binary_prog} become an NP-hard.
 
-The usual way to prove the complexity of some problem is to reduce other problem with known complexity to
+The usual way to prove the complexity of some problem is to reduce other problems with known complexity to
 an instance of the studied one. Thus let's consider the maximum independent set problem \cite{pemmaraju2003computational}.
 
 \begin{figure}[ht]
@@ -82,32 +82,32 @@ an instance of the studied one. Thus let's consider the maximum independent set 
 
 The maximum independent set problem is a problem of finding a subset of vertices of some undirected
 graph with maximum cardinality, such that it doesn't contain any vertices connected by edges of the graph.
-An example of the maximum independent set problem is depicted on the figure \ref{fig:maxis_reduction} (a).
-The formal definition as an ILP problem is given by \ref{def:maxis}.
+An example of the maximum independent set problem is depicted in Figure \ref{fig:maxis_reduction} (a).
+The formal definition of an ILP problem is given by \ref{def:maxis}.
 \begin{definition}[MaxIS] \label{def:maxis}
   Let \( G=(V, E), V \neq \emptyset \) be an undirected graph, then a maximum independent set problem for the graph \( G \) is the following:
   \begin{align*}
     & \max \sum\limits_{v \in V} x_v                               \\
-    & x_u + x_v \leq 1               \qquad \forall \{u, v\} \in E \\
+    & x_u + x_v \leq 1 \qquad \forall \{u, v\} \in E \\
     & x_v \in \{0, 1\}
   \end{align*}
 \end{definition}
 
 The MaxIS problem is an NP-hard \cite{pemmaraju2003computational} problem since VertexCover can be reduced to an instance of
-this problem. But what is even more interesting for us is that this problem looks very similar to the
-our projection ILP problem, except the fact, that set of constraint \eqref{eq:num_proj_const} are
-omitted and costs are equal to \( 1 \). Moreover, the relation whether two edges of the graph are adjacent
+this problem. But even more interesting for us is that this problem looks very similar to
+our projection ILP problem, except that set of constraint \eqref{eq:num_proj_const} is
+omitted and costs are equal to \( 1 \). Moreover, whether two edges of the graph are adjacent
 is not transitive as well as the relation of overlapping \ref{def:overlapping}! That's why we will try to reduce
 the maximum independent set problem to an instance of the generalized ILP problem.
 
 The idea of the reduction is straightforward. For every vertex \( v \in V \) of the MaxIS problem
 we will create one distinct target candidate \( \tgt{p_v} \) that corresponds to this vertex.
-The set of all such target candidate will be called \( T_V \). The ILP problem are formulated as a projection
-from source entities, in order to represent MaxIS as this ILP problem let's create dummy source nodes. The number of source nodes
-is determined in such a way that it will be easy to satisfy constraints~\eqref{eq:num_proj_const}.
-The generalized number of dummy source nodes for any type of constraints \eqref{eq:num_proj_const} are given
+The set of all such target candidates will be called \( T_V \). The ILP problem is formulated as a projection
+from source entities, to represent MaxIS as this ILP problem let's create dummy source nodes. The number of source nodes
+is determined so that it will be easy to satisfy constraints~\eqref{eq:num_proj_const}.
+The generalized number of dummy source nodes for any type of constraint \eqref{eq:num_proj_const} are given
 in the table \ref{tab:dummy_nodes_num} (a). The matching cost between any dummy source node and
-target candidate from the set \( T_V \) will make equal to \( 1 \). And finally let's link solution of the
+target candidate from the set \( T_V \) will be equal to \( 1 \). And finally, let's link the solution of the
 ILP problem to the solutions of the MaxIS problem:
 \[
   x_v = 1 \Leftrightarrow \exists \src{p} \in S \Big| x_{\src{p}, \tgt{p_v}} = 1
@@ -152,10 +152,10 @@ if and only if there is an edge in the graph \( G \) between these nodes or \( u
   t_u \cap t_v \neq \emptyset \Leftrightarrow
   \left( \{ u, v \} \in E \right) \lor  \left(u = v \right)
 \end{equation}
-Such a definition of overlapping allow us to match all properties, i.e. reflexivity, symmetricity and non transitivity,
+Such a definition of overlapping allows us to match all properties, i.e. reflexivity, symmetricity, and nontransitivity,
 of overlapping relation on word ranges in the initial definition \ref{def:overlapping}. The fact that we consider
 overlapping nodes that correspond to the same vertex simply means that it is impossible to
-add the same vertex in the independent set two times which is a property of the any set.
+add the same vertex in the independent set two times which is a property of any set.
 
 Hence the resulting ILP problem induced by the MaxIS problem is the following:
 \begin{equation} \label{eq:reduction_without_nproj}
@@ -171,10 +171,10 @@ where set \( \hat{\Pi} \) defined based on the introduced above relation \( \cap
 
 The problem \eqref{eq:reduction_without_nproj} is exactly the same as the ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog}
 except the fact that constraints \eqref{eq:num_proj_const} are omitted. The reason is that we can not be sure
-that them can be satisfied for type of constraints with \( =, >, \geq \) inequalities, since it is possible to just run out of nodes.
-In order to overcome this problem, let's create dummy target nodes. The generalized minimum number of such nodes are given
-in the table \ref{tab:dummy_nodes_num} (b). Let's denote set of all such nodes as \( T_{dummy} \) and then the set of all target candidates
-will be \( T = T_V \cup T_{dummy} \). We will consider that dummy target nodes don't overlap with any node expect itself:
+that they can be satisfied for the type of constraints with \( =, >, \geq \) inequalities since it is possible to just run out of nodes.
+To overcome this problem, let's create dummy target nodes. The generalized minimum number of such nodes is given
+in the table \ref{tab:dummy_nodes_num} (b). Let's denote the set of all such nodes as \( T_{dummy} \) and then the set of all target candidates
+will be \( T = T_V \cup T_{dummy} \). We will consider that dummy target nodes don't overlap with any node except itself:
 \[
   \forall \tgt{p_1} \in T_{dummy}, \; \tgt{p} \in T \quad
   \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \Leftrightarrow \tgt{p_1} = \tgt{p_2}
@@ -182,8 +182,8 @@ will be \( T = T_V \cup T_{dummy} \). We will consider that dummy target nodes d
 Target dummy nodes are created only to satisfy constraints \eqref{eq:num_proj_const}, so all matching scores
 between any dummy source node and any dummy target node set to be equal \( 0 \).
 
-Since we have a one to one correspondence between vertices from the MaxIS problem and target
-candidates from the set \( T \), consider the following set that fully determine the solution of the
+Since we have a one-to-one correspondence between vertices from the MaxIS problem and the target
+candidates from the set \( T \), consider the following set that fully determines the solution of the
 MaxIS problem:
 \[
   T^*_{x} = \{ t \in T | \exists s \in S, x_{s, t} = 1 \}
@@ -193,35 +193,35 @@ they are in relation~\( \sim \) if their corresponding solutions of the MaxIS pr
 \[
   x_1 \sim x_2 \Leftrightarrow T^{*}_{x_1} = T^{*}_{x_2}
 \]
-Since this relation defined by an equality of sets it is reflexive, symmetric and transitive and therefore
+Since this relation is defined by equality of sets, it is reflexive, symmetric, and transitive and therefore
 equivalence relation.
 
 Then quotient set \( \quot{X}{\sim} \) will consist of all equivalence classes of feasible solutions
 that differ only in matching with dummy nodes. Every such equivalence class corresponds to one feasible solution of
-the maximum weight independent set problem.
+the maximum weight-independent set problem.
 
 Let's notice that the objective function value is equal for all
 elements within any equivalence class.
 \begin{lemma}
-  Let X be a set of feasible solution of the problem \eqref{eq:reduction_without_nproj}. Then
+  Let X be a set of feasible solutions of the problem \eqref{eq:reduction_without_nproj}. Then
   for any equivalence class in the quotient set \( \quot{X}{\sim} \) the objective
   value is the same for every solution within this equivalence class.
 \end{lemma}
 \begin{proof}
   Consider an equivalence class \( [x] \) of some feasible solution \( x \).
-  Let's notice that non zero scores have only elements from the set \( T^*_x \),
+  Let's notice that non-zero scores have only elements from the set \( T^*_x \),
   therefore the objective determines by this set of projected target candidates:
   \begin{multline*}
     \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
     \sum\limits_{(\src{p}, \tgt{p}) \in S \times T_V} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} = \\
     \sum\limits_{(\src{p}, \tgt{p}) \in S \times T^{*}_{x}} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}
   \end{multline*}
-  Because of non-overlapping constraints and the fact that we consider that target candidate overlaps with
+  Because of non-overlapping constraints and the fact that we consider that the target candidate overlaps with
   itself only one source entity can be projected onto every target candidate from the set \( T_x^* \):
   \[
     \forall \tgt{p} \in T^*_x, \; \exists! \src{p} \in S \Big| x_{\src{p}, \tgt{p}} = 1
   \]
-  Then the objective value equals to the cardinality of the set \( T^*_x \) that are equal for
+  Then the objective value equals the cardinality of the set \( T^*_x \) that are equal for
   any solution without the same equivalence class by the definition of the relation \( ~ \).
   \[
     \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} =
@@ -231,16 +231,16 @@ elements within any equivalence class.
 \end{proof}
 \begin{corollary} \label{col:maxis_and_ilp_objective_equal}
   The objective function value of the ILP problem \eqref{eq:reduction_without_nproj} and the maximum independent
-  set problem are equal.
+  set problems are equal.
 \end{corollary}
 \begin{proof}
-  By construction every target candidate from the set \( T^*_x \) corresponds to one only one vertex
-  from the MaxIS problem. Therefore the objective value is equal to the cardinality of the set \(  T^*_x \).
-  In the proof of the lemma we showed that the objective value of the ILP problem~\eqref{eq:reduction_without_nproj}
+  By construction, every target candidate from the set \( T^*_x \) corresponds to only one vertex
+  from the MaxIS problem. Therefore the objective value is equal to the cardinality of the set \( T^*_x \).
+  In the proof of the lemma, we showed that the objective value of the ILP problem~\eqref{eq:reduction_without_nproj}
   equals to \( | T^*_x| \) as well.
 \end{proof}
 
-Dummy source nodes exists only to be able to formulate the MaxIS problem as the desired ILP projection problem.
+Dummy source nodes exist only to be able to formulate the MaxIS problem as the desired ILP projection problem.
 Hence we can swap a dummy source node for a target candidate it was projected from.
 \begin{lemma} \label{lemma:swap_source_reduction}
   Let \( x \) be a feasible solution of the problem \eqref{eq:reduction_without_nproj} such that
@@ -248,7 +248,7 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
   i.e. \( x_{\src{p}, \tgt{p}} = 1 \). Then for any other source node
   \( \src{\hat{p}} \in S, \src{p} \neq \src{\hat{p}} \) a solution \( x^{*} \), such that
   \begin{align*}
-    & x^*_{\src{\hat{p}}, \tgt{p}} = 1  \qquad
+    & x^*_{\src{\hat{p}}, \tgt{p}} = 1 \qquad
     x^*_{\src{p}, \tgt{p}} = 0                                                                                            \\
     & \forall (s, t) \in S \times T \setminus \{ (\src{p}, \tgt{p}), (\src{\hat{p}}, \tgt{p}) \} \quad x^*_{s,t} = x_{s,t}
   \end{align*}
@@ -287,7 +287,7 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
     & \forall \src{p} \in S \;\; \forall \tgt{p} \in T_V \qquad \hat{x}_{\src{p}, \tgt{p}} = x_{\src{p}, \tgt{p}} \\
     & \forall \src{p} \in S \;\; \forall \tgt{p} \in T_{dummy} \qquad \hat{x}_{\src{p}, \tgt{p}} = 0
   \end{align*}
-  By construction this solution has the same objective value since all score that for dummy target nodes are equal to \( 0 \),
+  By construction, this solution has the same objective value since all scores for dummy target nodes are equal to \( 0 \),
   the same set \( T^*_{\hat{x}} = T^*_x \)
   and also it doesn't violate the non-overlapping constraints:
   \begin{align*}
@@ -326,7 +326,7 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
   corresponding feasible solution of the problem \eqref{eq:reduction_without_nproj}.
 \end{lemma}
 \begin{proof}
-  Suppose some non feasible solution \( x \) that corresponds to the feasible solution of the
+  Suppose some non-feasible solution \( x \) that corresponds to the feasible solution of the
   MaxWIS problem. Then we have:
   \[
     \exists (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \Big|
@@ -350,7 +350,7 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
     x_{\src{p_1}, \tgt{p}} = 1 \qquad x_{\src{p_2}, \tgt{p}} = 1
   \]
 
-  But then consider a solution \( x^* \) such that we remove one of the projection that
+  But then consider a solution \( x^* \) such that we remove one of the projections that
   make this constraint violated:
   \begin{align*}
     & \forall (s,t) \in S \times T \setminus \left\{ (\src{p_2}, \tgt{p}) \right\}
@@ -359,31 +359,31 @@ Hence we can swap a dummy source node for a target candidate it was projected fr
   \end{align*}
   Note that \( T^*_{x^*} = T^*_x  \) because there is a projection to the target candidate \( \tgt{p} \)
   since \( \)  \( x^*_{\src{p_1}, \tgt{p}} = 1 \).
-  If the solution \( x^* \) is infeasible - repeat procedure, otherwise
+  If the solution \( x^* \) is infeasible - repeat the procedure, otherwise
   this solution is feasible and corresponds to the same solution \( x_v \) of the MaxWIS problem.
 \end{proof}
 
-And finally we can prove the complexity of the generalized ILP problem by reduction the MaxIS problem
+And finally, we can prove the complexity of the generalized ILP problem by reducing the MaxIS problem
 to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
 \begin{theorem}[\( MaxIS \leq_P ILP_{proj} \)]
   The generalized ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} is NP-hard
 \end{theorem}
 \begin{proof}
   Assume the reduction of the MaxIS problem to an instance of the projection ILP problem described above.
-  Since number of nodes in the ILP problem is linear on the number of vertices in the MaxIS problem and
-  having a solution of the ILP problem it scales at most quadratically on number of vertices time to
+  Since the number of nodes in the ILP problem is linear on the number of vertices in the MaxIS problem and
+  has a solution to the ILP problem it scales at most quadratically on a number of vertices time to
   determine the solution of the MaxIS problem the reduction takes a polynomial time.
-  The only thing that it is required to check is whether the projected optimal solution of the ILP problem
-  will be always optimal solution of the MaxIS and vice versa.
+  The only thing that is required to check is whether the projected optimal solution to the ILP problem
+  will be always the optimal solution of the MaxIS and vice versa.
 
   By the corollary \ref{col:maxis_and_ilp_objective_equal} the objective values of two problems are equal and therefore
-  feasible solution with highest objective value will have a highest objective value in the counterpart problem.
+  feasible solution with the highest objective value will have the highest objective value in the counterpart problem.
   Then by lemmas \ref{lemma:app_maxis_f_implies_ilp} and \ref{lemma:ilp_f_implies_maxis} the non-overlapping constraint
   won't make any optimal solution infeasible for their counterpart.
 
   But besides non-overlapping constraint the problem \eqref{eq:objective}--\eqref{eq:binary_prog} also has
   constraints \eqref{eq:num_proj_const}. Let's check whether they won't make any optimal solution of the MaxIS
-  problem infeasible in their ILP formulation and there are no new optimal solutions.
+  problem infeasible in their ILP formulation and if there are no new optimal solutions.
 
   Consider a set \( X \) of all feasible solutions of the problem \eqref{eq:reduction_without_nproj} and
   set \( Y \) of all feasible solutions of the problem \eqref{eq:objective}--\eqref{eq:binary_prog}. Since
@@ -391,12 +391,12 @@ to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
   \[
     Y \subset X \implies \forall y \in Y \quad \exists x \in X \Big| \quad [y] \subset [x],
   \]
-  i.e. there won't be no new equivalence classes and therefore no new feasible solutions of the MaxIS problem.
+  i.e. there won't be any new equivalence classes and therefore no new feasible solutions of the MaxIS problem.
   But it turns out that for any equivalence class there is a feasible solution of the full generalized problem that belongs to this class:
   \[
     \forall x \in X \quad \exists y \in Y \Big| \quad y \in [x]
   \]
-  Let's prove it. For this we need to analyze constraints \eqref{eq:num_proj_const} for every type of inequalities.
+  Let's prove it. For this, we need to analyze constraints \eqref{eq:num_proj_const} for every type of inequality.
 
   \textit{The case of \( < \).} The number of dummy source nodes is given in the table \ref{tab:dummy_nodes_num} (a) and equal to
   \( |S| = \ceil{\frac{|V|}{n_{proj} - 1}} \)
@@ -455,22 +455,22 @@ to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
     n_{proj}
   \end{align*}
   In short words always there are a "free" dummy target nodes that can be used to ensure equality constraints.
-  It was expectable just because during construction we choose the number of target dummy nodes to make it possible.
-  In order to make the solution closer to be feasible we just need to project source entity \( \src{\hat{p}} \) onto this target
+  It was expected just because during construction we chose the number of target dummy nodes to make it possible.
+  To make the solution closer to being feasible we just need to project source entity \( \src{\hat{p}} \) onto this target
   candidate \( t_d \). So, the modified solution \( \hat{x} \) is the following:
   \begin{align*}
     & \forall (s,t) \in S \times T \setminus \left\{ (\src{\hat{p}}, t_d) \right\} \hat{x}_{s,t} = x^*_{s,t} \\
     & \hat{x}_{\src{\hat{p}}, t_d} = 1
   \end{align*}
   By the definition of the set \( T^*_{\hat{x}} \) since we add only a projection to a dummy node
-  it won't change the equivalence class of the solution, objective value but make the number of projection
+  it won't change the equivalence class of the solution and objective value, but make the number of projection
   from the source entity \( \src{\hat{p}} \) higher:
   \[
     \sum\limits_{\tgt{p} \in T} \hat{x}_{\src{\hat{p}}, \tgt{p}} =
     \sum\limits_{\tgt{p} \in T} x^*_{\src{\hat{p}}, \tgt{p}} + 1
     \leq n_{proj}
   \]
-  Since dummy target nodes overlaps only with itself we have that the constraints that potentially
+  Since dummy target nodes overlap only with itself we have the constraints that potentially
   can be violated are defined by this set:
   \begin{multline*}
     \left\{ (\src{p_1}, \src{p_2}, t_d, \tgt{p_2}) \Big| (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \in \hat{\Pi}(S, T) \right\} = \\
@@ -485,7 +485,7 @@ to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
     & \hat{x}_{\src{\hat{p}}, t_d} + \hat{x}_{\src{p_2}, t_d} = 1 + 0 = 1 \leq 1
   \end{align*}
 
-  If still there are some source entity for which constrains \eqref{eq:num_proj_const} are violated - repeat the process.
+  If still there are some source entities for which constrains \eqref{eq:num_proj_const} are violated - repeat the process.
   Repetition of the process is possible since the property \eqref{eq:red_thm_n_proj} still holds and
   we proved that there always exists a "free" dummy target node we can project this source node onto.
 
@@ -504,5 +504,5 @@ to an instance of \eqref{eq:objective}--\eqref{eq:binary_prog}.
   a feasible solution of the full generalized ILP problem \eqref{eq:objective}--\eqref{eq:binary_prog} that belongs to the
   same equivalence class. And every feasible solution of the full generalized ILP problem is a feasible solution of the problem \eqref{eq:reduction_without_nproj}.
   Therefore the MaxIS problem can be solved as an instance of the problem \eqref{eq:objective}--\eqref{eq:binary_prog}
-  and consequently the generalized ILP problem is at least as hard as the maximum independent set problem which is NP-hard.
+  and consequently, the generalized ILP problem is at least as hard as the maximum independent set problem which is NP-hard.
 \end{proof}
