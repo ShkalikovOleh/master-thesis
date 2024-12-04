@@ -424,17 +424,34 @@
   pages     = {486--496},
   abstract  = {Named entity recognition (NER) suffers from the scarcity of annotated training data, especially for low-resource languages without labeled data. Cross-lingual NER has been proposed to alleviate this issue by transferring knowledge from high-resource languages to low-resource languages via aligned cross-lingual representations or machine translation results. However, the performance of cross-lingual NER methods is severely affected by the unsatisfactory quality of translation or label projection. To address these problems, we propose a Cross-lingual Entity Projection framework (CROP) to enable zero-shot cross-lingual NER with the help of a multilingual labeled sequence translation model. Specifically, the target sequence is first translated into the source language and then tagged by a source NER model. We further adopt a labeled sequence translation model to project the tagged sequence back to the target language and label the target raw sentence. Ultimately, the whole pipeline is integrated into an end-to-end model by the way of self-training. Experimental results on two benchmarks demonstrate that our method substantially outperforms the previous strong baseline by a large margin of +3 7 F1 scores and achieves state-of-the-art performance.}
 }
-@inproceedings{unitrans,
-  author    = {Wu, Qianhui and Lin, Zijia and Karlsson, B\"{o}rje F. and Huang, Biqing and Lou, Jian-Guang},
-  title     = {UniTrans: unifying model transfer and data transfer for cross-lingual named entity recognition with unlabeled data},
+@inproceedings{xue-etal-2021-mt5,
+  title     = {m{T}5: A Massively Multilingual Pre-trained Text-to-Text Transformer},
+  author    = {Xue, Linting  and
+               Constant, Noah  and
+               Roberts, Adam  and
+               Kale, Mihir  and
+               Al-Rfou, Rami  and
+               Siddhant, Aditya  and
+               Barua, Aditya  and
+               Raffel, Colin},
+  editor    = {Toutanova, Kristina  and
+               Rumshisky, Anna  and
+               Zettlemoyer, Luke  and
+               Hakkani-Tur, Dilek  and
+               Beltagy, Iz  and
+               Bethard, Steven  and
+               Cotterell, Ryan  and
+               Chakraborty, Tanmoy  and
+               Zhou, Yichao},
+  booktitle = {Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies},
+  month     = jun,
   year      = {2021},
-  isbn      = {9780999241165},
-  abstract  = {Prior works in cross-lingual named entity recognition (NER) with no/little labeled data fall into two primary categories: model transfer based and data transfer based methods. In this paper we find that both method types can complement each other, in the sense that, the former can exploit context information via language-independent features but sees no task-specific information in the target language; while the latter generally generates pseudo target-language training data via translation but its exploitation of context information is weakened by inaccurate translations. Moreover, prior works rarely leverage unlabeled data in the target language, which can be effortlessly collected and potentially contains valuable information for improved results. To handle both problems, we propose a novel approach termed UniTrans to Unify both model and data Transfer for cross-lingual NER, and furthermore, to leverage the available information from unlabeled target-language data via enhanced knowledge distillation. We evaluate our proposed UniTrans over 4 target languages on benchmark datasets. Our experimental results show that it substantially outperforms the existing state-of-the-art methods.},
-  booktitle = {Proceedings of the Twenty-Ninth International Joint Conference on Artificial Intelligence},
-  articleno = {543},
-  numpages  = {7},
-  location  = {Yokohama, Yokohama, Japan},
-  series    = {IJCAI'20}
+  address   = {Online},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2021.naacl-main.41},
+  doi       = {10.18653/v1/2021.naacl-main.41},
+  pages     = {483--498},
+  abstract  = {The recent {``}Text-to-Text Transfer Transformer{''} (T5) leveraged a unified text-to-text format and scale to attain state-of-the-art results on a wide variety of English-language NLP tasks. In this paper, we introduce mT5, a multilingual variant of T5 that was pre-trained on a new Common Crawl-based dataset covering 101 languages. We detail the design and modified training of mT5 and demonstrate its state-of-the-art performance on many multilingual benchmarks. We also describe a simple technique to prevent {``}accidental translation{''} in the zero-shot setting, where a generative model chooses to (partially) translate its prediction into the wrong language. All of the code and model checkpoints used in this work are publicly available.}
 }
 @inproceedings{chen-etal-2023-frustratingly,
   title     = {Frustratingly Easy Label Projection for Cross-lingual Transfer},

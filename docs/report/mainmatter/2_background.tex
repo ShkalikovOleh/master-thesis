@@ -57,9 +57,9 @@ underscore the necessity for alternative approaches to XLNER.
 
 Another significant group of approaches to cross-lingual named entity recognition consists of methods
 aimed at generating labeled datasets in the target language, referred to as data-based methods.
-While some approaches generate entirely artificial data, such as MulDA \cite{liu-etal-2021-mulda},
+While some approaches generate entirely artificial data, such as MulDA~\cite{liu-etal-2021-mulda},
 in which the authors propose the use of a language model (LSTM \cite{lstm} or
-mBART \cite{liu-etal-2020-multilingual-denoising}) to generate labelled text in the target language by
+mBART~\cite{liu-etal-2020-multilingual-denoising}) to generate labelled text in the target language by
 insert labels in IOB2 format before the words with corresponding labels, the most compelling approaches
 not only generate text but also incorporate the labeling of the desired text in the target language.
 
@@ -112,13 +112,37 @@ results in lower-quality translations. By its design, this method is incapable o
 onto the original sentence and can therefore only be employed to generate a labeled dataset in the target language
 based on the labeled dataset in the source language.
 
-CODEC \cite{Le2024ConstrainedDF}
+CODEC \cite{Le2024ConstrainedDF} aims to address the issue that the back-translated and the original
+target sentences differ by employing constrained decoding. This method similarly encloses every entity
+with a special marker that corresponds to the class; however, it utilizes guided decoding
+(for which the authors propose an optimized version specifically for this task) to ensure that
+the back-translated sentence completely matches the original target sentence, except for the markers
+added around each entity. Nevertheless, since translation models remain imperfect and the insertion
+of markers impacts their performance, this method also exhibits limitations.
 
-CLaP \cite{parekh-etal-2024-contextual}
+CLaP \cite{parekh-etal-2024-contextual} seeks to address the issue of independent source entity
+translation encountered in EasyProject by proposing the use of a LLM as a contextualized translator
+instead of employing a conventional translation model like NLLB-200. In this approach, the LLM is tasked
+with translating each source entity into the target language while being provided with the entire
+source sentence as context. Initially, this method was proposed to generate a labeled dataset in the
+target language based on a labeled dataset in the source language. However, with the application of
+guided decoding that constrains the translation of source entities to be substrings of the original
+sentence, it can also be utilized for projection onto the original target sentence. The primary
+limitation of this approach lies in the language coverage of openly available LLMs, which typically
+encompasses fewer than 200 languages, compared to NLLB-200, along with the fact that translation
+quality is still not perfect.
 
-T-Projection \cite{garcia-ferrero-etal-2023-projection}
+T-Projection \cite{garcia-ferrero-etal-2023-projection} employs a fine-tuned mT5 \cite{xue-etal-2021-mt5}
+model with beam search to generate target substrings that serve as potential candidates for matching
+with source entities. It then computes the NMTScore \cite{vamvas_sennrich_2022_nmtscore}, which
+represents the likelihood that the given source entity translates to the selected candidate, ultimately
+choosing the candidate with the highest NMTScore to project the source entity onto it. The primary
+drawbacks of this approach include the limitation of the mT5 model in terms of the number of languages
+it supports, the necessity for the model to be trained, and the significant computational resources
+required to generate potential projection candidates. Additionally, the NMTScore is not without its
+flaws, as it is dependent on the quality of the underlying translation model.
 
-Transfusion \cite{transfusion}
+TransFusion \cite{transfusion} 
 
 w2w alignments heuristics \cite{garcia-ferrero-etal-2022-model}
 
