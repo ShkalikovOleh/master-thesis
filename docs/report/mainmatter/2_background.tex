@@ -1,28 +1,73 @@
 \chapter{Background}
 \label{sec:background}
+Before proceeding to the description of our method, it is essential to understand methods
+for cross-lingual named entity recognition that have been already proposed. This chapter will provide
+an overview of several significant results and approaches in this field. However, this list is not
+exhaustive, as XLNER remains an active area of research.
+
+Overall, all approaches can be categorized into two major groups: model-based and data-based methodologies.
 
 \section{Model transfer}
+Currently, there are two main types of models used for the  NER problem. Both types are based on the
+Transformer \cite{vaswani2017attention} architecture but leverage different components of it.
 
-generall model transfer and BERT
+Encoder-only models, such as BERT \cite{devlin-etal-2019-bert}, are pretrained in unsupervised
+settings using large volumes of text, which enhances their understanding of language.
+Following this pretraining, these models are fine-tuned for the NER task, requiring a labeled
+dataset for this process.
 
-benefits from the similar languages
+Conversely, decoder-only models, such as LLMs like GPT \cite{gpt3}, are pretrained in unsupervised
+settings on even larger datasets. NER tasks can be performed by these models in a generative context,
+utilizing both simple prompting as well advanced formulation, e. g. as a task of code generation, as in
+GoLLIE \cite{sainz2024gollieannotationguidelinesimprove}, thereby eliminating the necessity for a
+labeled NER dataset. Additionally, a notable advantage of decoder-only
+models is their flexibility, i.e. they are not restricted to a predefined set of classes, unlike
+encoder-only models, which can only predict classes that were included in the training dataset.
+
+However, due to their autoregressive nature, large language models require significant computational
+resources to perform the NER task, as they necessitate several forward passes of the model. In contrast,
+encoder-only models accomplish this in a single forward pass. To address the issue of resource
+requirements, some researchers have proposed distilling a large LLM into smaller LLMs, e. g. UniversalNER \cite{zhou2023universalner},
+or even into encoder-only models \cite{huang2024leveraginglargelanguagemodels}.
+
+In the context of cross-lingual NER, both approaches leverage the model's ability to transfer knowledge
+across languages. The general concept is as follows: models are pretrained on datasets containing
+multiple languages, thereby developing an understanding of each language. Subsequently, if a model
+is trained as in the case of BERT-like architectures, or is capable, as is the case for large language models (LLMs),
+of addressing the NER problem in one language it can subsequently transfer this knowledge to tackle
+NER in other languages. Notable examples of such encoder-only models include mBERT
+\cite{devlin-etal-2019-bert}, XLM-RoBERTa \cite{conneau-etal-2020-unsupervised-xlmr}, and
+MDeBERTa \cite{He2020DeBERTaDB,He2021DeBERTaV3ID}. Additionally, the pretraining datasets
+of all LLMs typically contain data in multiple languages.
+
+It has been demonstrated by \cite{torge-etal-2023-named} that when the language of the dataset used for the
+fine-tuning of an encoder-only model originates from the same language family as the target
+language, the performance of NER in the target language is likely to be higher compared to situations
+where the dataset is sourced from a different language family. Unfortunately, for low-resource
+languages such as Upper Sorbian, the languages within the same family also lack sufficient labeled data.
+A similar situation arises in specific domains, where labeled data is predominantly available only in English.
+The multilingual capability of LLMs for low-resource languages is also limited,
+and this topic constitutes an active area of research \cite{lai-etal-2024-llms}.
+
+Thus, despite the fact that model transfer demonstrates favorable results in some
+scenarios \cite{garcia-ferrero-etal-2022-model}, the issues associated with these methods
+underscore the necessity for alternative approaches to XLNER.
 
 \section{Data-based methods}
 
 \begin{definition}[Source entity]
 
 \end{definition}
-\begin{definition}[Target candidate]
 
-\end{definition}
 
 description (3 step)
 
-Mulda, UniTrans
+Mulda \cite{liu-etal-2021-mulda}
 
-CROP, EasyProject
+CROP \cite{yang-etal-2022-crop}, EasyProject \cite{chen-etal-2023-frustratingly}, CODEC \cite{Le2024ConstrainedDF},
+T-Projection \cite{garcia-ferrero-etal-2023-projection}
 
-w2w alignments heuristics
+w2w alignments heuristics \cite{garcia-ferrero-etal-2022-model}
 
 \begin{algorithm}
   \SetAlgorithmName{Algorithm}{}{}
@@ -60,7 +105,7 @@ w2w alignments heuristics
   \caption{Heuristic projection algorithm based on word-to-word alignments}
   \label{alg:heuristics}
 
-  \KwData{\( S \) -- set of source entities, \( T \) -- set of target candidates,
+  \KwData{\( S \) -- set of source entities,
   \( a _{kl} \) -- word-to-word alignments, parameters \( d, k \in \mathbb{N}, \text{only\_i} \in \{ True, False \}, thr \in [0, 1] \)}
   \KwResult{\( \tgt{l} = (\tgt{l_1}), \dots, \tgt{l_m} \) -- labelling of the target sentence}
 
@@ -111,6 +156,6 @@ w2w alignments heuristics
   }
 \end{algorithm}
 
-Transfusion
+Transfusion \cite{transfusion}
 
-LLM-based
+CLaP \cite{parekh-etal-2024-contextual}

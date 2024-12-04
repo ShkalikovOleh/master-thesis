@@ -63,7 +63,14 @@ we can establish an integer linear optimization problem.
 \end{figure*}
 
 \section{Formulation of the ILP problem}
-First and foremost, a definition of overlapping candidate should be established.
+First and foremost, definitions of target candidate and overlapping relation should be established.
+
+\begin{definition}[Target candidate]
+  Let \( \tgt{s} = \left( \tgt{s_1}, \dots, \tgt{s_m} \right) \) be a target sentence consisting of \( m \) words.
+  The target candidate \( \tgt{p} = (i_{\tgt{p}}, j_{\tgt{p}}) \) is defined as a continuous
+  subrange of words within the sentence, characterized by the index \( i_{\tgt{p}} \in \{ 1, \dots, m \} \) of the first
+  word and the index \( j_{\tgt{p}} \in \{ 1, \dots, m \} \) of the last word.
+\end{definition}
 
 \begin{definition}[Relation of overlapping] \label{def:overlapping}
   Target candidates \( \tgt{p_1} = (i_{\tgt{p_1}}, j_{\tgt{p_1}}) \) and \linebreak
