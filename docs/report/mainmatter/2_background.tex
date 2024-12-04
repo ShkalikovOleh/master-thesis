@@ -55,17 +55,49 @@ underscore the necessity for alternative approaches to XLNER.
 
 \section{Data-based methods}
 
-\begin{definition}[Source entity]
+Another significant group of approaches to cross-lingual named entity recognition consists of methods
+aimed at generating labeled datasets in the target language, referred to as data-based methods.
+While some approaches generate entirely artificial data, such as MulDA \cite{liu-etal-2021-mulda},
+in which the authors propose the use of a language model (LSTM \cite{lstm} or
+mBART \cite{liu-etal-2020-multilingual-denoising}) to generate labelled text in the target language by
+insert labels in IOB2 format before the words with corresponding labels, the most compelling approaches
+not only generate text but also incorporate the labeling of the desired text in the target language.
 
+The overall pipeline of such XLNER approaches is divided into
+three steps: the translation of the input sentence, referred to as the target sentence, into a
+high-resource language; the application of a NER model to the translated
+sentence, known as the source sentence; and the projection of entities from the source sentence
+back onto the sentence in the target language.
+
+The NER entities identified by the NER model in the source sentence are referred to as source entities.
+\begin{definition}[Source entity]
+  Let \( \src{s} = \left( \src{s_1}, \dots, \tgt{s_m} \right) \) be a source sentence consisting of \( n \) words
+  and \( L \) -- a fixed set of classes.
+  The source entity \( \src{p} = (i_{\src{p}}, j_{\src{p}}, l_{\src{p}} ) \) is defined as a continuous
+  subrange of words within the sentence, characterized by the index \( i_{\src{p}} \in \{ 1, \dots, n \} \) of the first
+  word, the index \( j_{\src{p}} \in \{ 1, \dots, n \} \) of the last word and the class \( l_{\src{p}} \in L \).
 \end{definition}
 
+This type of XLNER pipeline is called a projection-based pipeline. The main idea is that after
+translation, a sentence is obtained in a high-resource language for which a labeled dataset is
+likely available, therefore it is possible to train a model to perform the desired NER task.
 
-description (3 step)
+While state-of-the-art transformer-based models, such as NLLB-200 \cite{nllbteam2022languageleftbehindscaling}
+and DeBERTa \cite{He2020DeBERTaDB,He2021DeBERTaV3ID}, are utilized for translation and source NER labelling,
+there are numerous methods to perform the final projection step. This work will propose a formulation
+of the projection step as an integer linear optimization problem, thereby necessitating a description
+of the existing projection methods.
 
-Mulda \cite{liu-etal-2021-mulda}
 
-CROP \cite{yang-etal-2022-crop}, EasyProject \cite{chen-etal-2023-frustratingly}, CODEC \cite{Le2024ConstrainedDF},
+CROP \cite{yang-etal-2022-crop}
+
+EasyProject \cite{chen-etal-2023-frustratingly}
+
+CODEC \cite{Le2024ConstrainedDF}
+
 T-Projection \cite{garcia-ferrero-etal-2023-projection}
+
+CLaP \cite{parekh-etal-2024-contextual}
 
 w2w alignments heuristics \cite{garcia-ferrero-etal-2022-model}
 
@@ -157,5 +189,3 @@ w2w alignments heuristics \cite{garcia-ferrero-etal-2022-model}
 \end{algorithm}
 
 Transfusion \cite{transfusion}
-
-CLaP \cite{parekh-etal-2024-contextual}
