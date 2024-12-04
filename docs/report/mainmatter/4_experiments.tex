@@ -290,6 +290,8 @@ papers, are presented in Table \ref{tab:masakhaner2_f1_other}. However, it shoul
 evaluation setups for these experiments were different from ours, making direct comparisons not feasible.
 EasyProject, CODEC, and CLaP were evaluated in extrinsic settings, i.e. the reported results represent the
 F1 metric on the test set of the MasakhaNER2 dataset, derived from models trained on datasets generated
-by these methods. GOOLIE-TF and CLaP utilized all four classes provided in the MasakhaNER2 dataset,
+by these methods. GOOLIE-TF (TransFusion), GPT-4 and CLaP utilized all four classes provided in the MasakhaNER2 dataset,
 while our approach and others in this list were evaluated without the \textit{DATE} class.
+The results for GPT4 are taken from the TransFusion paper \cite{transfusion} and denote few-shot
+prompt results using GPT-4 (gpt4-02-14) with a GoLLIE \cite{sainz2024gollieannotationguidelinesimprove} style prompt.
 Nonetheless, it is observed that the metrics fall within the same range as those from our experiments.

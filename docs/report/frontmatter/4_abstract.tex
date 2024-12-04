@@ -2,13 +2,29 @@
 
 % TODO: Replace the placeholders with your actual abstracts
 
-\newcommand*{\Abstreng}{This is an abstract. The abstract is written after finishing the work and should give an overview about the motivation, used methods, as well as the results. It is here to inform the reader about the core topics of the work and if it is relevant to his research. The abstract stands for itself and uses no components of the rest of the work. In consequence, there are no references nor citations used here. It should be around 100 to 250 words. There should always be an english version of your abstract, regardless of the language the work is actually written in.}
+\newcommand*{\Abstreng}{
+  High-resource languages benefit from abundant data, allowing named entity recognition tasks to achieve
+  high accuracy. However, low-resource languages and specialized domains face challenges due to
+  limited training data. Current multilingual capabilities of models are insufficient for
+  low-resource languages, prompting ongoing research. Approaches to address NER in these contexts
+  are split into model-based and data-based, with projection-based methods being a significant subset
+  of the latter. These methods involve translating sentences into high-resource languages, labeling
+  them, and projecting labels back to the original. Despite many proposals for projection, this step
+  hasn't been explicitly formalized as an optimization problem, often relying on heuristics. This study
+  addresses this gap by formulating the projection step as an integer linear programming problem within
+  the cross-lingual NER pipeline. This ILP approach optimizes matching of source to target entities
+  using varied cost strategies: alignment-based, NER-model-based, and translation-based
+  scores,— integrated to mitigate individual limitations. While the ILP problem's complexity remains
+  partially open, a proposed greedy algorithm performs effectively in practice. Evaluations using
+  Europarl-NER and MasakhaNER2 datasets show our ILP method excels over heuristic and model transfer
+  techniques, especially with fused scores.
+}
 
-\newcommand*{\Abstrger}{Das ist eine Zusammenfassung. Die Zusammenfassung wird geschrieben, nachdem die Arbeit ferttiggestellt ist und sollte einen Überblick über Motivation, Methoden und die Ergebnisse geben. Die Zusammenfassung informiert den Leser über die Kernthemen der Arbeit und ob die Arbeit für seine Forschung relevant ist. Die Zusammenfassung ist von der Arbeit entkoppelt und verwendet keine anderen Komponenten der Arbeit. In der Folge werden hier keine Referenzen oder Zitierungen genutzt. Sie sollte zwischen 100 und 250 Worten umfassen. Unabhängig von der Sprache, in der die Arbeit verfasst wurde, sollte es immer eine englische Version der Zusammenfassung geben.}
+% \newcommand*{\Abstrger}{}
 
 \begin{abstract}[pagestyle=empty.tudheadings]
   \Abstreng
-  \nextabstract[ngerman]
-  \Abstrger
+  % \nextabstract[ngerman]
+  % \Abstrger
 
 \end{abstract}
