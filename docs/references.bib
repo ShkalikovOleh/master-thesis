@@ -333,6 +333,164 @@
   archiveprefix = {arXiv},
   primaryclass  = {cs.CL}
 }
+@inproceedings{parekh-etal-2024-contextual,
+  title     = {Contextual Label Projection for Cross-Lingual Structured Prediction},
+  author    = {Parekh, Tanmay  and
+               Hsu, I-Hung  and
+               Huang, Kuan-Hao  and
+               Chang, Kai-Wei  and
+               Peng, Nanyun},
+  editor    = {Duh, Kevin  and
+               Gomez, Helena  and
+               Bethard, Steven},
+  booktitle = {Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)},
+  month     = jun,
+  year      = {2024},
+  address   = {Mexico City, Mexico},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2024.naacl-long.321},
+  doi       = {10.18653/v1/2024.naacl-long.321},
+  pages     = {5738--5757},
+  abstract  = {Label projection, which involves obtaining translated labels and texts jointly, is essential for leveraging machine translation to facilitate cross-lingual transfer in structured prediction tasks. Prior research exploring label projection often compromise translation accuracy by favoring simplified label translation or relying solely on word-level alignments. In this paper, we introduce a novel label projection approach, CLaP, which translates text to the target language and performs *contextual translation* on the labels using the translated text as the context, ensuring better accuracy for the translated labels. We leverage instruction-tuned language models with multilingual capabilities as our contextual translator, imposing the constraint of the presence of translated labels in the translated text via instructions. We benchmark CLaP with other label projection techniques on zero-shot cross-lingual transfer across 39 languages on two representative structured prediction tasks - event argument extraction (EAE) and named entity recognition (NER), showing over 2.4 F1 improvement for EAE and 1.4 F1 improvement for NER. We further explore the applicability of CLaP on ten extremely low-resource languages to showcase its potential for cross-lingual structured prediction.}
+}
+@article{Le2024ConstrainedDF,
+  title   = {Constrained Decoding for Cross-lingual Label Projection},
+  author  = {Duong Minh Le and Yang Chen and Alan Ritter and Wei Xu},
+  journal = {ArXiv},
+  year    = {2024},
+  volume  = {abs/2402.03131},
+  url     = {https://api.semanticscholar.org/CorpusID:267412651}
+}
+@inproceedings{liu-etal-2021-mulda,
+  title     = {{M}ul{DA}: A Multilingual Data Augmentation Framework for Low-Resource Cross-Lingual {NER}},
+  author    = {Liu, Linlin  and
+               Ding, Bosheng  and
+               Bing, Lidong  and
+               Joty, Shafiq  and
+               Si, Luo  and
+               Miao, Chunyan},
+  editor    = {Zong, Chengqing  and
+               Xia, Fei  and
+               Li, Wenjie  and
+               Navigli, Roberto},
+  booktitle = {Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 1: Long Papers)},
+  month     = aug,
+  year      = {2021},
+  address   = {Online},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2021.acl-long.453},
+  doi       = {10.18653/v1/2021.acl-long.453},
+  pages     = {5834--5846},
+  abstract  = {Named Entity Recognition (NER) for low-resource languages is a both practical and challenging research problem. This paper addresses zero-shot transfer for cross-lingual NER, especially when the amount of source-language training data is also limited. The paper first proposes a simple but effective labeled sequence translation method to translate source-language training data to target languages and avoids problems such as word order change and entity span determination. With the source-language data as well as the translated data, a generation-based multilingual data augmentation method is introduced to further increase diversity by generating synthetic labeled data in multiple languages. These augmented data enable the language model based NER models to generalize better with both the language-specific features from the target-language synthetic data and the language-independent features from multilingual synthetic data. An extensive set of experiments were conducted to demonstrate encouraging cross-lingual transfer performance of the new research on a wide variety of target languages.}
+}
+@misc{transfusion,
+  author = {Chen, Yang and Shah, Vedaant and Ritter, Alan},
+  year   = {2023},
+  month  = {05},
+  pages  = {},
+  title  = {Better Low-Resource Entity Recognition Through Translation and Annotation Fusion},
+  doi    = {10.48550/arXiv.2305.13582}
+}
+@inproceedings{yang-etal-2022-crop,
+  title     = {{CROP}: Zero-shot Cross-lingual Named Entity Recognition with Multilingual Labeled Sequence Translation},
+  author    = {Yang, Jian  and
+               Huang, Shaohan  and
+               Ma, Shuming  and
+               Yin, Yuwei  and
+               Dong, Li  and
+               Zhang, Dongdong  and
+               Guo, Hongcheng  and
+               Li, Zhoujun  and
+               Wei, Furu},
+  editor    = {Goldberg, Yoav  and
+               Kozareva, Zornitsa  and
+               Zhang, Yue},
+  booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2022},
+  month     = dec,
+  year      = {2022},
+  address   = {Abu Dhabi, United Arab Emirates},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2022.findings-emnlp.34},
+  doi       = {10.18653/v1/2022.findings-emnlp.34},
+  pages     = {486--496},
+  abstract  = {Named entity recognition (NER) suffers from the scarcity of annotated training data, especially for low-resource languages without labeled data. Cross-lingual NER has been proposed to alleviate this issue by transferring knowledge from high-resource languages to low-resource languages via aligned cross-lingual representations or machine translation results. However, the performance of cross-lingual NER methods is severely affected by the unsatisfactory quality of translation or label projection. To address these problems, we propose a Cross-lingual Entity Projection framework (CROP) to enable zero-shot cross-lingual NER with the help of a multilingual labeled sequence translation model. Specifically, the target sequence is first translated into the source language and then tagged by a source NER model. We further adopt a labeled sequence translation model to project the tagged sequence back to the target language and label the target raw sentence. Ultimately, the whole pipeline is integrated into an end-to-end model by the way of self-training. Experimental results on two benchmarks demonstrate that our method substantially outperforms the previous strong baseline by a large margin of +3 7 F1 scores and achieves state-of-the-art performance.}
+}
+@inproceedings{unitrans,
+  author    = {Wu, Qianhui and Lin, Zijia and Karlsson, B\"{o}rje F. and Huang, Biqing and Lou, Jian-Guang},
+  title     = {UniTrans: unifying model transfer and data transfer for cross-lingual named entity recognition with unlabeled data},
+  year      = {2021},
+  isbn      = {9780999241165},
+  abstract  = {Prior works in cross-lingual named entity recognition (NER) with no/little labeled data fall into two primary categories: model transfer based and data transfer based methods. In this paper we find that both method types can complement each other, in the sense that, the former can exploit context information via language-independent features but sees no task-specific information in the target language; while the latter generally generates pseudo target-language training data via translation but its exploitation of context information is weakened by inaccurate translations. Moreover, prior works rarely leverage unlabeled data in the target language, which can be effortlessly collected and potentially contains valuable information for improved results. To handle both problems, we propose a novel approach termed UniTrans to Unify both model and data Transfer for cross-lingual NER, and furthermore, to leverage the available information from unlabeled target-language data via enhanced knowledge distillation. We evaluate our proposed UniTrans over 4 target languages on benchmark datasets. Our experimental results show that it substantially outperforms the existing state-of-the-art methods.},
+  booktitle = {Proceedings of the Twenty-Ninth International Joint Conference on Artificial Intelligence},
+  articleno = {543},
+  numpages  = {7},
+  location  = {Yokohama, Yokohama, Japan},
+  series    = {IJCAI'20}
+}
+@inproceedings{chen-etal-2023-frustratingly,
+  title     = {Frustratingly Easy Label Projection for Cross-lingual Transfer},
+  author    = {Chen, Yang  and
+               Jiang, Chao  and
+               Ritter, Alan  and
+               Xu, Wei},
+  editor    = {Rogers, Anna  and
+               Boyd-Graber, Jordan  and
+               Okazaki, Naoaki},
+  booktitle = {Findings of the Association for Computational Linguistics: ACL 2023},
+  month     = jul,
+  year      = {2023},
+  address   = {Toronto, Canada},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2023.findings-acl.357},
+  doi       = {10.18653/v1/2023.findings-acl.357},
+  pages     = {5775--5796},
+  abstract  = {Translating training data into many languages has emerged as a practical solution for improving cross-lingual transfer. For tasks that involve span-level annotations, such as information extraction or question answering, an additional label projection step is required to map annotated spans onto the translated texts. Recently, a few efforts have utilized a simple mark-then-translate method to jointly perform translation and projection by inserting special markers around the labeled spans in the original sentence. However, as far as we are aware, no empirical analysis has been conducted on how this approach compares to traditional annotation projection based on word alignment. In this paper, we present an extensive empirical study across 57 languages and three tasks (QA, NER, and Event Extraction) to evaluate the effectiveness and limitations of both methods, filling an important gap in the literature. Experimental results show that our optimized version of mark-then-translate, which we call EasyProject, is easily applied to many languages and works surprisingly well, outperforming the more complex word alignment-based methods. We analyze several key factors that affect the end-task performance, and show EasyProject works well because it can accurately preserve label span boundaries after translation. We will publicly release all our code and data.}
+}
+@inproceedings{torge-etal-2023-named,
+  title     = {Named Entity Recognition for Low-Resource Languages - Profiting from Language Families},
+  author    = {Torge, Sunna  and
+               Politov, Andrei  and
+               Lehmann, Christoph  and
+               Saffar, Bochra  and
+               Tao, Ziyan},
+  editor    = {Piskorski, Jakub  and
+               Marci{\'n}czuk, Micha{\l}  and
+               Nakov, Preslav  and
+               Ogrodniczuk, Maciej  and
+               Pollak, Senja  and
+               P{\v{r}}ib{\'a}{\v{n}}, Pavel  and
+               Rybak, Piotr  and
+               Steinberger, Josef  and
+               Yangarber, Roman},
+  booktitle = {Proceedings of the 9th Workshop on Slavic Natural Language Processing 2023 (SlavicNLP 2023)},
+  month     = may,
+  year      = {2023},
+  address   = {Dubrovnik, Croatia},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2023.bsnlp-1.1},
+  doi       = {10.18653/v1/2023.bsnlp-1.1},
+  pages     = {1--10},
+  abstract  = {Machine learning drives forward the development in many areas of Natural Language Processing (NLP). Until now, many NLP systems and research are focusing on high-resource languages, i.e. languages for which many data resources exist. Recently, so-called low-resource languages increasingly come into focus. In this context, multi-lingual language models, which are trained on related languages to a target low-resource language, may enable NLP tasks on this low-resource language. In this work, we investigate the use of multi-lingual models for Named Entity Recognition (NER) for low-resource languages. We consider the West Slavic language family and the low-resource languages Upper Sorbian and Kashubian. Three RoBERTa models were trained from scratch, two mono-lingual models for Czech and Polish, and one bi-lingual model for Czech and Polish. These models were evaluated on the NER downstream task for Czech, Polish, Upper Sorbian, and Kashubian, and compared to existing state-of-the-art models such as RobeCzech, HerBERT, and XLM-R. The results indicate that the mono-lingual models perform better on the language they were trained on, and both the mono-lingual and language family models outperform the large multi-lingual model in downstream tasks. Overall, the study shows that low-resource West Slavic languages can benefit from closely related languages and their models.}
+}
+@inproceedings{garcia-ferrero-etal-2022-model,
+  title     = {Model and Data Transfer for Cross-Lingual Sequence Labelling in Zero-Resource Settings},
+  author    = {Garc{\'\i}a-Ferrero, Iker  and
+               Agerri, Rodrigo  and
+               Rigau, German},
+  editor    = {Goldberg, Yoav  and
+               Kozareva, Zornitsa  and
+               Zhang, Yue},
+  booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2022},
+  month     = dec,
+  year      = {2022},
+  address   = {Abu Dhabi, United Arab Emirates},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2022.findings-emnlp.478},
+  doi       = {10.18653/v1/2022.findings-emnlp.478},
+  pages     = {6403--6416},
+  abstract  = {Zero-resource cross-lingual transfer approaches aim to apply supervised modelsfrom a source language to unlabelled target languages. In this paper we performan in-depth study of the two main techniques employed so far for cross-lingualzero-resource sequence labelling, based either on data or model transfer.Although previous research has proposed translation and annotation projection(data-based cross-lingual transfer) as an effective technique for cross-lingualsequence labelling, in this paper we experimentally demonstrate that highcapacity multilingual language models applied in a zero-shot (model-basedcross-lingual transfer) setting consistently outperform data-basedcross-lingual transfer approaches. A detailed analysis of our results suggeststhat this might be due to important differences in language use. Morespecifically, machine translation often generates a textual signal which isdifferent to what the models are exposed to when using gold standard data,which affects both the fine-tuning and evaluation processes. Our results alsoindicate that data-based cross-lingual transfer approaches remain a competitiveoption when high-capacity multilingual language models are not available.}
+}
+
 
 
 
