@@ -86,18 +86,39 @@ While state-of-the-art transformer-based models, such as NLLB-200 \cite{nllbteam
 and DeBERTa \cite{He2020DeBERTaDB,He2021DeBERTaV3ID}, are utilized for translation and source NER labelling,
 there are numerous methods to perform the final projection step. This work will propose a formulation
 of the projection step as an integer linear optimization problem, thereby necessitating a description
-of the existing projection methods.
+of the existing projection methods. The first major group of projection methods consists of those based
+on back-translation, which involves translating labeled source sentences or their substrings back to the
+target language while preserving the labels.
 
+CROP \cite{yang-etal-2022-crop} surrounds each source entity with a special symbol \texttt{\_\_SLOT{n}\_\_},
+where \( n \) represents an index corresponding to the entity class. Subsequently, this slotted sentence
+is passed to a fine-tuned translation model designed to translate such sentences, resulting in a
+sentence in the target language. Projection occurs in the following manner: for each substring
+surrounded by slots with the same index, CROP searches for it in the original target sentence. If it
+is found, the class corresponding to the index of the slot is assigned to the identified substring;
+otherwise, no projection occurs. A significant weakness of CROP is that the back-translated sentence
+often differs from the original sentence, leading to low recall and the omission of many entities.
 
-CROP \cite{yang-etal-2022-crop}
-
-EasyProject \cite{chen-etal-2023-frustratingly}
+EasyProject \cite{chen-etal-2023-frustratingly} also employs the insertion of special markers,
+specifically angle brackets, which here remain consistent across different entity types, surrounding all
+source entities before passing the marked sentence into the translation
+model. The model then translates the entire sentence with the markers and also translates each source
+entity independently. Subsequently, fuzzy string matching is utilized to project labels: for each substring
+of the back-translated sentence that is surrounded by markers, the method identifies the back-translated
+source entity with the highest fuzzy matching string score and assigns the corresponding label to the substring.
+Unfortunately, this method also suffers from translation errors induced by the insertion of special
+symbols, as well as the fact that translating source entities independently, without context, often
+results in lower-quality translations. By its design, this method is incapable of projecting labels
+onto the original sentence and can therefore only be employed to generate a labeled dataset in the target language
+based on the labeled dataset in the source language.
 
 CODEC \cite{Le2024ConstrainedDF}
 
+CLaP \cite{parekh-etal-2024-contextual}
+
 T-Projection \cite{garcia-ferrero-etal-2023-projection}
 
-CLaP \cite{parekh-etal-2024-contextual}
+Transfusion \cite{transfusion}
 
 w2w alignments heuristics \cite{garcia-ferrero-etal-2022-model}
 
@@ -187,5 +208,3 @@ w2w alignments heuristics \cite{garcia-ferrero-etal-2022-model}
     }
   }
 \end{algorithm}
-
-Transfusion \cite{transfusion}
