@@ -23,7 +23,11 @@ NER and alignment-based pipelines are expected to be similar.
 
 Additionally, it is worth to point out, that according to Theorem \ref{thm:reduce_T_for_align},
 the set of candidates \( T \) has been reduced for all ILP-based experiments that
-utilize only word-to-word alignments, resulting in reduced runtimes.
+utilize only word-to-word alignments, resulting in reduced runtimes. Furthermore, the initial
+computation of NMT scores for the dataset (which corresponds to the \textit{nmt}
+pipeline with constraints of type \( \leq 1 \) and the GUROBI solver) caches certain
+precomputations. As a result, all subsequent runs involving NMT scores require
+less time.
 
 \begin{table}[t]
   \centering

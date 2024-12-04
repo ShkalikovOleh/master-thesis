@@ -72,7 +72,9 @@ as the current set of all n-grams up to a defined maximum length is excessively 
 in slower computations for both the solution and matching scores. In addition to the options
 discussed in the preceding sections, such as employing large language models (LLMs) or NER models
 to predict candidates, utilizing part-of-speech tags should also be considered, as NER entities
-typically correspond to noun phrases.
+typically correspond to noun phrases. Furthermore, it makes sense to evaluate the proposed method in
+settings where the source and target languages have completely different writing systems, for example
+for Chinese, Thai, and Japanese.
 
 From a broader perspective, the proposed ILP problem for the projection step of the XLNER pipeline
 can be generalized to other Natural Language Processing tasks. For example, in the word-to-word

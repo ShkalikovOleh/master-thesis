@@ -31,7 +31,7 @@ Word-to-word alignments for all experiments were computed using a non-fine-tuned
 AWESOME aligner with the following default hyperparameters: extraction method set
 to softmax, softmax\_threshold of \( 0.001 \), and align\_layer is \( 8 \).
 
-For source labelling, candidate evaluation, and model transfer, the MDeBERTa-v3-base
+For source labelling, candidate evaluation, and model transfer, the MDeBERTa-v3-base \cite{He2021DeBERTaV3ID}
 model, fine-tuned on the English split of the CONLL-2003 dataset \cite{tjong-kim-sang-de-meulder-2003-introduction-conll},
 was utilized. This selection is based by the findings of the original study in which
 MasakhaNER2 was introduced, demonstrating that MDeBERTa-v3 achieves superior performance
