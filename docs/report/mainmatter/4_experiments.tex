@@ -277,3 +277,19 @@ It demonstrates results that are comparable to those of other pipelines.
 Notably, for the Bambara (bam) and Mossi (mos) languages, it performs the best, as
 it is capable of disregarding incorrectly predicted NER model labels for spans that
 correspond to actual target entities.
+
+\begin{table}[ht]
+  \input{mainmatter/tables/mashkaner2_others.tex}
+  \caption{Overall F1 scores for various XLNER methods evaluated under different
+  settings compared to our experiments}
+  \label{tab:masakhaner2_f1_other}
+\end{table}
+To assess how the performance of the proposed method compares to that of other methods described
+in Chapter \ref{sec:background}, the results obtained by these methods, as reported in the original
+papers, are presented in Table \ref{tab:masakhaner2_f1_other}. However, it should be noted that the
+evaluation setups for these experiments were different from ours, making direct comparisons not feasible.
+EasyProject, CODEC, and CLaP were evaluated in extrinsic settings, i.e. the reported results represent the
+F1 metric on the test set of the MasakhaNER2 dataset, derived from models trained on datasets generated
+by these methods. GOOLIE-TF and CLaP utilized all four classes provided in the MasakhaNER2 dataset,
+while our approach and others in this list were evaluated without the \textit{DATE} class.
+Nonetheless, it is observed that the metrics fall within the same range as those from our experiments.
