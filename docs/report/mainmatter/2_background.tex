@@ -142,8 +142,22 @@ it supports, the necessity for the model to be trained, and the significant comp
 required to generate potential projection candidates. Additionally, the NMTScore is not without its
 flaws, as it is dependent on the quality of the underlying translation model.
 
-TransFusion \cite{transfusion} 
+As an alternative to translation-based projection, TransFusion \cite{transfusion} proposes the use of
+specifically trained models to perform projection. Specifically, the authors propose two types of fusion
+models capable of projecting entities: decoder-only large language models (LLMs) and encoder-only models.
+In the first case, the translated sentence in the source language and the original target sentence are
+passed to the LLM, which is then asked to perform source NER labeling and projection simultaneously
+by outputting labelling for both sentences. For the encoder-only model, every source entity is enclosed
+with XML tags corresponding to classes, and this is concatenated with the original target sentence
+before being passed to the encoder-only model. And then considers only the output that corresponds to the
+target sentence. The main limitation of this approach is that it requires a parallel labeled dataset,
+which does not exist, which motivates the problem of XLNER. To address this fundamental issue, the
+authors employ EasyProject to generate such a dataset based on a labeled dataset in the source
+language. However, as EasyProject introduces errors, models trained on this generated data are also
+constrained by these inaccuracies.
 
+And the last but not least type of projection approaches is based on word-to-word alignments.
+AWESoME \cite{dou-neubig-2021-word} and SimAlign \cite{jalili-sabet-etal-2020-simalign}
 w2w alignments heuristics \cite{garcia-ferrero-etal-2022-model}
 
 \begin{algorithm}

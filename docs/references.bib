@@ -582,6 +582,42 @@
   pages     = {726--742},
   abstract  = {This paper demonstrates that multilingual denoising pre-training produces significant performance gains across a wide variety of machine translation (MT) tasks. We present mBART{---}a sequence-to-sequence denoising auto-encoder pre-trained on large-scale monolingual corpora in many languages using the BART objective (Lewis et al., 2019). mBART is the first method for pre-training a complete sequence-to-sequence model by denoising full texts in multiple languages, whereas previous approaches have focused only on the encoder, decoder, or reconstructing parts of the text. Pre-training a complete model allows it to be directly fine-tuned for supervised (both sentence-level and document-level) and unsupervised machine translation, with no task- specific modifications. We demonstrate that adding mBART initialization produces performance gains in all but the highest-resource settings, including up to 12 BLEU points for low resource MT and over 5 BLEU points for many document-level and unsupervised models. We also show that it enables transfer to language pairs with no bi-text or that were not in the pre-training corpus, and present extensive analysis of which factors contribute the most to effective pre-training.1}
 }
+@inproceedings{dou-neubig-2021-word,
+  title     = {Word Alignment by Fine-tuning Embeddings on Parallel Corpora},
+  author    = {Dou, Zi-Yi  and
+               Neubig, Graham},
+  editor    = {Merlo, Paola  and
+               Tiedemann, Jorg  and
+               Tsarfaty, Reut},
+  booktitle = {Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics: Main Volume},
+  month     = apr,
+  year      = {2021},
+  address   = {Online},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2021.eacl-main.181},
+  doi       = {10.18653/v1/2021.eacl-main.181},
+  pages     = {2112--2128},
+  abstract  = {Word alignment over parallel corpora has a wide variety of applications, including learning translation lexicons, cross-lingual transfer of language processing tools, and automatic evaluation or analysis of translation outputs. The great majority of past work on word alignment has worked by performing unsupervised learning on parallel text. Recently, however, other work has demonstrated that pre-trained contextualized word embeddings derived from multilingually trained language models (LMs) prove an attractive alternative, achieving competitive results on the word alignment task even in the absence of explicit training on parallel data. In this paper, we examine methods to marry the two approaches: leveraging pre-trained LMs but fine-tuning them on parallel text with objectives designed to improve alignment quality, and proposing methods to effectively extract alignments from these fine-tuned models. We perform experiments on five language pairs and demonstrate that our model can consistently outperform previous state-of-the-art models of all varieties. In addition, we demonstrate that we are able to train multilingual word aligners that can obtain robust performance on different language pairs.}
+}
+@inproceedings{jalili-sabet-etal-2020-simalign,
+  title     = {{S}im{A}lign: High Quality Word Alignments Without Parallel Training Data Using Static and Contextualized Embeddings},
+  author    = {Jalili Sabet, Masoud  and
+               Dufter, Philipp  and
+               Yvon, Fran{\c{c}}ois  and
+               Sch{\"u}tze, Hinrich},
+  editor    = {Cohn, Trevor  and
+               He, Yulan  and
+               Liu, Yang},
+  booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2020},
+  month     = nov,
+  year      = {2020},
+  address   = {Online},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2020.findings-emnlp.147},
+  doi       = {10.18653/v1/2020.findings-emnlp.147},
+  pages     = {1627--1643},
+  abstract  = {Word alignments are useful for tasks like statistical and neural machine translation (NMT) and cross-lingual annotation projection. Statistical word aligners perform well, as do methods that extract alignments jointly with translations in NMT. However, most approaches require parallel training data and quality decreases as less training data is available. We propose word alignment methods that require no parallel data. The key idea is to leverage multilingual word embeddings {--} both static and contextualized {--} for word alignment. Our multilingual embeddings are created from monolingual data only without relying on any parallel data or dictionaries. We find that alignments created from embeddings are superior for four and comparable for two language pairs compared to those produced by traditional statistical aligners {--} even with abundant parallel data; e.g., contextualized embeddings achieve a word alignment F1 for English-German that is 5 percentage points higher than eflomal, a high-quality statistical aligner, trained on 100k parallel sentences.}
+}
 
 
 
