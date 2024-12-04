@@ -1,13 +1,6 @@
 \chapter{Background}
 \label{sec:background}
 
-\begin{definition}[Source entity]
-
-\end{definition}
-\begin{definition}[Target candidate]
-
-\end{definition}
-
 \section{Model transfer}
 
 generall model transfer and BERT
@@ -16,15 +9,108 @@ benefits from the similar languages
 
 \section{Data-based methods}
 
+\begin{definition}[Source entity]
+
+\end{definition}
+\begin{definition}[Target candidate]
+
+\end{definition}
+
 description (3 step)
 
-Mulda, CROP, UniTrans
+Mulda, UniTrans
 
-Transfusion
+CROP, EasyProject
 
 w2w alignments heuristics
+
 \begin{algorithm}
-  \caption{Heuristic projection algorithm based on word-to-word alignments} \label{alg:heuristics}
+  \SetAlgorithmName{Algorithm}{}{}
+  \caption{Algorithm that merges ranges that are separated by \( d \) non-aligned to the source entity words}
+  \label{alg:merge}
+
+  \KwData{\( C \) -- set of ranges of target words,
+    \( a _{kl} \) -- word-to-word alignments, \( e \) -- index of the first word of the source entity,
+  parameters \( d \in \mathbb{N}, \text{only\_i} \in \{ True, False \} \)}
+  \KwResult{\( \hat{C} \) -- set of target word ranges where all ranges with at most \(d\)
+  non-aligned to the source words have been merged}
+
+  \( \mathcal{C} \gets \) sort ranges \(C\) by the index of the first word \;
+  \( \hat{C} \gets \{ \mathcal{C}[0] \} \)  \;
+  \( \hat{o} \gets o_{\mathcal{C}[0]} \) \;
+  \ForAll{\( (s, o) \in \mathcal{C} \)}
+  {
+    \uIf{\( s - \hat{o} > d \) }{
+      \( \hat{C} \gets \hat{C} \cup \{ (s, o) \} \) \;
+    }
+    \uElseIf{only\_i is True and \( a_{,s} = 1 \)}{
+      \( \hat{C} \gets \hat{C} \cup \{ (s, o) \} \) \Comment*[r]{The first word is aligned to a source word with a \textit{B-} label}  \
+    }
+    \Else{
+      \( c^* \gets \) last added to \( \hat{C} \) \;
+      \( \hat{C} \gets \hat{C} \setminus \{ c^* \}  \) \;
+      \( \hat{C} \gets \hat{C} \cup \{ (c^*_s, o) \}  \) \Comment*[r]{Merge ranges}  \
+    }
+    \( \hat{o} \gets o \) \;
+  }
 \end{algorithm}
+
+\begin{algorithm}
+  \SetAlgorithmName{Algorithm}{}{}
+  \caption{Heuristic projection algorithm based on word-to-word alignments}
+  \label{alg:heuristics}
+
+  \KwData{\( S \) -- set of source entities, \( T \) -- set of target candidates,
+  \( a _{kl} \) -- word-to-word alignments, parameters \( d, k \in \mathbb{N}, \text{only\_i} \in \{ True, False \}, thr \in [0, 1] \)}
+  \KwResult{\( \tgt{l} = (\tgt{l_1}), \dots, \tgt{l_m} \) -- labelling of the target sentence}
+
+  \ForAll{\( \tgt{l_i} \in \tgt{l} \)}{
+    \( \tgt{l_i} \gets \text{O} \) \;
+  }
+
+  \ForAll{\( \src{p} \in S \)}{
+    \Comment{Extract continuous ranges of maximum length of target words that are aligned to any word of the source
+    entity}
+    \( C^* \gets
+      \left\{ (s, o) \Big| \forall r \in \{ s, \dots, o \} \;
+        \exists i \in \{ i_{\src{p}}, \dots, j_{\src{p}} \}
+    \; a_{ir} = 1 \right\} \) \;
+    \( C \gets \left\{ (s, o) \in C^* \Big|
+        \nexists (\hat{s}, \hat{o}) \in  C^* \;
+    [s, o] \subset [\hat{s}, \hat{o}] \right\} \) \;
+
+    \Comment{Merge ranges that are separated by \(d\) non-aligned words}
+    \( C \gets \text{merge}(C, a_{kl},  i_{\src{p}}, d, \text{only\_i}) \) \;
+
+    \Comment{Length ratio thresholding (optional)}
+    \If{\( thr > 0 \)}
+    {
+      \( C \gets \left\{ (s, o) \in C \Big| \dfrac{o - s}{j_{\src{p}} - i_{\src{p}}} > thr \right\} \) \;
+    }
+
+    \Comment{Take only top-k longest aligned ranges (optional)}
+    \If{\( k > 0 \)}
+    {
+      \( C \gets \text{sort} \; C \; \text{by length and take top} \; k \) \;
+    }
+
+    \Comment{Labelling}
+    \ForAll{\( (s, o) \in C \)}
+    {
+      \Comment{Label the range only if any word of it has not been previously labeled.}
+      \If{\( \forall r \in \{ s, \dots, o \} \quad l_r = \text{O} \)}
+      {
+        \( \hat{l} \gets l_{\src{p}} \) \Comment*[r]{Class of the source entity}  \
+        \( l_s \gets \text{B-} \hat{l} \) \Comment*[r]{Assign the \textit{B-} label to the first word} \
+        \ForAll{\( r \in \{ s+1, o \} \)}
+        {
+          \( l_r \gets \text{I-} \hat{l} \) \Comment*[r]{Assign the \textit{I-} label to consecutive words} \
+        }
+      }
+    }
+  }
+\end{algorithm}
+
+Transfusion
 
 LLM-based

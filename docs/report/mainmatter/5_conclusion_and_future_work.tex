@@ -74,10 +74,20 @@ discussed in the preceding sections, such as employing large language models (LL
 to predict candidates, utilizing part-of-speech tags should also be considered, as NER entities
 typically correspond to noun phrases.
 
+From a broader perspective, the proposed ILP problem for the projection step of the XLNER pipeline
+can be generalized to other Natural Language Processing tasks. For example, in the word-to-word
+alignment problem, every word consists of tokens, and it is necessary to match words from the source
+language with words from the target language based on their tokens. In this context, the set of target
+candidates is equivalent to the set of tuples of tokens corresponding to all words in the target
+sentence; therefore, there is no overlap among different candidates. The remaining challenge
+is to derive a method for computing matching scores. One approach can involve adopting the methodology
+utilized by current neural-based aligners and calculating these scores based on cosine similarities
+between embeddings for each token.
+
 In summary, our proposed formulation of the projection step as an ILP problem generalizes numerous
 previous methods and enables their integration, addressing the drawbacks of individual methods.
 By analyzing the solutions to the problem in conjunction with the corresponding matching scores,
 we gain insight into why particular entities are projected onto specific target candidates, thus
 enhancing interpretability, especially when compared to model transfer or the heuristic word-to-word
 alignment algorithm. Nevertheless, interpretability remains limited due to the fact that all
-proposed matching score are computed utilizing neural network-based models.
+proposed matching scores are computed utilizing neural network-based models.

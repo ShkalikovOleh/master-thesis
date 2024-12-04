@@ -330,6 +330,7 @@ sentence.
 Thus, the algorithm for candidates extraction wilt a bounded maximum length of n-grams
 is the following.
 \begin{algorithm}
+  \SetAlgorithmName{Algorithm}{}{}
   \KwData{\( n \in \mathbb{N} \) -- number of words in the target sentence,
   \(M \leq n \in \mathbb{N} \) -- maximum length of a target candidate}
   \KwResult{\( T \) -- set of target candidates}
@@ -1123,6 +1124,7 @@ enforce non-overlapping constraints. Algorithm \ref{alg:ilp_greedy} represents a
 variant of this greedy algorithm.
 
 \begin{algorithm}
+  \SetAlgorithmName{Algorithm}{}{}
   \caption{Approximate greedy algorithm for the proposed ILP problem} \label{alg:ilp_greedy}
   \KwData{instance of the ILP problem \eqref{eq:ilp}}
   \KwResult{\( x \) -- "solution" of the ILP problem}
