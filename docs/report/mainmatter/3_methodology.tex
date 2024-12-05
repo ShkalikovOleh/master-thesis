@@ -7,7 +7,7 @@ illustrated in Figure \ref{fig:cand_matching}. Whereas a predetermined set of so
 for projection is provided; a subset of continuous word ranges from the original
 sentence in the target language can be selected and considered as potential
 projections for source entities. The likelihood scores that each source entity
-should be projected onto each candidate will be computed. The goal is to identify a
+should be projected onto each candidate can also be computed. The goal is to identify a
 combination of source entities and target candidates that maximizes the overall
 sum of the corresponding scores. However, natural constraints must also be taken into account.
 For instance, when two source entities project onto overlapping candidates, it becomes
@@ -114,18 +114,16 @@ projected onto overlapping target candidates. Additionally, another
 set of constraints \eqref{eq:num_proj_const} limits the number of
 projections for each source entity. It should be noted that the
 inequality sign is not fixed, as various forms may be relevant: "less,"
-"less than or equal," and "equal" can be used to ensure that a source entity
+"less or equal," and "equal" can be used to ensure that a source entity
 is not projected onto as many available candidates as possible solely to increase
-the objective value. Conversely, "greater" or "greater than or equal" can be
+the objective value. Conversely, "greater" or "greater or equal" can be
 employed to enforce that a source entity will be projected at least a specified
 number of times, e.g., once, ensuring that the solver does not simply ignore it.
 It is evident that \( n_{proj} = 0 \) represents a corner case that typically
 lacks meaning, except in the case of a "greater or equal" inequality, which effectively
 eliminates any limits and is equivalent to having no constraints of this type.
 
-However, the number of constraints \eqref{eq:non_overlap_const} scales as
-\( \Theta(n^3 m^2) \) where \( m \) is the the number of source entities and
-\( n \) is the length of the target sentence, assuming that all possible continuous subranges are utilized as candidates.
+However, the number of constraints \eqref{eq:non_overlap_const} scales quadratically on the the number of source entities.
 This considerable growth in constraints can complicate the problem-solving process.
 Consequently, it is essential to explore methods to reduce the number of such
 constraints. To begin, let us examine the overlapping relation that forms the
@@ -200,7 +198,7 @@ negative.
   \end{align*}
   Or
   \begin{align*}
-    & \exists \src{p_1}, \src{p_2} \in S, \src{p_1} \neq \src{p_2}, \; \tgt{p} \in \{\tgt{p_1}, \tgt{p_2}  \} \Big| x_{\src{p_1}, \tgt{p}} = 1, x_{\src{p_2}, \tgt{p}} = 1 \implies \\
+    & \exists \src{p_1}, \src{p_2} \in S, \; \src{p_1} \neq \src{p_2}, \; \tgt{p} \in \{\tgt{p_1}, \tgt{p_2}  \} \Big| x_{\src{p_1}, \tgt{p}} = 1, x_{\src{p_2}, \tgt{p}} = 1 \implies \\
     & x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} = 2 > 1
   \end{align*}
   This situation contradicts our initial assumption that the constraints \eqref{eq:non_overlap_const} are satisfied.
@@ -209,7 +207,7 @@ negative.
   \begin{align*}
     & \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} > 1
     \stackrel{\eqref{eq:binary_prog}}{\implies}                                                                                           \\
-    & \exists \src{p_1}, \src{p_2} \in S, \src{p_1} \neq \src{p_2} \Big| x_{\src{p_1}, \tgt{p}} = 1, x_{\src{p_2}, \tgt{p}} = 1 \implies \\
+    & \exists \src{p_1}, \src{p_2} \in S, \; \src{p_1} \neq \src{p_2} \Big| x_{\src{p_1}, \tgt{p}} = 1, x_{\src{p_2}, \tgt{p}} = 1 \implies \\
     & x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} = 2 > 1
   \end{align*}
 
@@ -229,9 +227,9 @@ negative.
     \begin{aligned}
       & \sum\limits_{\src{p} \in S} (x_{\src{p}, \tgt{p_1}} + x_{\src{p}, \tgt{p_2}}) = 1
       \stackrel{\eqref{eq:binary_prog}}{\implies}                                                       \\
-      & \exists! \src{p} \in S, \exists! \tgt{p} \in \{ \tgt{p_1}, \tgt{p_2}\}
+      & \exists! \src{p} \in S, \; \exists! \tgt{p} \in \{ \tgt{p_1}, \tgt{p_2}\}
       \Bigg| x_{\src{p}, \tgt{p}} = 1 \implies                                                          \\
-      & \forall \src{p_1}, \src{p_2} \in S, x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
+      & \forall \src{p_1}, \src{p_2} \in S, \; x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
     \end{aligned}
   \end{equation*}
   Therefore we proved that
@@ -241,13 +239,16 @@ negative.
   \]
   where
   \begin{align*}
-    \hat{\Pi'}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
+    \hat{\Pi'}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big|
+      \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \;
+      \tgt{p_2} \in T, \quad \tgt{p_1} \cap \tgt{p_2} \neq \emptyset, \\
     \tgt{p_1} \neq \tgt{p_2} \Big\}
   \end{align*}
 
   But it is not the same as set \eqref{eq:overlapping_set}:
   \[
-    \hat{\Pi}(S, T) \setminus \hat{\Pi'}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big| \src{p_1}, \src{p_2} \in S, \tgt{p_1}, \tgt{p_2} \in T, \tgt{p_1} = \tgt{p_2},
+    \hat{\Pi}(S, T) \setminus \hat{\Pi'}(S, T) = \Big\{ (\src{p_1}, \src{p_2}, \tgt{p_1}, \tgt{p_2}) \Big|
+      \src{p_1}, \src{p_2} \in S, \; \tgt{p_1}, \tgt{p_2} \in T, \; \tgt{p_1} = \tgt{p_2}, \;
     \src{p_1} \neq \src{p_2} \Big\}
   \]
   So we need to check whether constraints \eqref{eq:non_overlap_const} are satisfied on this set difference.
@@ -284,12 +285,12 @@ negative.
     \end{aligned} \implies \\
     x_{\src{p_1}, \tgt{p}} + x_{\src{p_2}, \tgt{p}} \leq 1 \qquad
     \begin{aligned}
-      & \forall \src{p_1}, \src{p_1} \in S, \src{p_1} \neq \src{p_2}                                                        \\
+      & \forall \src{p_1}, \src{p_1} \in S, \; \src{p_1} \neq \src{p_2}                                                        \\
       & \forall \tgt{p} \in T \Bigg| \exists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
     \end{aligned}
   \end{multline*}
-  So, only the case, when entity has no overlapped entity that are
-  not equal to it, remains. But this case is fully covered by the second part of the proposed reduced constraints:
+  So, only the case, when a target candidate has no distinct overlapped target candidate remains.
+  But this case is fully covered by the second part of the proposed reduced constraints:
   \[
     \sum\limits_{\src{p} \in S} x_{\src{p}, \tgt{p}} \leq 1 \qquad
     \forall \tgt{p} \in T \Big| \nexists \tgt{p_2} \in T: \tgt{p} \neq \tgt{p_2}, \tgt{p} \cap \tgt{p_2} \neq \emptyset
@@ -299,8 +300,8 @@ negative.
   constraints \eqref{eq:non_overlap_const} are satisfied.
 \end{proof}
 
-The theorem allows to reduce number of constraints, ensuring that they scale scale as a constant
-with respect to the number of source entities. Consequently, we arrive at the following final
+The theorem allows to reduce number of constraints, ensuring that they scale as a constant
+with respect to the number of source entities. Consequently, we obtain the following final
 formulation of the ILP problem for the projection step of the XLNER pipeline.
 \begin{equation} \label{eq:ilp}
   \begin{aligned}
@@ -332,10 +333,9 @@ it is reasonable to expect that actual target entities typically do not exceed a
 certain predefined length. For instance, it is unlikely for a person's name to consist
 of more than 10 words, and if there are three source entities, it is unlikely
 that there exists a single target entity that consists of all words of the target
-sentence.
+sentence. Thus, we obtain the algorithm \ref{alg:ngram_extraction} for candidates extraction wilt a
+bounded maximum length of n-grams.
 
-Thus, the algorithm for candidates extraction wilt a bounded maximum length of n-grams
-is the following.
 \begin{algorithm}
   \SetAlgorithmName{Algorithm}{}{}
   \KwData{\( n \in \mathbb{N} \) -- number of words in the target sentence,
@@ -344,7 +344,7 @@ is the following.
 
   \( T \gets \emptyset \) \;
   \For{\(i \gets 0 \) \KwTo \( n \)}{
-    \( m \gets \min(s + M, n) \) \;
+    \( m \gets \min(i + M, n) \) \;
     \For{\(j \gets i \) \KwTo \( m \)}{
       \( T \gets T \cup \{ (i, j) \} \) \;
     }
@@ -356,17 +356,17 @@ is the following.
 An alternative approach for candidate extraction is to employ a model to generate
 candidates. In this regard, TProjection \cite{garcia-ferrero-etal-2023-projection} utilizes a fine-tuned T5 model with beam
 search for candidate generation. In theory, any large language model can be
-fine-tuned for this purpose. However, the primary drawback of this approach is
-the necessity to fine-tune these models, which requires a labeled dataset in
-the target language or relies on cross-lingual model transfer. In this context,
-it may be more feasible and effective to train a model specifically to label target
-entities rather than to generate candidates for the projection step of the
+fine-tuned for this purpose. However, the primary drawback of this approach is the necessity
+to fine-tune these models, which requires the availability of a labeled dataset in the target
+language or reliance on cross-lingual model transfer. Instead, in this context,
+it may be more feasible and effective to train a model to predict target
+entities directly rather than to generate candidates for the projection step of the
 XLNER pipeline. Moreover, autoregressive models tend to be resource-intensive,
 making it inefficient to utilize them solely for candidate extraction.
 
-It also makes sense to consider a multilingual encoder-only Transformer \cite{vaswani2017attention}
-model with high recall. However, these models still require training to extract candidates
-effectively. In the following chapters, these alternatives will not be discussed
+Alternatively, for candidate extraction a multilingual encoder-only Transformer \cite{vaswani2017attention}
+model with high recall can be considered. However, these models also require training and therefore labelled dataset
+to extract candidates effectively. In the following chapters, these alternatives will not be discussed
 and will remain as topics for future work.
 
 \section{Matching scores}
@@ -397,7 +397,7 @@ based on word-to-word alignments. First, the greater the number of aligned words
 between the source entity and the target candidates, the higher the score should be.
 Second, it is insufficient to simply divide the number of aligned words by the length
 of the source entity, as this would lead to a higher score for longer target candidates.
-Lastly, the third property is particularly beneficial: when considering two candidates,
+Lastly, the third property, which is particularly beneficial: when considering two candidates,
 where one is a substring of the other, if the total number of aligned words between the
 source entity and these candidates is the same, preference should be given to the
 smaller candidate. The score defined in equation \eqref{eq:align_cost} fulfills this
@@ -438,10 +438,10 @@ requirement.
 \end{proof}
 
 \begin{corollary} \label{col:shrink_cand}
-  The cost of the extended candidate \( \tgt{p_{+n}} \) derived from the target
+  The score of the extended candidate \( \tgt{p_{+n}} \) derived from the target
   candidate \( \tgt{p} \), when extended to the left or right by
   \( n \in \mathbb{N} \) non-aligned words that do not correspond to any word
-  of the source entity \( \src{p} \in S \), is lower than the cost of the original
+  of the source entity \( \src{p} \in S \), is lower than the score of the original
   candidate.
 \end{corollary}
 \begin{proof}
@@ -459,14 +459,14 @@ requirement.
 The main advantage of this property is that it allows for the reduction of the set of
 target candidates without compromising optimal solutions. Specifically, it permits
 the consideration of candidates only from the subrange between the leftmost and
-rightmost words aligned with any word of any source entity.
+rightmost words aligned to any word of any source entity.
 \begin{theorem} \label{thm:reduce_T_for_align}
-  Let \( m, M \in \mathbb{N} \) denote the indices of the leftmost and rightmost
-  aligned words corresponding to any source entity. Then there exists
+  Let \( m, M \in \mathbb{N} \) denote the indices of the leftmost and rightmost words aligned
+  to any words of any source entity. Then there exists
   an optimal solution for the problem \eqref{eq:ilp} where the constraints
   \eqref{eq:num_proj_const} take the form of \( < \) or \( \leq \), such that
-  all source entity are projected onto a target candidates from the set \( T \)
-  generated by the algorithm \ref{alg:ngram_extraction}, where all word indices
+  all source entity are projected onto target candidates from the set \( T \)
+  generated by the algorithm \ref{alg:ngram_extraction} (\( n = M - m \)), where all word indices
   are contained within the range \( [m, M] \).
 \end{theorem}
 \begin{proof}
@@ -476,24 +476,24 @@ rightmost words aligned with any word of any source entity.
   and \( x_{\src{p}, \tgt{\hat{p}}} = 1 \) for an optimal solution \( x \).
 
   This case can be divided into two parts: one where \( \tgt{\hat{p}} \) contains
-  no words aligned with any words of the source entities, and the other where it
+  no words aligned to any words of source entities, and the other where it
   does have such alignments.
 
   Considering the first scenario, if \( \tgt{\hat{p}} \) consists entirely of
-  words that are not aligned with any word from the source entities, then the
-  alignment-based matching cost, according to the definition in \eqref{eq:align_cost},
+  words that are not aligned to any word from source entities, then the
+  alignment-based matching score, according to the definition in \eqref{eq:align_cost},
   equals \( 0 \).
 
   In this situation, we can take a solution \( x^* \) that is identical to the
   optimal solution \( x \), except for the target candidate \( \tgt{\hat{p}} \);
   that is, we set \( x_{\src{p}, \tgt{\hat{p}}} = 0 \). Consequently, the objective
-  function remains unchanged because the cost of matching is zero. Additionally,
+  function remains unchanged because the corresponding matching score is zero. Additionally,
   we do not violate the non-overlapping constraints \eqref{eq:non_overlap_const}:
   \begin{align*}
     & \forall \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \\
     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p}, \tgt{\hat{p}}} =
     x_{\src{p_1}, \tgt{p_1}} + 1 \leq 1 \implies                                                                         \\
-    & x^*_{\src{p_1}, \tgt{p_1}} + x^*_{\src{p}, \tgt{\hat{p}}} \leq 1 =
+    & x^*_{\src{p_1}, \tgt{p_1}} + x^*_{\src{p}, \tgt{\hat{p}}} =
     x_{\src{p_1}, \tgt{p_1}} + 0 \leq 1
   \end{align*}
   As well as constraints \eqref{eq:num_proj_const}:
@@ -507,11 +507,10 @@ rightmost words aligned with any word of any source entity.
   but with target candidates constrained to have indices within the range \( [m, M] \).
 
   Considering the second option, where a target candidate \( \tgt{\hat{p}} \) contains words
-  that are aligned with words from a source entity \( \src{p} \), i.e.,
-  \( \left[ (i_{\tgt{\hat{p}}} < m) \lor (M < j_{\tgt{\hat{p}} < m}) \right] \land
-  \left[ (i_{\tgt{\hat{p}}} \leq M) \lor m \leq j_{\tgt{\hat{p}}} \right] \).
-  By corollary \ref{col:shrink_cand}, the candidate \( \tgt{p} = ( \max(i_{\tgt{\hat{p}}}, m), \min(M, j_{\tgt{\hat{p}}}) ) \),
-  which is a substring of \( \tgt{\hat{p}} \), will have a higher alignment-based
+  that are aligned to words from the source entity \( \src{p} \). Therefore the indices of its words
+  overlap with the range \( [ m, M ] \).
+  By corollary \ref{col:shrink_cand}, the candidate \( \tgt{p} = ( \max(i_{\tgt{\hat{p}}}, m), \min(M, j_{\tgt{\hat{p}}}) ) \)
+  which is a substring of \( \tgt{\hat{p}} \) restricted to the range \( [m, M] \), will have a higher alignment-based
   matching score.
 
   Let us consider a solution \( x^* \) that is identical to the solution \( x \)
@@ -539,7 +538,7 @@ rightmost words aligned with any word of any source entity.
     \left\{ (\src{p_1}, \tgt{p_1}) \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \right\} \subset
     \left\{ (\src{p_1}, \tgt{p_1}) \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \right\}
   \end{equation}
-  This implies that all constraints that must hold for \( \tgt{p} \) should also be satisfied for \( \tgt{\hat{p}} \):
+  Suppose that it is not the case for the solution \( x^* \):
   \begin{align*}
     & \exists \src{p_1} \in S, \tgt{p_1} \in T \Big| (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{p}) \in \hat{\Pi}(S, T) \\
     & x^*_{\src{p_1}, \tgt{p_1}} + x^*_{\src{p}, \tgt{p}} =
@@ -548,11 +547,11 @@ rightmost words aligned with any word of any source entity.
     \implies                                                                                                       \\
     & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p}, \tgt{\hat{p}}} = 1 + 1 = 2 > 1
   \end{align*}
-  However, due to \eqref{eq:overlap_substring}, it follows that
-  \( (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \).
-  This contradiction indicates that the solution \( x \) was feasible.
-  Consequently, the constraints \eqref{eq:non_overlap_const} are satisfied by the
-  solution \( x^* \).
+  However, it contradicts our assumption that the solution \( x \) was feasible
+  since \linebreak \( (\src{p_1}, \src{p}, \tgt{p_1}, \tgt{\hat{p}}) \in \hat{\Pi}(S, T) \)
+  due to \eqref{eq:overlap_substring}.
+  And therefore it proves that the constraints \eqref{eq:non_overlap_const} are satisfied by the
+  solution~\( x^* \).
 
   At the same time, the solution \( x^* \) has a higher objective value, which
   implies that the original solution \( x \) was not optimal. This leads to a
@@ -573,12 +572,12 @@ In contrast, heuristics only provide a labeling of the target sentence. Addition
 the predictions made by this formulation and the heuristics are not always the same.
 For example, the heuristic algorithm merges all continuous ranges of aligned words
 that are separated by at most a fixed number of non-aligned words, whereas the
-ILP formulation will only do so under certain specific conditions.
+ILP formulation will only do so under specific conditions.
 
 It is also worth mentioning that, for the alignment-based score, there is no fixed
-upper bound, as the maximum value of the denominator is the product of the lengths of
+upper bound, as the maximum value of the numerator is the product of the lengths of
 the source entity and the target candidate. This limitation may be addressed by
-replacing one of the summation operations in the denominator of equation
+replacing one of the summation operations in the numerator of equation
 \eqref{eq:align_cost} with a logical OR. Nevertheless, in our experiments, we will
 utilize the original form of the alignment-based matching score.
 
@@ -588,10 +587,10 @@ Another approach to evaluate matching scores between source entities
 and target candidates is to utilize a multilingual NER model.
 The underlying concept is as follows: for each word in the target
 candidate, the model predicts a probability distribution over a
-set of classes to determine the likelihood that a word has a
+set of classes that determines the likelihood that a word has a
 specific label. To compute the matching score indicating how likely a source
 entity classified as \( l \) should be projected onto a target candidate,
-we calculate the average probability of class \( l \) across all words in
+we calculate the average probability of class \( l \) across all words of
 the candidate.
 
 Let \( L \) denote a set of classes. Since a NER model outputs results in the IOB format,
@@ -603,8 +602,8 @@ index of a label. We will assume that the label \( O \), which indicates that a 
 belong to any class, has an index of \( 2|L| + 1 \).
 
 Next, we introduce mappings \( B[l]: L \rightarrow \{ 1, \dots, 2|L| \} \) and
-\( I[l]: L \rightarrow \{ 1, \dots, 2|L| \} \), which return the indices of the
-B and I labels, respectively, for a class \( l \in L \) in the probability matrix.
+\( I[l]: L \rightarrow \{ 1, \dots, 2|L| \} \), which return the indices in the probability matrix
+of the B and I labels, respectively, for a class \( l \in L \).
 
 Therefore, the NER model-based matching score can be expressed as follows:
 \begin{equation} \label{eq:ner_cost}
@@ -616,12 +615,13 @@ Therefore, the NER model-based matching score can be expressed as follows:
   {j_{\tgt{p}} - i_{\tgt{p}}}
 \end{equation}
 where \( l_{\src{p}} \in L \) denotes the class of the source entity
-\( \src{p} \in S \) and \( \alpha > 0 \in \mathbb{R} \) is a length-scaling constant.
+\( \src{p} \in S \) and \( \alpha > 1 \in \mathbb{R} \) is a length-scaling constant.
 
-The factor \( \alpha \) is necessary to align the matching scores with the NER model
-predictions, i.e it is naturally expected that the matching cost should be lower if a
-target candidate is a substring of a target candidate that is identical to the predicted
-by the NER model entity.
+The factor \( \alpha \) is necessary to align the matching score with the NER model
+predictions: suppose two target candidates where the first one is a substring of the second
+and the second is identical to the predicted by a NER model entity. Then the matching cost
+of the first candidate should be lower than the matching cost of the second. But without setting
+\( a > 1 \) it is not always satisfied.
 
 For example, let the set of classes contain only the class \textit{PER},
 so \( L = \{ \text{PER} \} \). Assume the set of source entities consists of
@@ -753,25 +753,27 @@ Having this useful fact it is possible to provide some estimates for the constan
     1 + \frac{S - ns}{n(S + s)}
   \end{equation*}
 \end{proof}
-As demonstrated in the proof, this represents just an upper estimate of such an
+As demonstrated in the proof, this value represents just an upper estimate of such an
 \( \alpha \) for the worst-case scenario. In practice, it may be reasonable to attempt
 even smaller values of \( \alpha \). However, doing so does not guarantee that the
 desired properties will be satisfied.
 
 The primary distinction between a standard model transfer and the XLNER pipeline,
-which employs the ILP projection problem utilizing NER model-based matching costs,
-lies in the fact that in the latter, we project labels from source entities.
-Consequently, certain predictions made by the NER model, which may be incorrect,
-can be disregarded since the solution to the ILP problem does not include a
-source entity projecting onto that specific target entity.
+which employs the ILP projection problem utilizing NER model-based matching scores,
+lies in the fact that in the latter, we need to have a projection from source entities to preserve
+predicted by a model target entities.
+Consequently, certain predictions made by a NER model, which may be incorrect,
+can be disregarded since the solution to the ILP problem may not include a projection from
+any source entity onto candidates corresponding to wrongly predicted
+target entities.
 
-One of the challenges associated with using models is that they often exhibit
+One of the challenges associated with neural network models is that they often exhibit
 overconfidence in their predictions, producing high probabilities for each output,
-including those that may be incorrect. Since the proposed score directly relies on
+including those that are incorrect. Since the proposed score directly relies on
 these probabilities, it can be adversely affected. To mitigate this issue, calibration \cite{pmlr-v70-guo17a}
 of the model can be implemented. The simplest method to achieve this is to scale
 the model's output logits by a temperature factor. Nevertheless, in the subsequent chapters,
-we will utilize the NER model without any calibration.
+we will utilize NER models without any calibration.
 
 The NER model-based matching score \eqref{eq:ner_cost} possesses another noteworthy
 property. Since the computation of the score relies solely on the class of the source
@@ -793,10 +795,10 @@ between the desired languages.
 The NMTScore proposes three translation-based measures: direct, pivot, and cross-likelihood.
 However, since the computation of the latter two measures requires significantly more
 computational resources than the first, the direct measure is chosen for our matching
-score, considering time constraints. The direct NMTScore operates with the direct
+score. The direct NMTScore operates with the direct
 translation probability, which is computed as follows: let \( A \) and \( B \) be
-phrases in two different languages \( a \) and \( b \), and let \( p_{\theta} \)
-represent the probabilities generated by a translation model. The direct translation
+phrases in two languages \( a \) and \( b \), and let \( p_{\theta} \)
+represents the probabilities generated by a translation model. The direct translation
 probability is given by:
 \[
   P_{direct}(A, B) = \left[ \prod\limits_{t=0}^{|A|} p_{\theta}(A^i|B, A^{<i}) \right]^{\frac{1}{|A|}}
@@ -804,12 +806,12 @@ probability is given by:
 
 Essentially, this is a probability, induced by an autoregressive translation model,
 normalized by the sequence length. The directed NMTScore similarity is a normalized
-version that constrains it to be less than or equal to 1:
+version of it that constrains it to be less or equal to 1:
 \[
   \widehat{sim}(A, B) = \frac{P_{direct}(A, B)}{P_{direct}(A, A)}
 \]
 
-However, because the translation probability \( p_{\theta} \) is a directed measure,
+However, because the translation probability is a directed measure,
 it will differ if the arguments are swapped. To make the similarity score symmetric
 with respect to the arguments, the authors compute an average of both directions:
 \[
@@ -833,7 +835,7 @@ sentences, but also arbitrary subphrases.
 \subsection{Fused score}
 The performance of the alignment, NER, and translation models utilized for the
 computation of the scores discussed above varies based on factors such as language,
-domain, and the set of classes. Each matching score has its own advantages and
+domain, set of classes, etc. Each matching score has its own advantages and
 drawbacks; however, a natural way to minimize failures is to combine the scores.
 Since all scores are real numbers, one approach to achieve this is to compute a
 weighted sum of scores across all types:
@@ -843,14 +845,14 @@ weighted sum of scores across all types:
   \lambda_{ner} c_{\src{p}, \tgt{p}}^{ner} +
   \lambda_{nmt} c_{\src{p}, \tgt{p}}^{nmt}
 \end{equation}
-where \( \lambda_{align} \geq, \lambda_{ner} \geq 0, \lambda_{nmt} \geq 0 \in R\).
+where \( \lambda_{align} \geq 0, \lambda_{ner} \geq 0, \lambda_{nmt} \geq 0 \in \mathbb{R}\).
 
 Furthermore, the fused score enhances the ability to address issues associated with
-the individual scores. For instance, the NER model used in the NER-based cost
+the individual scores. For instance, the NER model used in the NER-based score
 \eqref{eq:ner_cost} may occasionally correctly predict the spans of entities in the
 target sentence but misclassify their labels. During the computation of the NER
-model-based cost, we assume that the labels are predicted accurately, as there is
-no method to amend them. However, when the cost is comprised of various basic scores,
+model-based score, we assume that the labels are predicted accurately, as there is
+no method to amend them. However, when the score is comprised of various basic scores,
 we can utilize the NER model-based score solely to evaluate the likelihood that a
 given candidate can represent a target entity of any class, while determining the
 label through other types of scores. The modified version of \eqref{eq:ner_cost} that
@@ -1167,7 +1169,7 @@ variant of this greedy algorithm.
 \end{algorithm}
 
 The steps of Algorithm \ref{alg:ilp_greedy} imply that by removing all overlapping
-target candidates—thereby setting their costs to zero—the algorithm maintains the non-overlapping constraints.c
+target candidates—thereby setting their scores to zero—the algorithm maintains the non-overlapping constraints.c
 Constraints \eqref{eq:num_proj_const} regarding the number of candidates projected from
 each source entity are ensured by removing all source entities that reach maximum allowed number
 of projections.  However, this holds true only in cases where the constraints are of
@@ -1177,10 +1179,10 @@ In the cases of \( =, >, \) or \( \geq \), the algorithm may produce a "solution
 violates the constraint \eqref{eq:num_proj_const} under two specific circumstances.
 The first occurs when there is a source entity for which all target candidates,
 which do not overlap with the already projected ones, initially have a matching
-cost of zero. However, in such cases, it does not make sense from an application standpoint
+score of zero. However, in such cases, it does not make sense from an application standpoint
 to project the source entity onto these candidates, as they are definitively not
 counterparts of the source entity in the target sentence; otherwise, their
-matching cost would not be zero.
+matching score would not be zero.
 
 The second situation arises when target candidates that could potentially be
 projected onto have been eliminated in previous iterations of the algorithm.
