@@ -886,7 +886,7 @@ However, let us explore the more general case.
 
 For the sake of convenience, we will utilize the first formulation of the ILP
 problem \eqref{eq:objective}--\eqref{eq:binary_prog} in this section. However,
-since it is equivalent to the formulation in \eqref{eq:ilp}, this choice does not
+since it is equivalent to the formulation \eqref{eq:ilp}, this choice does not
 impact the results of the analysis.
 
 A common approach to establishing the complexity of a problem is to reduce another
@@ -936,7 +936,7 @@ It can be demonstrated that the generalized form of the projection ILP problem
 \eqref{eq:objective}--\eqref{eq:binary_prog}, where the relation \( \cap \) is an
 arbitrary reflexive, symmetric, and non-transitive relation, is NP-hard. The
 reduction of the maximum independent set problem to the instance of the generalized
-ILP problem that proves this is presented in Appendix~\ref{sec:gen_ilp_is_np_hard}.
+ILP problem that proves it is presented in Appendix~\ref{sec:gen_ilp_is_np_hard}.
 However, the overlapping relation defined in \ref{def:overlapping}, which is
 employed in the projection ILP problem, represents a specific case in which
 the induced graph of the MaxIS problem is an interval graph. Consequently, the
@@ -986,12 +986,13 @@ the solutions of the MaxIS problem can be established as follows:
   \exists s \in S \Big| x_{s, t_v} = 1 \implies
   x_v = 1
 \end{equation}
-That is, the vertex \( v \in V \) belongs to the maximum independent set if and only
-if the source entity with the highest matching score is projected onto the target
-candidate \( \tgt{p_v} \) corresponding to this vertex. In the event that several source
-entities have equal maximum scores, we select only one entity.
+That is, if the vertex \( v \in V \) belongs to the maximum weight independent set then
+the source entity with the highest matching score is projected onto the target
+candidate \( \tgt{p_v} \) corresponding to this vertex. In the case when several source
+entities have equal maximal scores, we select only one entity.
 
-In the instance of the MaxWIS problem, nodes \( v \) and \( u \in V \), where \( u \neq v \),
+In the instance of the MaxWIS problem, induced by the projection ILP problem, nodes
+\( v, u \in V \), where \( u \neq v \),
 are connected if and only if their corresponding target candidates overlap:
 \begin{equation} \label{eq:edge_reduction}
   \{ v, u \} \in E \Leftrightarrow t_u \cap t_v \neq \emptyset
@@ -1002,7 +1003,7 @@ This completes the reduction procedure. It is important to note that the reducti
 is executed in polynomial time.
 
 Given the one-to-one correspondence between the vertices in the MaxWIS problem and
-the target candidates from the set \( T \), we can consider the following set that
+the target candidates \( T \), we can consider the following set that
 is completely determined by and determines the solution of the MaxWIS problem:
 \[
   T^*_{x} = \{ t \in T | \exists s \in S, x_{s, t} = 1 \}
@@ -1028,11 +1029,11 @@ and vice versa.
   involving \( \tgt{p_1} \neq \tgt{p_2} \) cannot be violated:
   \begin{align*}
     & \forall \{ u, w \} \in E \quad x_u + x_w \leq 1 \stackrel{\eqref{eq:edge_reduction}}{\implies}                  \\
-    & \forall \tgt{p_1} \in T^*_x \; \nexists \tgt{p_2} \in T^*_x \Big| \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \implies \\
+    & \forall \tgt{p_1} \in T^*_x \;\; \nexists \tgt{p_2} \in T^*_x \Big| \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \implies \\
     & \forall \src{p_1}, \src{p_2} \in S \quad x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1
   \end{align*}
   Therefore, \( \tgt{p_1} = \tgt{p_2} \), and the constraints are violated because
-  there exist at least two source entities \( \src{p_1}, \src{p_2} \in S \) that are
+  there exist at least two distinct source entities \( \src{p_1}, \src{p_2} \in S \) that are
   projected onto the same target candidate \( \tgt{p} \in T \):
   \[
     x_{\src{p_1}, \tgt{p}} = 1 \qquad x_{\src{p_2}, \tgt{p}} = 1
@@ -1076,10 +1077,11 @@ algorithm.
   problem. If \( x \) is always an optimal solution for the problem
   \eqref{eq:ilp_without_nproj} then this would establish that we can reduce this
   problem to an instance of the maximum weighted independent set problem, which has a
-  polynomial time algorithm.
+  polynomial time algorithm, i.e. create induced MaxWIS problem, solve it with a polynomial time algorithm
+  and convert solution of the MaxWIS problem back to the optimal solution of the original ILP problem.
 
-  By Lemma \ref{lemma:maxis_f_implies_ilp}, the feasibility of the solution for the
-  MaxWIS problem ensures the feasibility of the corresponding solution for the ILP
+  By Lemma \ref{lemma:maxis_f_implies_ilp}, the feasibility of the solution of the
+  MaxWIS problem ensures the feasibility of the corresponding solution of the ILP
   problem. The objective function for the solution \( x \) is, by construction as
   indicated in \eqref{eq:link_variables}, equal to the objective function of the
   MaxWIS problem:
@@ -1102,7 +1104,7 @@ algorithm.
   \]
   By Lemma \ref{lemma:ilp_f_implies_maxis}, it follows that \( x^*_v \) will be a
   feasible solution. However, this contradicts the fact that \( x_v \) was an optimal
-  solution:
+  solution of the MaxWIS problem:
   \[
     \sum\limits_{v \in V} w_v x_v =
     \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}} <
@@ -1111,16 +1113,16 @@ algorithm.
   \]
 \end{proof}
 
-Thus, the question of whether the problem \eqref{eq:ilp} is NP-hard remains open.
+The question of whether the full projection ILP problem \eqref{eq:ilp} is NP-hard still remains open.
 However, if it is NP-hard, the constraints \eqref{eq:num_proj_const} are
-principal factor to that complexity.
+principal factor of that complexity.
 
 \subsection{Approaches to compute the solution of the problem}
 Like any ILP problem, the problem \eqref{eq:ilp} can be solved using methods such as
 branch-and-bound \cite{land2010automatic}, cutting planes \cite{gilmore1963linear, dyckhoff1981new},
 branch-and-cut \cite{branchAndCut}, and other exact algorithms.
 However, these approaches may require significant time to find an optimal solution,
-which can render such formulations inefficient from an application standpoint,
+which can make such formulations inefficient from an application standpoint,
 particularly when it is necessary to solve instances of this problem for thousands
 of sentences within a limited timeframe.
 
@@ -1169,31 +1171,32 @@ variant of this greedy algorithm.
 \end{algorithm}
 
 The steps of Algorithm \ref{alg:ilp_greedy} imply that by removing all overlapping
-target candidates—thereby setting their scores to zero—the algorithm maintains the non-overlapping constraints.c
-Constraints \eqref{eq:num_proj_const} regarding the number of candidates projected from
+target candidates—by setting their scores to zero—the algorithm maintains the non-overlapping constraints.
+Constraints~\eqref{eq:num_proj_const} regarding the number of candidates projected from
 each source entity are ensured by removing all source entities that reach maximum allowed number
 of projections.  However, this holds true only in cases where the constraints are of
 the form \( < \) or \( \leq \).
 
 In the cases of \( =, >, \) or \( \geq \), the algorithm may produce a "solution" that
-violates the constraint \eqref{eq:num_proj_const} under two specific circumstances.
+violates the constraint~\eqref{eq:num_proj_const} under two specific circumstances.
 The first occurs when there is a source entity for which all target candidates,
-which do not overlap with the already projected ones, initially have a matching
-score of zero. However, in such cases, it does not make sense from an application standpoint
+which do not overlap with the already projected ones, initially have a zero matching
+score. However, in such cases, it does not make sense from an application standpoint
 to project the source entity onto these candidates, as they are definitively not
 counterparts of the source entity in the target sentence; otherwise, their
 matching score would not be zero.
 
 The second situation arises when target candidates that could potentially be
 projected onto have been eliminated in previous iterations of the algorithm.
-Addressing this issue is challenging without backtracking or violating the
-feasibility of the non-overlapping constraints \eqref{eq:non_overlap_const}.
+But addressing this issue is challenging without backtracking or violating the
+feasibility of the non-overlapping constraints~\eqref{eq:non_overlap_const}.
 
 Nevertheless, Algorithm \ref{alg:ilp_greedy} operates in linear time with respect to
 the number of variables and, thus, can solve the ILP problem significantly faster than
 an exact ILP solver in general cases.
 
-Even in cases where the output of the greedy algorithm is a feasible solution, it does not necessarily imply that the solution is optimal; there may exist another feasible solution with a higher objective value. This can be easily illustrated with an example.
+Even in cases where the output of the greedy algorithm is a feasible solution, it does not necessarily
+imply that the solution is optimal -- there may exist another feasible solution with a higher objective value. This can be easily illustrated with an example.
 
 Consider the ILP problem \eqref{eq:ilp} with \( n_{proj} = 2 \) and the \( \leq \)
 type of constraints \eqref{eq:num_proj_const}. Let \( T = \{ \tgt{p_1} = (1, 2), \tgt{p_2} = (2, 3), \tgt{p_3} = (3, 5) \} \)
@@ -1205,6 +1208,6 @@ and \( S = \{ \src{p} \} \), and let the matching scores be as follows:
 \]
 The output of Algorithm \ref{alg:ilp_greedy} is the solution \( x \) with only one
 non-zero variable, \( x_{\src{p}, \tgt{p_2}} = 1 \). This solution has an objective
-value of \( 0.3 \). In contrast, the optimal solution involves projecting the source
-entity onto both \( \tgt{p_1} \) and \( \tgt{p_2} \), yielding an objective value
+value of \( 0.3 \). In contrast, the actual optimal solution involves projecting the source
+entity onto both \( \tgt{p_1} \) and \( \tgt{p_3} \), yielding an objective value
 of \( 0.4 \).
