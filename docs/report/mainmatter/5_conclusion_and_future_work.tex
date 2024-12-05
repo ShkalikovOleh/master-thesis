@@ -2,7 +2,7 @@
 \label{sec:conclusion}
 
 In this work, we have proposed the projection step of the cross-lingual named entity recognition
-pipeline as an integer linear programming (ILP) problem \eqref{eq:ilp}.
+pipeline as the integer linear programming problem \eqref{eq:ilp}.
 This formulation aims to extract candidates within the target sentence and match them
 with the source entity provided from the preceding step of the XLNER pipeline. The likelihood
 of such matches is represented by the matching scores, which should be maximized under
@@ -16,33 +16,33 @@ computed based on different principle and motivations and fuse them together to 
 inherent in each individual score.
 
 For candidate extraction, a straightforward approach has been proposed, which considers all word
-n-grams constrained by the maximum length of the target sentence as potential candidates for matching.
-Furthermore, it has been demonstrated that, for certain scores, specifically alignment-based, this
-set can be reduced without compromising any optimal solution regarding the constraints of type
-\eqref{eq:num_proj_const} of form "less" or "less or equal", thus enabling a more efficient computation
-of the ILP solution.
+n-grams of the target sentence constrained by the maximum length as potential candidates for matching.
+Furthermore, it has been proved that, for certain scores, specifically alignment-based,
+and constraints \eqref{eq:num_proj_const} of type "less" or "less or equal" this
+set can be reduced without compromising any optimal solution. That allows
+to speed up computation of solutions.
 
 The complexity of the proposed ILP problem remains an open question. Nonetheless, it has been
 shown that, in the absence of constraints limiting the number of projections for each source
 entity, the problem can be solved by a polynomial-time algorithm. This property arises because the
 non-overlapping constraints, by construction, induce an interval graph. Thus, even if the problem is NP-hard,
-then the constraints \eqref{eq:num_proj_const} play a critical role in its complexity.
+the constraints \eqref{eq:num_proj_const} play a critical role in its complexity.
 
 Additionally, a fast greedy approximate algorithm has been developed for practical application,
 yielding solutions that satisfy non-overlapping constraints and constraints of
 type \eqref{eq:num_proj_const} when they are of form "less" or "less or equal". However, this algorithm continues
 to demonstrate superior performance from the application standpoint even when constraints \eqref{eq:num_proj_const} have other forms, as the
-enforcement of certain constraints typically leads to less optimal solutions from an application
+enforcement of these constraints typically leads to less optimal solutions from an application
 perspective.
 
 It is also important to highlight that the constraints restricting the number of projected candidates
 for each source entity, particularly with respect to constraints of type "equal", "greater", "greater or equal", may result
-in the optimal solution not aligning with the optimal labeling of the target sentence, as the
-exact solver has to enforce these constraints and therefore may break optimal projection from the application
-point of view.
+in the optimal solution that is not aligning with the optimal labeling of the target sentence, as the
+exact solver has to enforce these constraints and therefore may break optimal from the application
+point of view projections.
 
 We have evaluated our approach in isolation (focusing solely on the projection step) utilizing the
-Europarl-NER dataset, as well as within the complete XLNER pipeline using the MasakhaNER2 dataset.
+Europarl-NER dataset, as well as within the full XLNER pipeline using the MasakhaNER2 dataset.
 The evaluation results indicate that the highest metrics for the application problem are attained when
 the constraints of type \eqref{eq:num_proj_const} are defined as \( \leq 1 \). This can be attributed
 to the expectation of a one-to-one correspondence between source and target entities for languages
@@ -66,7 +66,7 @@ First, it is essential to determine the complexity of the proposed problem, eith
 reduction to or from a problem with known complexity or by providing a polynomial-time algorithm to solve this problem.
 Secondly, novel matching costs could be developed to extend and enhance existing ones. Particularly
 intriguing are matching scores that can take negative values, as this flexibility may enable the
-application of alternative constraints of type \eqref{eq:num_proj_const}, such as "greater or equal".
+application of alternative form constraints of type \eqref{eq:num_proj_const}, such as "greater or equal".
 An additional direction for research involves the refinement of candidate extraction strategies,
 as the current set of all n-grams up to a defined maximum length is excessively large, resulting
 in slower computations for both the solution and matching scores. In addition to the options
@@ -77,16 +77,16 @@ settings where the source and target languages have completely different writing
 for Chinese, Thai, and Japanese.
 
 From a broader perspective, the proposed ILP problem for the projection step of the XLNER pipeline
-can be generalized to other Natural Language Processing tasks. For example, in the word-to-word
-alignment problem, every word consists of tokens, and it is necessary to match words from the source
-language with words from the target language based on their tokens. In this context, the set of target
+can be generalized to other Natural Language Processing tasks. For example, the word-to-word
+alignment problem. From its perspective, every word consists of tokens, and the task is to match words from the source
+sentence with words from the target sentence based on their tokens. In this context, the set of target
 candidates is equivalent to the set of tuples of tokens corresponding to all words in the target
 sentence; therefore, there is no overlap among different candidates. The remaining challenge
 is to derive a method for computing matching scores. One approach can involve adopting the methodology
-utilized by current neural-based aligners and calculating these scores based on cosine similarities
+utilized by current neural-based aligners and compute these scores based on cosine similarities
 between embeddings for each token.
 
-In summary, our proposed formulation of the projection step as an ILP problem generalizes numerous
+In summary, our proposed formulation of the projection step as the ILP problem generalizes numerous
 previous methods and enables their integration, addressing the drawbacks of individual methods.
 By analyzing the solutions to the problem in conjunction with the corresponding matching scores,
 we gain insight into why particular entities are projected onto specific target candidates, thus
