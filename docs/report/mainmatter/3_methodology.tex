@@ -613,7 +613,7 @@ Therefore, the NER model-based matching score can be expressed as follows:
     p_{i_{\tgt{p}}, B[l_{\src{p}}]} +
     \sum\limits_{k = i_{\tgt{p}} + 1}^{j_{\tgt{p}}} p_{k, I[l_{\src{p}}]}
   }
-  {j_\tgt{p} - i_{\tgt{p}}}
+  {j_{\tgt{p}} - i_{\tgt{p}}}
 \end{equation}
 where \( l_{\src{p}} \in L \) denotes the class of the source entity
 \( \src{p} \in S \) and \( \alpha > 0 \in \mathbb{R} \) is a length-scaling constant.
@@ -806,14 +806,14 @@ Essentially, this is a probability, induced by an autoregressive translation mod
 normalized by the sequence length. The directed NMTScore similarity is a normalized
 version that constrains it to be less than or equal to 1:
 \[
-  \hat{sim}(A, B) = \frac{P_{direct}(A, B)}{P_{direct}(A, A)}
+  \widehat{sim}(A, B) = \frac{P_{direct}(A, B)}{P_{direct}(A, A)}
 \]
 
 However, because the translation probability \( p_{\theta} \) is a directed measure,
 it will differ if the arguments are swapped. To make the similarity score symmetric
 with respect to the arguments, the authors compute an average of both directions:
 \[
-  sim(A, B) = \frac{\hat{sim}(A, B) + \hat{sim}(B, A)}{2}
+  sim(A, B) = \frac{\widehat{sim}(A, B) + \widehat{sim}(B, A)}{2}
 \]
 
 Thus, the translation-based matching score can be computed as the direct NMTScore of
@@ -862,7 +862,7 @@ implements this concept is as follows:
     p_{i_{\tgt{p}}, B[l]} +
     \sum\limits_{k = i_{\tgt{p}} + 1}^{j_{\tgt{p}}} p_{k, I[l]}
   }
-  {j_\tgt{p} - i_{\tgt{p}}}
+  {j_{\tgt{p}} - i_{\tgt{p}}}
 \end{equation}
 
 \section{Analysis of the ILP problem}
@@ -907,7 +907,7 @@ Therefore, let us consider the maximum weight independent set problem
       (6) -- (2) -- (3)
     };
   \end{tikzpicture}
-  \caption{Maximum weigh independent set problem (MaxWIS). Vertices that form an optimal solution are colored in \textbf{\textcolor{green!50}{green}}}
+  \caption{Maximum weigh independent set problem (MaxWIS). Vertices that form an optimal solution are colored in green}
   \label{fig:maxwis}
 \end{figure}
 
