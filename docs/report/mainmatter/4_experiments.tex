@@ -1,7 +1,7 @@
 \chapter{Evaluation}
 \label{sec:experiments}
 
-The evaluation of the XLNER pipelines can be classified into two groups: extrinsic and
+The evaluation strategies for the XLNER pipelines can be classified into two groups: extrinsic and
 intrinsic. Extrinsic evaluation involves utilizing the XLNER pipeline to produce a
 labeled dataset in the target language, followed by training a NER model on this dataset.
 In this context, the performance of the trained NER model serves as a measure of quality.
@@ -18,17 +18,17 @@ labels. It is reasonable to anticipate that superior intrinsic performance will
 correlate with improved extrinsic performance, assuming a consistent training setup.
 
 To assess the proposed formulation of the projection step of the XLNER pipeline as an
-ILP problem, as delineated in \eqref{eq:ilp}, and to analyze various forms of it, two
+ILP problem \eqref{eq:ilp} and to analyze various forms of it, two
 sets of experiments have been conducted. The first set evaluates the performance of
-the projection step in isolation. The second set of experiments confirms the quality
-of projections within the complete XLNER pipeline on the MasakhaNER2 dataset
+the projection step in isolation. The second set of experiments tests the quality
+of the proposed method within the complete XLNER pipeline on the MasakhaNER2 dataset
 \cite{adelani-etal-2022-masakhaner}. The source code utilized for conducting all
-experiments is made publicly available on GitHub\footnote{\url{https://github.com/ShkalikovOleh/master-thesis}}.
-The GUROBI optimizer \cite{gurobi}, employed under an academic license, served as the
+experiments is publicly available on GitHub\footnote{\url{https://github.com/ShkalikovOleh/master-thesis}}.
+The GUROBI optimizer \cite{gurobi}, employed under an academic license, served as the exact
 ILP solver for all experiments.
 
 Word-to-word alignments for all experiments were computed using a non-fine-tuned
-AWESOME aligner with the following default hyperparameters: extraction method set
+AWESOME \cite{dou-neubig-2021-word} aligner with the following default hyperparameters: extraction method set
 to softmax, softmax\_threshold of \( 0.001 \), and align\_layer is \( 8 \).
 
 For source labelling, candidate evaluation, and model transfer, the MDeBERTa-v3-base \cite{He2021DeBERTaV3ID}
@@ -46,13 +46,13 @@ In all experiments involving NER model-based and translation-based matching scor
 in order to simplify the problem (by making scores matrix sparse) and based on the interpretation of the scores
 (where small values indicate a poor projection), all \eqref{eq:ner_cost} scores were
 thresholded at \( 0.05 \) and all \eqref{eq:nmt_cost} scores were thresholded
-at \( 0.1 \). The \( \alpha \) parameter fo the NER model-based score was set to \( 1.15 \).
+at \( 0.1 \). The \( \alpha \) parameter of the NER model-based score was set to \( 1.15 \).
 The translation model utilized for the computation of the NMTScore, and consequently
 for the translation-based matching scores, is the distilled 600M version of the NLLB-200 \cite{nllbteam2022languageleftbehindscaling}.
 
 All experiments involving target candidate extraction were conducted using the
-algorithm~\ref{alg:ngram_extraction} with \( n = 10 \). Although this limitation restricts the proposed method's
-ability to project onto longer candidates, it remains within the 0.99 percentile of entity lengths
+algorithm~\ref{alg:ngram_extraction} with \( n = 10 \). Although it restricts the proposed method's
+ability to predict longer target entities, it remains within the 0.99 percentile of entity lengths
 for all datasets utilized. Furthermore, all experiments with only the alignment-based matching
 score were conducted with a reduced set of target candidates, as specified in Theorem \ref{thm:reduce_T_for_align}.
 
@@ -62,10 +62,12 @@ and projection. Each of these steps can introduce errors. The new ILP-based appr
 projection step has been proposed, and it is essential to evaluate the performance
 of this step independently from errors associated with the preceding steps.
 
-This necessitates the availability of a labelled dataset for parallel text,
+This necessitates the availability of a labelled dataset with parallel texts,
 which would enable the exclusion of the translation and source labelling phases.
 The Europarl-NER dataset \cite{agerri-etal-2018-building} serves as such a dataset.
-This dataset consists of 799 parallel sentences derived from the Europarl corpus \cite{koehn2005europarl}, manually annotated according to four entity types, adhering to the CoNLL 2002 and 2003 guidelines for four languages: English, German, Italian, and Spanish.
+This dataset consists of 799 parallel sentences derived from the Europarl corpus \cite{koehn2005europarl},
+and manually annotated according to four entity types, adhering to the CoNLL 2002 and 2003
+guidelines for four languages: English, German, Italian, and Spanish.
 
 \begin{table}[ht]
   \centering
@@ -84,14 +86,15 @@ The F1 scores for the heuristic algorithm, assessed with varying hyperparameters
 presented in Table \ref{tab:europarl_heur_f1}.
 
 The results indicate that the optimal combination of hyperparameters for the majority of
-languages is as follows: a merging distance \( d = 1 \), an unrestricted maximum number
-of aligned subranges sorted by length that can be projected (i.e., \( k \) should not be
-limited), merging of aligned ranges should disregard whether the first word of the
+languages is as follows: a merging distance \( d = 1 \), \( k \) should not be
+limited (an unrestricted maximum number of aligned subranges sorted by
+length that can be projected (i.e., )),
+merging of aligned ranges should disregard whether the first word of the
 right-aligned range is aligned to the first word of a source entity, and a word length
-ratio threshold of \( 0.8 \)  between the source entity and the target range of words.
+ratio threshold of \( 0.8 \).
 Hence, these hyperparameters will be employed for subsequent experiments.
 
-The overall results are as follows. The most significant improvement in performance
+The overall results are the following. The most significant improvement in performance
 occurs when the algorithm is permitted to merge aligned ranges together, provided
 that only one non-aligned word exists between them. This enhancement is attributed to
 the algorithm's ability to fill gaps in imperfect or missed alignments. Concurrently,
@@ -100,13 +103,13 @@ results in a slight decrease in performance. Additionally, due to errors in alig
 the merging of aligned subranges, which only occurs when the right range begins with a
 word aligned to the first word of a source entity, leads to outcomes that are less
 favorable in comparison to scenarios without such a limit. Finally, applying a threshold
-based on the ratio of length between the source entity and the ranges of aligned target
-words enhances performance. This improvement is attributed to the filtering out of
-incorrect alignments involving single words, which would otherwise be incorrectly part of projections.
+on the length ratio between the source entity and the ranges of aligned target
+words enhances performance. This improvement is attributed to the filtering out
+wrong alignments of single words, which would otherwise be incorrectly part of projections.
 
 The subsequent step involves evaluating the performance of the proposed ILP
 formulation \eqref{eq:ilp} for the projection step and identifying which type
-of constraints \eqref{eq:num_proj_const} yield superior results. Additionally, a
+of constraints \eqref{eq:num_proj_const} yield superior results. A
 comparison was made among all proposed matching scores, excluding fused scores,
 as well as between greedy and exact solvers. The results including the model transfer pipeline
 are presented in Table \ref{tab:europarl_ilp_f1}. It is important to note that, given the
@@ -126,28 +129,28 @@ omitted from testing, for example,
 
 First and foremost, the best results obtained for all languages utilizing the
 proposed ILP formulation surpass the highest results achieved with the heuristic
-word-to-word alignment-based algorithm. In the case of the Italian and Spanish languages,
+word-to-word alignment-based algorithm as well as model transfer. In the case of the Italian and Spanish languages,
 this improved performance is attributed to the superior effectiveness of the
 translation-based cost, whereas alignment-based matching scores exhibit inferior results.
 This discrepancy can be explained by the heuristic algorithm's capability to merge aligned
 ranges if only one misaligned word exists between them, while the ILP formulation with
 alignment-based scoring can achieve similar merging only under specific circumstances.
 Nevertheless, for the German language, the proposed alignment-based matching score
-within the ILP-based projection step pipeline demonstrated superior results across
-all experimental evaluations.
+within the ILP-based projection step demonstrated superior results across
+all experimental evaluations including heuristics.
 
 In the comparison between the greedy algorithm \ref{alg:ilp_greedy} and the exact solver
 GUROBI, it is observed that, in most cases, the greedy algorithm performs better.
 There are two primary reasons for this outcome. The first reason is that the exact
-ILP solver may enforce or misuse constraints, leading to suboptimal solutions from an
+ILP solver has to enforce constraints, leading to suboptimal solutions from an
 application perspective. When constraints are of the type \( = \), the solver may
 include incorrect projections in an effort to satisfy the constraints. When constraints
 are \( \leq 2 \), it tends to favor smaller, non-overlapping candidates with a higher
-overall cost rather than opting for a longer candidate with high cost. In cases where
+overall cost rather than opting for a longer candidate with high individual cost. In cases where
 constraints are \( \geq \), the solver attempts to project the source entity to as many
 target candidates as possible, given that all scores are non-negative.
-Conversely, the greedy algorithm consistently selects the candidate with the maximum score
-for projection and does not generally adhere to the constraints \eqref{eq:num_proj_const}
+Conversely, the greedy algorithm consistently selects for projection candidates with
+the maximum score and does not generally adhere to the constraints \eqref{eq:num_proj_const}
 for the cases of \( =, \geq, > \).
 
 However, this does not account for why, in certain experiments involving the Italian and
@@ -155,7 +158,7 @@ Spanish languages with constraints of type \( \leq 1 \), the greedy algorithm st
 slightly outperforms the exact solver. This discrepancy can be attributed to the fact that all
 matching score calculations involve models that may themselves introduce errors,
 resulting in scores that are not always aligned with the application problem of projection.
-Nonetheless, it is noteworthy that for the best solutions, the GUROBI optimizer
+Nonetheless, it is noteworthy that among the best solutions, the GUROBI optimizer
 outperformed the greedy algorithm in all cases.
 
 Furthermore, it is important to note the runtimes of the various pipelines.
@@ -171,15 +174,17 @@ Another important observation is that the ILP-based projection pipeline utilizin
 model-based matching costs significantly outperforms the model transfer approach,
 despite the fact that the model that has been used and, consequently, the outputs of the model
 were identical. The improvement in F1 score can be attributed to the fact that projection
-pipelines project source entities, thereby filtering out any predictions from the model
+pipelines needs to project source entities, thereby filtering out any predictions from the model
 that correspond to classes not present among the source entities. And in addition, the
 application of constraints \eqref{eq:num_proj_const} imposes limitations on the number
 of entities of each class, which explains the circumstances under which the metric
-for the \( \geq 2 \) type of constraints appears lower to that of model transfer.
+for this type of the matching score for the \( \geq 2 \) type of constraints appears
+lower to that of model transfer.
 
 Thus, for the subsequent experiments, the constraints \eqref{eq:num_proj_const} will
 be fixed in the form of \( \leq 1 \). Additionally, it is noted that the translation-based
-matching scores yield the best results and should consequently dominate in all fused scores.
+matching scores yield the best results and consequently should dominate, i.e. has higher weight,
+in all fused scores.
 
 \section{Intrinsic evaluation within a full pipeline}
 It is crucial to evaluate the proposed ILP-based projection step not only in isolated
@@ -236,8 +241,8 @@ constraints \eqref{eq:num_proj_const} have been selected based on the findings f
 previous section, specifically corresponding to the best results from the experiments
 denoted in Tables \ref{tab:europarl_heur_f1} and \ref{tab:europarl_ilp_f1}.
 All experiments involving ILP-based projection pipelines were conducted using GUROBI as
-the exact solver to evaluate the true performance of the proposed formulation, thereby avoiding
-alterations induced by an approximate greedy algorithm.
+the exact solver to evaluate the true performance of the proposed formulation, avoiding
+alterations induced by the proposed approximate greedy algorithm.
 
 \begin{table}[ht]
   \input{mainmatter/tables/mashkaner2}
@@ -262,18 +267,18 @@ be attributed to the fact that the \textit{all\_fusion} matching score integrate
 of each individual score, thereby providing a more accurate representation of whether
 a source entity should be projected onto a target candidate. In situations where the
 \textit{all\_fusion} score performs worse than any other ILP-based pipeline, it
-suggests that one of the individual compound scores make from the overall
+suggests that one of the individual compound scores make the overall
 fused matching score worse due to its inherent drawbacks.
 
 Similar to the isolated evaluation, the results for the heuristic word-to-word
 alignment-based algorithm are slightly superior to those for the ILP-based projection
-utilizing alignment-based matching scores, attributable to the same rationale: the
-heuristic algorithm can consistently merge two aligned word ranges that are separated
-by only one non-aligned word to any source entity.
+utilizing alignment-based matching scores. It is attributed to the same rationale: the
+heuristic algorithm, in comparison to ours, always can merge two aligned word ranges that are separated
+by only one non-aligned word to the source entity.
 
-At the same time, the pipeline \textit{ner}, which utilizes the NER model-based matching
+For the same reasons described in the previous section, the pipeline \textit{ner}, which utilizes the NER model-based matching
 score, consistently outperforms (sometimes in 1.5 times) the \textit{Model transfer} approach when provided with the same
-NER model outputs, for the same reasons described in the previous section. However,
+NER model outputs. However,
 being projection-based, it may be susceptible to errors from the preceding steps, namely
 translation and source NER model labeling errors, which can adversely impact performance,
 as observed in the cases of the Chichewa (nya) and Kiswahili (swa) languages.
@@ -285,21 +290,20 @@ as observed in the cases of the Chichewa (nya) and Kiswahili (swa) languages.
   \label{tab:masakhaner2_f1_other}
 \end{table}
 
-Additionally, the score \eqref{eq:ner_cost_wo_classes}, referred to as \textit{ner\_spans},
-involves utilizing the predictions of the NER model solely to assess the likelihood
-that a given candidate may represent a valid target entity of any class. This approach
+Another observation involves the score \eqref{eq:ner_cost_wo_classes}, referred to as \textit{ner\_spans},
+which utilizes the predictions of a NER model only to assess the likelihood
+that a given candidate is a span of an entity of any class. This approach
 leverages other scores to assign the appropriate label to this span.
-It demonstrates results that are comparable to those of other pipelines.
+It demonstrates results that are comparable to those of other pipelines, especially \textit{ner}.
 Notably, for the Bambara (bam) and Mossi (mos) languages, it performs the best, as
-it is capable of disregarding incorrectly predicted NER model labels for spans that
-correspond to actual target entities.
+it used its ability of disregarding incorrectly predicted labels for correctly predicted spans.
 
 To assess how the performance of the proposed method compares to that of other methods described
 in Chapter \ref{sec:background}, the results obtained by these methods, as reported in the original
 papers, are presented in Table \ref{tab:masakhaner2_f1_other}. However, it should be noted that the
 evaluation setups for these experiments were different from ours, making direct comparisons not feasible.
 EasyProject, CODEC, and CLaP were evaluated in extrinsic settings, i.e. the reported results represent the
-F1 metric on the test set of the MasakhaNER2 dataset, derived from models trained on datasets generated
+F1 metric on the test set of the MasakhaNER2 dataset, obtained by models trained on datasets generated
 by these methods. GOOLIE-TF (TransFusion), GPT-4 and CLaP utilized all four classes provided in the MasakhaNER2 dataset,
 while our approach and others in this list were evaluated without the \textit{DATE} class.
 The results for GPT4 are taken from the TransFusion paper \cite{transfusion} and denote few-shot
