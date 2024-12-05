@@ -19,7 +19,7 @@ For candidate extraction, a straightforward approach has been proposed, which co
 n-grams constrained by the maximum length of the target sentence as potential candidates for matching.
 Furthermore, it has been demonstrated that, for certain scores, specifically alignment-based, this
 set can be reduced without compromising any optimal solution regarding the constraints of type
-\eqref{eq:num_proj_const} of form \( <, \leq \), thus enabling a more efficient computation
+\eqref{eq:num_proj_const} of form "less" or "less or equal", thus enabling a more efficient computation
 of the ILP solution.
 
 The complexity of the proposed ILP problem remains an open question. Nonetheless, it has been
@@ -30,13 +30,13 @@ then the constraints \eqref{eq:num_proj_const} play a critical role in its compl
 
 Additionally, a fast greedy approximate algorithm has been developed for practical application,
 yielding solutions that satisfy non-overlapping constraints and constraints of
-type \eqref{eq:num_proj_const} when they are of form \( <, \leq \). However, this algorithm continues
+type \eqref{eq:num_proj_const} when they are of form "less" or "less or equal". However, this algorithm continues
 to demonstrate superior performance from the application standpoint even when constraints \eqref{eq:num_proj_const} have other forms, as the
 enforcement of certain constraints typically leads to less optimal solutions from an application
 perspective.
 
 It is also important to highlight that the constraints restricting the number of projected candidates
-for each source entity, particularly with respect to constraints of type \( =, >, \geq \), may result
+for each source entity, particularly with respect to constraints of type "equal", "greater", "greater or equal", may result
 in the optimal solution not aligning with the optimal labeling of the target sentence, as the
 exact solver has to enforce these constraints and therefore may break optimal projection from the application
 point of view.
@@ -66,7 +66,7 @@ First, it is essential to determine the complexity of the proposed problem, eith
 reduction to or from a problem with known complexity or by providing a polynomial-time algorithm to solve this problem.
 Secondly, novel matching costs could be developed to extend and enhance existing ones. Particularly
 intriguing are matching scores that can take negative values, as this flexibility may enable the
-application of alternative constraints of type \eqref{eq:num_proj_const}, such as \( \geq \).
+application of alternative constraints of type \eqref{eq:num_proj_const}, such as "greater or equal".
 An additional direction for research involves the refinement of candidate extraction strategies,
 as the current set of all n-grams up to a defined maximum length is excessively large, resulting
 in slower computations for both the solution and matching scores. In addition to the options

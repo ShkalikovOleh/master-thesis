@@ -96,7 +96,7 @@ a relation of overlapping, then the projection ILP problem is the following:
   \label{eq:binary_prog}
   & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}                                                                     & \forall (\src{p}, \tgt{p}) \in S \times T
 \end{align}
-where \( \hat{\Pi}(S, T) \) represents a set of combinations of
+where \( n_{proj} \in \mathbb{N} \) and \( \hat{\Pi}(S, T) \) represents a set of combinations of
 source entities and target candidates that cannot be projected onto
 together due to overlapping. This set is defined as follows:
 \begin{equation}  \label{eq:overlapping_set}
@@ -120,7 +120,7 @@ the objective value. Conversely, "greater" or "greater than or equal" can be
 employed to enforce that a source entity will be projected at least a specified
 number of times, e.g., once, ensuring that the solver does not simply ignore it.
 It is evident that \( n_{proj} = 0 \) represents a corner case that typically
-lacks meaning, except in the case of a "greater" or "greater or equal" inequality, which effectively
+lacks meaning, except in the case of a "greater or equal" inequality, which effectively
 eliminates any limits and is equivalent to having no constraints of this type.
 
 However, the number of constraints \eqref{eq:non_overlap_const} scales as
@@ -768,7 +768,7 @@ source entity projecting onto that specific target entity.
 One of the challenges associated with using models is that they often exhibit
 overconfidence in their predictions, producing high probabilities for each output,
 including those that may be incorrect. Since the proposed score directly relies on
-these probabilities, it can be adversely affected. To mitigate this issue, calibration
+these probabilities, it can be adversely affected. To mitigate this issue, calibration \cite{pmlr-v70-guo17a}
 of the model can be implemented. The simplest method to achieve this is to scale
 the model's output logits by a temperature factor. Nevertheless, in the subsequent chapters,
 we will utilize the NER model without any calibration.

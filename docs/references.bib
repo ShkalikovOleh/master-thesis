@@ -619,6 +619,22 @@
   abstract  = {Word alignments are useful for tasks like statistical and neural machine translation (NMT) and cross-lingual annotation projection. Statistical word aligners perform well, as do methods that extract alignments jointly with translations in NMT. However, most approaches require parallel training data and quality decreases as less training data is available. We propose word alignment methods that require no parallel data. The key idea is to leverage multilingual word embeddings {--} both static and contextualized {--} for word alignment. Our multilingual embeddings are created from monolingual data only without relying on any parallel data or dictionaries. We find that alignments created from embeddings are superior for four and comparable for two language pairs compared to those produced by traditional statistical aligners {--} even with abundant parallel data; e.g., contextualized embeddings achieve a word alignment F1 for English-German that is 5 percentage points higher than eflomal, a high-quality statistical aligner, trained on 100k parallel sentences.}
 }
 
+@inproceedings{pmlr-v70-guo17a,
+  title     = {On Calibration of Modern Neural Networks},
+  author    = {Chuan Guo and Geoff Pleiss and Yu Sun and Kilian Q. Weinberger},
+  booktitle = {Proceedings of the 34th International Conference on Machine Learning},
+  pages     = {1321--1330},
+  year      = {2017},
+  editor    = {Precup, Doina and Teh, Yee Whye},
+  volume    = {70},
+  series    = {Proceedings of Machine Learning Research},
+  month     = {06--11 Aug},
+  publisher = {PMLR},
+  pdf       = {http://proceedings.mlr.press/v70/guo17a/guo17a.pdf},
+  url       = {https://proceedings.mlr.press/v70/guo17a.html},
+  abstract  = {Confidence calibration – the problem of predicting probability estimates representative of the true correctness likelihood – is important for classification models in many applications. We discover that modern neural networks, unlike those from a decade ago, are poorly calibrated. Through extensive experiments, we observe that depth, width, weight decay, and Batch Normalization are important factors influencing calibration. We evaluate the performance of various post-processing calibration methods on state-of-the-art architectures with image and document classification datasets. Our analysis and experiments not only offer insights into neural network learning, but also provide a simple and straightforward recipe for practical settings: on most datasets, temperature scaling – a single-parameter variant of Platt Scaling – is surprisingly effective at calibrating predictions.}
+}
+
 
 
 
