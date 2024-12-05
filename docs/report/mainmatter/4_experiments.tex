@@ -50,6 +50,12 @@ at \( 0.1 \). The \( \alpha \) parameter fo the NER model-based score was set to
 The translation model utilized for the computation of the NMTScore, and consequently
 for the translation-based matching scores, is the distilled 600M version of the NLLB-200 \cite{nllbteam2022languageleftbehindscaling}.
 
+All experiments involving target candidate extraction were conducted using the
+algorithm~\ref{alg:ngram_extraction} with \( n = 10 \). Although this limitation restricts the proposed method's
+ability to project onto longer candidates, it remains within the 0.99 percentile of entity lengths
+for all datasets utilized. Furthermore, all experiments with only the alignment-based matching
+score were conducted with a reduced set of target candidates, as specified in Theorem \ref{thm:reduce_T_for_align}.
+
 \section{Isolated evaluation of the projection step}
 The XLNER pipeline comprises three steps: forward translation, source NER labelling,
 and projection. Each of these steps can introduce errors. The new ILP-based approach for the
@@ -187,12 +193,6 @@ organization (\textit{ORG}), location (\textit{LOC}), and date (\textit{DATE}).
 However, since the source NER model employed does not support the DATE class, this
 particular class was disregarded during the metric computation.
 
-English has been selected as the source language. The forward translation model used
-for all experiments is NLLB-200-3.3B \cite{nllbteam2022languageleftbehindscaling}.
-It should be noted that this model supports only 18 of the 20 languages included
-in the MasakhaNER2 dataset; therefore, only these languages will be considered in
-our evaluation.
-
 \begin{table}[ht]
   \centering
   \begin{tabular}{lrrrr}
@@ -215,6 +215,12 @@ our evaluation.
   \label{tab:ilp_pipeline_explation}
 \end{table}
 
+English has been selected as the source language. The forward translation model used
+for all experiments is NLLB-200-3.3B \cite{nllbteam2022languageleftbehindscaling}.
+It should be noted that this model supports only 18 of the 20 languages included
+in the MasakhaNER2 dataset; therefore, only these languages will be considered in
+our evaluation.
+
 In comparison to the isolated evaluation of the projection step presented in the
 previous section, this evaluation also includes fused scores \eqref{eq:fused_cost},
 which represent a weighted sum of the basic matching scores. All ILP-based pipelines
@@ -229,6 +235,9 @@ the ILP-based projection step. The hyperparameters for the heuristic and the typ
 constraints \eqref{eq:num_proj_const} have been selected based on the findings from the
 previous section, specifically corresponding to the best results from the experiments
 denoted in Tables \ref{tab:europarl_heur_f1} and \ref{tab:europarl_ilp_f1}.
+All experiments involving ILP-based projection pipelines were conducted using GUROBI as
+the exact solver to evaluate the true performance of the proposed formulation, thereby avoiding
+alterations induced by an approximate greedy algorithm.
 
 \begin{table}[ht]
   \input{mainmatter/tables/mashkaner2}
@@ -269,6 +278,13 @@ being projection-based, it may be susceptible to errors from the preceding steps
 translation and source NER model labeling errors, which can adversely impact performance,
 as observed in the cases of the Chichewa (nya) and Kiswahili (swa) languages.
 
+\begin{table}[ht]
+  \input{mainmatter/tables/mashkaner2_others.tex}
+  \caption{Overall F1 scores for various XLNER methods evaluated under different
+  settings compared to our experiments}
+  \label{tab:masakhaner2_f1_other}
+\end{table}
+
 Additionally, the score \eqref{eq:ner_cost_wo_classes}, referred to as \textit{ner\_spans},
 involves utilizing the predictions of the NER model solely to assess the likelihood
 that a given candidate may represent a valid target entity of any class. This approach
@@ -278,12 +294,6 @@ Notably, for the Bambara (bam) and Mossi (mos) languages, it performs the best, 
 it is capable of disregarding incorrectly predicted NER model labels for spans that
 correspond to actual target entities.
 
-\begin{table}[ht]
-  \input{mainmatter/tables/mashkaner2_others.tex}
-  \caption{Overall F1 scores for various XLNER methods evaluated under different
-  settings compared to our experiments}
-  \label{tab:masakhaner2_f1_other}
-\end{table}
 To assess how the performance of the proposed method compares to that of other methods described
 in Chapter \ref{sec:background}, the results obtained by these methods, as reported in the original
 papers, are presented in Table \ref{tab:masakhaner2_f1_other}. However, it should be noted that the
