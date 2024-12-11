@@ -1,2 +1,4 @@
 # master-thesis
-Formulation of NLP tasks as an integer linear programming problems
+Formulation of the annotation projection step of the cross-lingual NER pipeline as an integer linear programming problem
+
+Please read the [report](docs/report/main.pdf).
