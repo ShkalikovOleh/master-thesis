@@ -1,0 +1,215 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{array}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+\usetikzlibrary{calc}
+\usetikzlibrary{positioning}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\pgfplotsset{
+  report_style/.style={
+    legend style={draw=none, font=\small},
+    legend cell align=left,
+    legend pos=north east,
+    ylabel style={align=center, font=\bfseries\boldmath},
+    xlabel style={align=center, font=\bfseries\boldmath},
+    x tick label style={font=\bfseries\boldmath},
+    y tick label style={font=\bfseries\boldmath},
+    scaled ticks=false,
+    every axis plot/.append style={thick},
+  },
+}
+
+\usepackage[justification=centering]{caption}
+\usepackage{subcaption}
+
+\usepackage{xurl}
+
+% default path to images and other assets
+\graphicspath{{../assets/}}
+
+% disable wrapping
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\hbadness=10000
+
+% number figure caption
+\setbeamertemplate{caption}[numbered]
+
+% display bib label in references
+\setbeamertemplate{bibliography item}{\insertbiblabel}
+\setbeamertemplate{bibliography entry title}{}
+\setbeamertemplate{bibliography entry location}{}
+\setbeamertemplate{bibliography entry note}{}
+
+\newcommand{\fall}[1]{\quad \textcolor{red}{#1}}
+
+% Metadata
+% ------------------------
+\title[XLNER]{Formalization of natural language processing tasks as optimization problems}
+\subtitle{Master thesis}
+
+\author[Oleh Shkalikov]{Oleh Shkalikov\texorpdfstring{ (5102818)
+    \\[0.7em]{\small Supervisor: Jannik Irmai}
+\\{\small Reviewers: Prof. Dr. Bjoern Andres, Prof. Dr. Simon Razniewski}}{}}
+
+\institute[TU Dresden]{TU Dresden}
+
+\date{January , 2025}
+
+\begin{document}
+
+\frame{\titlepage}
+
+% \begin{frame}
+%   \frametitle{Table of contents}
+%   \tableofcontents
+% \end{frame}
+
+\section{Introduction}
+
+\begin{frame}
+  \frametitle{Named Entity Recognition}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Issues of multilingual NER}
+\end{frame}
+
+\section{Related works}
+
+\begin{frame}
+  \frametitle{Classification of approaches to XLNER}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Model transfer}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Projection-based pipeline}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Translation-based projection}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Model-based projection}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Word-to-word alignment-based projection}
+\end{frame}
+
+\section{Methodology}
+
+\begin{frame}
+  \frametitle{Requirements to the formalization}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Projection ILP problem}
+\end{frame}
+
+\begin{frame}
+  \frametitle{ILP problem with reduced number of constraints}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Candidate extraction}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Word-to-word alignment-based matching score}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Reduction of the set of candidates}
+\end{frame}
+
+\begin{frame}
+  \frametitle{NER model-based matching score}
+\end{frame}
+
+\begin{frame}
+  \frametitle{translation-based matching score}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Fused matching score}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example of the ILP problem}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Complexity}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Reduction to the MaxWIS problem}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Approximate algorithm}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example of approximate algorithm failure}
+\end{frame}
+
+\section{Evaluation}
+
+\begin{frame}
+  \frametitle{Experiments setup}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Europarl-NER: heuristics}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Europarl-NER: ILP and model transfer}
+\end{frame}
+
+\begin{frame}
+  \frametitle{MasakhaNER2}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Europarl-NER: alternative methods}
+\end{frame}
+
+\section{Conclusions}
+
+\begin{frame}
+  \frametitle{Conclusions}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Directions of further work}
+\end{frame}
+
+\section*{References}
+
+\begin{frame}[allowframebreaks]
+  \frametitle{References}
+
+  \bibliographystyle{apalike}
+  \bibliography{../references.bib}
+\end{frame}
+
+\end{document}
