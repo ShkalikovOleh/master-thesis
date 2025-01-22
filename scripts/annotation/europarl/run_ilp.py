@@ -164,7 +164,6 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--lang",
-        nargs="+",
         type=str,
         choices=["de", "es", "it"],
     )

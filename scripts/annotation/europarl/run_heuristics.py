@@ -9,9 +9,9 @@ Constraint = namedtuple("Constrain", ["type", "n_proj"])
 
 def make_merge_only_i_labels_params(cfg: argparse.Namespace) -> list[Constraint]:
     params = []
-    if cfg.merge_only_i_labels != "True":
+    if cfg.merge_only_i_labels != "true":
         params.append("pipeline.project.transform.merge_only_i_labels=false")
-    if cfg.merge_only_i_labels != "False":
+    if cfg.merge_only_i_labels != "false":
         params.append("pipeline.project.transform.merge_only_i_labels=true")
     return params
 
