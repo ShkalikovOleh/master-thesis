@@ -11,7 +11,9 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, shapes.misc, arrows}
 \usetikzlibrary{calc}
+\usetikzlibrary{graphs}
 \usetikzlibrary{positioning}
+\usetikzlibrary{decorations.pathreplacing}
 
 \usepackage{multirow}  % use tables with columns stretching over multiple rows
 \usepackage{booktabs}
@@ -128,6 +130,12 @@
 
 \begin{frame}
   \frametitle{Issues of multilingual NER}
+
+  \begin{alertblock}{}
+    The lack of (labelled) data is the main problem in multilingual NER!
+  \end{alertblock}
+
+  \vspace*{0.5cm}
 
   Number of datasets for the token classification task on the HF Hub:
   \begin{itemize}
@@ -412,16 +420,77 @@
 
 \begin{frame}
   \frametitle{Candidate extraction}
+
+  Let's consider the set of target candidates as all n-grams (composed of words from the target sentence).
+  \begin{alertblock}{Problem: Number of candidates is too high}
+    Limit the n-gram length to a fixed number.
+  \end{alertblock}
+
+  \begin{figure}
+    \begin{tikzpicture}[node distance=0.05,
+        every node/.style={text centered,
+          text height=2ex,
+          text depth=.25ex,
+      },]
+      \node (1){Die};
+      \node[right=of 1] (2){TU};
+      \node[right=of 2] (3){Dresden};
+      \node[right=of 3] (4){ist};
+      \node[right=of 4] (5){eine};
+      \node[right=of 5] (6){Universität};
+
+      \draw[decoration={brace},decorate] (1.north west) -- node[above=5pt] {$\src{p_1}$} (1.north east);
+      \draw[decoration={brace},decorate] (2.north west) -- node[above=5pt] {$\src{p_2}$} (2.north east);
+      \draw[decoration={brace},decorate] (3.north west) -- node[above=5pt] {$\src{p_3}$} (3.north east);
+      \draw[decoration={brace},decorate] (4.north west) -- node[above=5pt] {$\src{p_4}$} (4.north east);
+      \draw[decoration={brace},decorate] (5.north west) -- node[above=5pt] {$\src{p_5}$} (5.north east);
+      \draw[decoration={brace},decorate] (6.north west) -- node[above=5pt] {$\src{p_6}$} (6.north east);
+
+      % \node (anchor_p8) at (3.south east)++(0, 1) {};
+
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (1.south west) -- node[below=6pt] {$\src{p_7}$} (2.south east);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (2.south west)++(0,-0.7) -- node[below=6pt] {$\src{p_8}$} ($(3.south east)+(0,-0.7)$);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (3.south west) -- node[below=6pt] {$\src{p_9}$} (4.south east);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (4.south west)++(0,-0.3) -- node[below=6pt] {$\src{p_{10}}$} ($(5.south east)+(0,-0.3)$);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (5.south west) -- node[below=6pt] {$\src{p_{11}}$} (6.south east);
+    \end{tikzpicture}
+    \caption{An example of a target candidate extraction algorithm with an n-gram length limit of 2 words}
+  \end{figure}
+  % \begin{exampleblock}{Example}
+  %   Targert sentence: \texttt{Die TU Dresden ist eine Universität}
+  %   Set of target candidates \( T = \{ (0, 1), () \} \)
+  % \end{exampleblock}
+
 \end{frame}
 
 \begin{frame}
   \frametitle{Word-to-word alignment-based matching score}
+
+  Let \( a_{kl} \) be binary variable denoted if \( k \)-th source word aligned to \( l \) target word,
+  then the word-to-word alignment-based mathcing score is the following:
 
   \begin{equation*}
     c_{\src{p}, \tgt{p}}^{align} =
     \frac{\sum\limits_{k=i_{\src{p}}}^{j_{\src{p}}} \sum\limits_{l=i_{\tgt{p}}}^{j_{\tgt{p}}} a_{kl}}
     {(j_{\src{p}} - i_{\src{p}}) + (j_{\tgt{p}} - i_{\tgt{p}})}
   \end{equation*}
+
+  \vspace*{0.2cm}
+  \begin{columns}
+    \begin{column}[t]{.5\textwidth}
+      \centering \textbf{Pros:}
+      \begin{itemize}
+        \item Alignments \( \rightarrow \) quanitive score
+        \item Allow to reduce set of target candidates
+      \end{itemize}
+    \end{column}
+    \begin{column}[t]{.5\textwidth}
+      \centering \textbf{Cons:}
+      \begin{itemize}
+        \item "Merging" heuristic is not always preserved
+      \end{itemize}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}
@@ -430,30 +499,112 @@
 
 \begin{frame}
   \frametitle{NER model-based matching score}
-
+  Let \( p_{k,l} \) be the probability predicted by a NER model that the \( k \)-th
+  target word has a label \( l \in L \). Let \( \mathcal{B} \) and \( \mathcal{I} \) be
+  mappings that return the indices of B- and I- labels in the model output matrix.
+  Then the NER-based score is defined as follows:
   \begin{equation*}
     c_{\src{p}, \tgt{p}}^{ner} = \alpha^{(j_{\tgt{p}} - i_{\tgt{p}}) - 1}
     \frac{
-      p_{i_{\tgt{p}}, B[l_{\src{p}}]} +
-      \sum\limits_{k = i_{\tgt{p}} + 1}^{j_{\tgt{p}}} p_{k, I[l_{\src{p}}]}
+      p_{i_{\tgt{p}}, \mathcal{B}[l_{\src{p}}]} +
+      \sum\limits_{k = i_{\tgt{p}} + 1}^{j_{\tgt{p}}} p_{k, \mathcal{I}[l_{\src{p}}]}
     }
     {j_{\tgt{p}} - i_{\tgt{p}}}
   \end{equation*}
+
+  \vspace*{0.2cm}
+  \begin{columns}
+    \begin{column}[t]{.5\textwidth}
+      \centering \textbf{Pros:}
+      \begin{itemize}
+        \item Projection \( \implies \) can correct missed/wrongly predicted by a
+          NER model entities
+      \end{itemize}
+    \end{column}
+    \begin{column}[t]{.5\textwidth}
+      \centering \textbf{Cons:}
+      \begin{itemize}
+        \item Projection \( \implies \) depends on quality of source NER labelling
+        \item Scores are identical for all source entities sharing the same class
+        \item Overconfidence of NER models
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{NER model-based matching score: alpha parameter}
+  Let \( s \) be a source entity with label \texttt{PER}.
+  And the model output is the following:
+
+  \begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[node distance=-0.1,
+        every node/.style={text centered,
+          text height=2ex,
+          text depth=.25ex,
+        },
+        loc/.style={fill=orange!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:####1}},
+        per/.style={fill=green!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:####1}},
+        O/.style={rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:O}}
+      ]
+
+      \node[per={0.9}, rounded rectangle east arc=none](Mark_tgt){Mark};
+      \node[per={0.8}, rounded rectangle west arc=none, right=of Mark_tgt](Twain_tgt){Twain};
+      \node[right=of Twain_tgt](wurde_tgt){wurde};
+      \node[right=of wurde_tgt](in_tgt){in};
+      \node[loc={0.95}, right=of in_tgt](Florida_tgt){Florida};
+      \node[right=of Florida_tgt](geboren_tgt){geboren};
+    \end{tikzpicture}
+    % \caption{Example of missaligned prediction when }
+  \end{figure}
+
+  If \( \alpha = 1 \), then the output of the projection step will be
+  misaligned with the output of the NER model:
+  \[
+    c^{ner}_{s, "Mark"} = 0.9 \qquad c^{ner}_{s, "Mark Twain"} = 0.85
+  \]
+
+  \begin{block}{Estimation of \( \alpha \)}
+    Let \( M = \frac{1}{2|L| + 1} \). Then, if
+    \(\alpha > 1 + \frac{1 - M}{1 + M}\),
+    the predictions of the projection step and the NER model are aligned.
+  \end{block}
+
 \end{frame}
 
 \begin{frame}
   \frametitle{Translation-based matching score}
-
+  The idea is to compute how likely a source entity is translated into a target
+  candidate. To accomplish this, we use the NMTScore (denoted as the \( sim \) function):
   \begin{equation*}
     c_{\src{p}, \tgt{p}}^{nmt} =
     sim \left(\src{w}[i_{\src{p}} : j_{\src{p}}],
     \tgt{w}[i_{\tgt{p}} : j_{\tgt{p}}] \right)
   \end{equation*}
+
+  \vspace*{0.2cm}
+  \begin{columns}
+    \begin{column}[t]{.5\textwidth}
+      \centering \textbf{Pros:}
+      \begin{itemize}
+        \item Interpretability
+      \end{itemize}
+    \end{column}
+    \begin{column}[t]{.5\textwidth}
+      \centering \textbf{Cons:}
+      \begin{itemize}
+        \item Translation without context
+        \item Slower then other scores
+      \end{itemize}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}
   \frametitle{Fused matching score}
-
+  Since all matching score are just real numbers we can compute a weighted sum of them,
+  i.e. combine different projection strategies together:
   \begin{equation*}
     c_{\src{p}, \tgt{p}}^{fused} =
     \lambda_{align} c_{\src{p}, \tgt{p}}^{align} +
@@ -462,6 +613,8 @@
   \end{equation*}
   where \( \lambda_{align} \geq 0, \lambda_{ner} \geq 0, \lambda_{nmt} \geq 0 \in \mathbb{R}\).
 
+  \vspace*{0.3cm}
+  Then, NER-based score can be used to evaluate only spans without labels:
   \begin{equation*}
     c_{\src{p}, \tgt{p}}^{ner} = \alpha^{(j_{\tgt{p}} - i_{\tgt{p}}) - 1}
     \max\limits_{l \in L}
@@ -473,12 +626,30 @@
   \end{equation*}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Example of the ILP problem}
-\end{frame}
+% \begin{frame}
+%   \frametitle{Example of the ILP problem}
+% \end{frame}
 
 \begin{frame}
   \frametitle{Complexity}
+  \begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[every node/.style = {draw, circle}]
+      \node[fill=green!10] (1) {1};
+      \node[right=of 1] (2) {1};
+      \node[below right=of 2, fill=green!10] (3) {1};
+      \node[below=of 1, fill=green!10] (4) {3};
+      \node[left=of 4] (5) {2};
+      \node[below right=of 4] (6) {2};
+
+      \graph{
+        (1) -- (2) -- (4) -- (6) -- (5) -- (4),
+        (6) -- (2) -- (3)
+      };
+    \end{tikzpicture}
+    \caption{Maximum weight independent set problem (MaxWIS). Vertices that form an optimal solution are colored in green}
+    \label{fig:maxwis}
+  \end{figure}
 \end{frame}
 
 \begin{frame}
@@ -613,7 +784,7 @@
   \frametitle{MasakhaNER2: Part 1}
 
   \begin{table}[ht]
-    \scalebox{0.7}{
+    \scalebox{0.71}{
       \begin{tabular}{lrrrrrrrrrr}
         \toprule
         tgt\_lang & bam & ewe & fon & hau & ibo & kin & lug & luo & mos & nya \\
@@ -643,7 +814,7 @@
   \frametitle{MasakhaNER2: Part 2}
 
   \begin{table}[ht]
-    \scalebox{0.7}{
+    \scalebox{0.71}{
       \begin{tabular}{lrrrrrrrrr}
         \toprule
         tgt\_lang & sna & swa & tsn & twi & wol & xho & yor & zul & \textbf{avg} \\
@@ -715,10 +886,26 @@
 
 \begin{frame}
   \frametitle{Conclusions}
+
+  \begin{itemize}[<+->]
+    \item Formalization of the projection step has been proposed \( \implies \) better interpretability
+    \item "Less or equal" type constraints on the number of projections from each source entity show the best results
+    \item The proposed greedy algorithm performs on par or better than the exact solver \( \implies \) optimal solution to the problem is not always the best solution from the NER point of view
+    \item Projection strategies are encapsulated into matching scores \( \implies \)  combination (fusion) is possible
+    \item Experiments show that ILP-based projection with fused scores outperforms other methods
+    \item Complexity remains an open question
+  \end{itemize}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Directions of further work}
+  \frametitle{Directions for Further Work}
+
+  \begin{itemize}
+    \item Complexity of the problem
+    \item New matching scores, especially those that can take negative values
+    \item New target candidate extraction methods
+    \item Word-to-word alignment problem as an instance of the proposed ILP problem
+  \end{itemize}
 \end{frame}
 
 \section*{References}
