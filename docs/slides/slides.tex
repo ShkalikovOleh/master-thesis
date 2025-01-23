@@ -366,8 +366,8 @@
   \begin{flushleft}
     Issues and heuristics to handle them: \\
     \textit{Split annotations} \( \implies \) merge if only \( d \) non-aligned words are between \\
-    \textit{Annotation collisions} \( \implies \) project only to the top-k by length ranges \\
-    \textit{Incorrect alignments} \( \implies \) threshold by word length ratio
+    \textit{Annotation collisions} \( \implies \) project to the longest \\
+    \textit{Incorrect alignments} \( \implies \) project only to the top-k by length ranges, threshold by word length ratio
   \end{flushleft}
 \end{frame}
 
@@ -528,20 +528,20 @@
       \node[right=of 4] (5){eine};
       \node[right=of 5] (6){Universität};
 
-      \draw[decoration={brace},decorate] (1.north west) -- node[above=5pt] {$\src{p_1}$} (1.north east);
-      \draw[decoration={brace},decorate] (2.north west) -- node[above=5pt] {$\src{p_2}$} (2.north east);
-      \draw[decoration={brace},decorate] (3.north west) -- node[above=5pt] {$\src{p_3}$} (3.north east);
-      \draw[decoration={brace},decorate] (4.north west) -- node[above=5pt] {$\src{p_4}$} (4.north east);
-      \draw[decoration={brace},decorate] (5.north west) -- node[above=5pt] {$\src{p_5}$} (5.north east);
-      \draw[decoration={brace},decorate] (6.north west) -- node[above=5pt] {$\src{p_6}$} (6.north east);
+      \draw[decoration={brace},decorate] (1.north west) -- node[above=5pt] {$\tgt{p_1}$} (1.north east);
+      \draw[decoration={brace},decorate] (2.north west) -- node[above=5pt] {$\tgt{p_2}$} (2.north east);
+      \draw[decoration={brace},decorate] (3.north west) -- node[above=5pt] {$\tgt{p_3}$} (3.north east);
+      \draw[decoration={brace},decorate] (4.north west) -- node[above=5pt] {$\tgt{p_4}$} (4.north east);
+      \draw[decoration={brace},decorate] (5.north west) -- node[above=5pt] {$\tgt{p_5}$} (5.north east);
+      \draw[decoration={brace},decorate] (6.north west) -- node[above=5pt] {$\tgt{p_6}$} (6.north east);
 
       % \node (anchor_p8) at (3.south east)++(0, 1) {};
 
-      \draw[decoration={brace,mirror,raise=5pt},decorate] (1.south west) -- node[below=6pt] {$\src{p_7}$} (2.south east);
-      \draw[decoration={brace,mirror,raise=5pt},decorate] (2.south west)++(0,-0.7) -- node[below=6pt] {$\src{p_8}$} ($(3.south east)+(0,-0.7)$);
-      \draw[decoration={brace,mirror,raise=5pt},decorate] (3.south west) -- node[below=6pt] {$\src{p_9}$} (4.south east);
-      \draw[decoration={brace,mirror,raise=5pt},decorate] (4.south west)++(0,-0.3) -- node[below=6pt] {$\src{p_{10}}$} ($(5.south east)+(0,-0.3)$);
-      \draw[decoration={brace,mirror,raise=5pt},decorate] (5.south west) -- node[below=6pt] {$\src{p_{11}}$} (6.south east);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (1.south west) -- node[below=6pt] {$\tgt{p_7}$} (2.south east);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (2.south west)++(0,-0.7) -- node[below=6pt] {$\tgt{p_8}$} ($(3.south east)+(0,-0.7)$);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (3.south west) -- node[below=6pt] {$\tgt{p_9}$} (4.south east);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (4.south west)++(0,-0.3) -- node[below=6pt] {$\tgt{p_{10}}$} ($(5.south east)+(0,-0.3)$);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (5.south west) -- node[below=6pt] {$\tgt{p_{11}}$} (6.south east);
     \end{tikzpicture}
     \caption{An example of a target candidate extraction algorithm with an n-gram length limit of 2 words}
   \end{figure}
@@ -577,13 +577,65 @@
       \centering \textbf{Cons:}
       \begin{itemize}
         \item "Merging" heuristic is not always preserved
+        \item Scores are not bounded by a shared constant
       \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Reduction of the set of candidates}
+  \frametitle{Reduction of the set of target candidates}
+
+  For \( < \) and \( \leq \) type of constraints, the set of candidates can be reduced
+  by removing all candidates that lie outside the range between leftmost or rightmost words
+  aligned with any entity words.
+
+  \begin{figure}
+    \begin{tikzpicture}[node distance=-0.1,
+        font=\footnotesize,
+        % font=\fontsize{7pt}{10pt}\selectfont,
+        every node/.style={text centered,
+          text height=1.5ex,
+        text depth=.25ex,},
+        loc/.style={fill=orange!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:####1-LOC}},
+        per/.style={fill=green!30, rounded rectangle, label={[anchor=center,font=\tiny\bfseries\sffamily]above:####1-PER}},
+      ]
+
+      \node[per={B}, rounded rectangle east arc=none](w1_src){$ \src{w_1} $};
+      \node[per={I}, rounded rectangle west arc=none, right=of w1_src](w2_src){$ \src{w_2} $};
+      \node[right=of w2_src](w3_src){$ \src{w_3} $};
+      \node[right=of w3_src](w4_src){$ \src{w_4} $};
+      \node[right=of w4_src](w5_src){$ \src{w_5} $};
+      \node[loc={B}, right=of w5_src](w6_src){$ \src{w_6} $};
+
+      \node[below=of w1_src, yshift=-1.2cm](w1_tgt){$ \tgt{w_1} $};
+      \node[right=of w1_tgt](w2_tgt){$ \tgt{w_2} $};
+      \node[right=of w2_tgt](w3_tgt){$ \tgt{w_3} $};
+      \node[right=of w3_tgt](w4_tgt){$ \tgt{w_4} $};
+      \node[right=of w4_tgt](w5_tgt){$ \tgt{w_5} $};
+      \node[right=of w5_tgt](w6_tgt){$ \tgt{w_6} $};
+      \node[right=of w6_tgt](w7_tgt){$ \tgt{w_7} $};
+
+      \draw[->] (w1_src) -- (w2_tgt);
+      \draw[->] (w2_src) -- (w3_tgt);
+      \draw[->] (w2_src) -- (w5_tgt.north);
+      \draw[->] (w6_src) -- (w6_tgt);
+
+      \draw[red, thick] (w1_tgt.north east) -- (w1_tgt.south east);
+      \draw[red, thick] (w6_tgt.north east) -- (w6_tgt.south east);
+
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (w2_tgt.south west) -- node[below=6pt] {$\tgt{p_1}$} (w3_tgt.south east);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (w7_tgt.south west) -- node[below=6pt] {$\tgt{p_3}$} (w7_tgt.south east);
+      \draw[decoration={brace,mirror,raise=5pt},decorate] (w1_tgt.south west)++(0,-0.5) -- node[below=6pt] {$\tgt{p_2}$} ($(w3_tgt.south east)+(0,-0.5)$);
+    \end{tikzpicture}
+    \caption{All candidates that start or end outside the red lines can be removed}
+  \end{figure}
+
+  Note, that \( \forall \src{p} \in S \):
+  \[
+    c_{\src{p}, \src{p_3}} = 0 \qquad
+    c_{\src{p}, \src{p_1}} > c_{\src{p}, \src{p_2}}
+  \]
 \end{frame}
 
 \begin{frame}
@@ -1180,13 +1232,13 @@
   \end{itemize}
 \end{frame}
 
-\section*{References}
+% \section*{References}
 
-\begin{frame}[allowframebreaks]
-  \frametitle{References}
+% \begin{frame}[allowframebreaks]
+%   \frametitle{References}
 
-  \bibliographystyle{apalike}
-  \bibliography{../references.bib}
-\end{frame}
+%   \bibliographystyle{apalike}
+%   \bibliography{../references.bib}
+% \end{frame}
 
 \end{document}
