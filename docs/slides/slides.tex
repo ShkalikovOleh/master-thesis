@@ -1085,6 +1085,125 @@
 \begin{frame}
   \frametitle{Europarl-NER: Model transfer vs NER-based score}
 
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+      \begin{figure}
+        \begin{tikzpicture}[node distance=-0.1,
+            font=\footnotesize,
+            % font=\fontsize{7pt}{10pt}\selectfont,
+            every node/.style={text centered,
+              text height=1.5ex,
+              text depth=.25ex,
+            font={\scriptsize}},
+            org/.style={fill=cyan!30, rounded rectangle,
+            },
+            misc/.style={fill=red!30, rounded rectangle,
+            },
+          ]
+
+          \node(w1_src){Delays};
+          \node[right=of w1_src](w2_src){in};
+          \node[right=of w2_src](w3_src){the};
+          \node[org, right=of w3_src](w4_src){CEN};
+          \node[right=of w4_src](w5_src){'s};
+          \node[right=of w5_src](w7_src){work};
+          \node[right=of w7_src](w8_src){are};
+          \node[right=of w8_src](w9_src){now};
+          \node[right=of w9_src](w10_src){making};
+          \node[below=of w1_src, xshift=-0.3cm](w11_src){it};
+          \node[right=of w11_src](w12_src){difficult};
+          \node[right=of w12_src](w13_src){to};
+          \node[right=of w13_src](w14_src){apply};
+          \node[right=of w14_src](w15_src){this};
+          \node[right=of w15_src](w16_src){very};
+          \node[right=of w16_src](w17_src){directive};
+          \node[right=of w17_src](w18_src){.};
+
+          \node[below=of w1_src, xshift=0.37cm, yshift=-1cm](w1_tgt){Aufgetretene};
+          \node[right=of w1_tgt](w2_tgt){Verzögerungen};
+          \node[right=of w2_tgt](w3_tgt){bei};
+          \node[right=of w3_tgt](w4_tgt){den};
+          \node[right=of w4_tgt](w5_tgt){Arbeiten};
+          \node[below=of w1_tgt, xshift=-0.6cm](w6_tgt){des};
+          \node[org, right=of w6_tgt](w7_tgt){CEN};
+          \node[right=of w7_tgt](w8_tgt){führen};
+          \node[right=of w8_tgt](w9_tgt){nun};
+          \node[right=of w9_tgt](w10_tgt){zu};
+          \node[right=of w10_tgt](w11_tgt){Problemen};
+          \node[right=of w11_tgt](w12_tgt){bei};
+          \node[right=of w12_tgt](w13_tgt){der};
+          \node[below=of w6_tgt, xshift=0.5cm](w14_tgt){Anwendung};
+          \node[right=of w14_tgt](w15_tgt){eben};
+          \node[right=of w15_tgt](w16_tgt){dieser};
+          \node[misc, right=of w16_tgt](w17_tgt){Richtlinie};
+
+          \node[below=of w1_tgt, yshift=-1.5cm](w1_ilp){Aufgetretene};
+          \node[right=of w1_ilp](w2_ilp){Verzögerungen};
+          \node[right=of w2_ilp](w3_ilp){bei};
+          \node[right=of w3_ilp](w4_ilp){den};
+          \node[right=of w4_ilp](w5_ilp){Arbeiten};
+          \node[below=of w1_ilp, xshift=-0.6cm](w6_ilp){des};
+          \node[org, right=of w6_ilp](w7_ilp){CEN};
+          \node[right=of w7_ilp](w8_ilp){führen};
+          \node[right=of w8_ilp](w9_ilp){nun};
+          \node[right=of w9_ilp](w10_ilp){zu};
+          \node[right=of w10_ilp](w11_ilp){Problemen};
+          \node[right=of w11_ilp](w12_ilp){bei};
+          \node[right=of w12_ilp](w13_ilp){der};
+          \node[below=of w6_ilp, xshift=0.5cm](w14_ilp){Anwendung};
+          \node[right=of w14_ilp](w15_ilp){eben};
+          \node[right=of w15_ilp](w16_ilp){dieser};
+          \node[right=of w16_ilp](w17_ilp){Richtlinie};
+
+          \node[text=gray, font=\tiny, above=of w5_src](source){Source labeled sentence};
+          \node[text=gray, font=\tiny, below=of source, yshift=-1.1cm](mt){Model transfer};
+          \node[text=gray, font=\tiny, below=of mt, yshift=-1.47cm]{ILP with NERScore};
+        \end{tikzpicture}
+        \caption{Example of ignoring a incorrectly predicted entity}
+      \end{figure}
+    \end{column}
+    \begin{column}{.5\textwidth}
+      \begin{figure}
+        \begin{tikzpicture}[node distance=-0.1,
+            font=\footnotesize,
+            % font=\fontsize{7pt}{10pt}\selectfont,
+            every node/.style={text centered,
+              text height=1.5ex,
+              text depth=.25ex,
+            font={\scriptsize}},
+            org/.style={fill=cyan!30, rounded rectangle,
+              % label={[anchor=center,font=\tiny\bfseries\sffamily]above:####1-MISC}
+            },
+          ]
+
+          \node[org](w1_src){Parliament};
+          \node[right=of w1_src](w2_src){rejected};
+          \node[right=of w2_src](w3_src){the};
+          \node[right=of w3_src](w4_src){request};
+          \node[right=of w4_src](wn_src){\dots};
+
+          \node[below=of w1_src, xshift=-0.37cm, yshift=-0.7cm] (w0_tgt){Das};
+          \node[right=of w0_tgt](w1_tgt){Parlament};
+          \node[right=of w1_tgt](w2_tgt){lehnt};
+          \node[right=of w2_tgt](w3_tgt){den};
+          \node[right=of w3_tgt](w4_tgt){Antrag};
+          \node[right=of w4_tgt](wn_tgt){\dots};
+
+          \node[below=of w0_tgt, yshift=-0.7cm] (w0_ilp){Das};
+          \node[org, right=of w0_ilp](w1_ilp){Parlament};
+          \node[right=of w1_ilp](w2_ilp){lehnt};
+          \node[right=of w2_ilp](w3_ilp){den};
+          \node[right=of w3_ilp](w4_ilp){Antrag};
+          \node[right=of w4_ilp](wn_ilp){\dots};
+
+          \node[text=gray, font=\tiny, above=of w2_src, yshift=0.2cm](source){Source labeled sentence};
+          \node[text=gray, font=\tiny, below=of source, yshift=-0.95cm](mt){Model transfer};
+          \node[text=gray, font=\tiny, below=of mt, yshift=-0.65cm]{ILP with NERScore};
+        \end{tikzpicture}
+        \caption{Example of restoring the target entity that was missed by the NER model}
+      \end{figure}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}
