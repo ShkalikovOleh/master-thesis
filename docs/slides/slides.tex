@@ -587,7 +587,7 @@
   \frametitle{Reduction of the set of target candidates}
 
   For \( < \) and \( \leq \) type of constraints, the set of candidates can be reduced
-  by removing all candidates that lie outside the range between leftmost or rightmost words
+  by removing all candidates that lie outside the range between leftmost and rightmost word
   aligned with any entity words.
 
   \begin{figure}
@@ -1035,62 +1035,50 @@
 \begin{frame}
   \frametitle{Europarl-NER: Heuristic vs ILP-based projection}
 
+  \begin{alertblock}{Crucial difference}
+    The heuristic algorithm is capable of merging nearby candidates, whereas
+    the ILP-based approach can only do so in specific cases.
+  \end{alertblock}
+
   \begin{figure}
     \begin{tikzpicture}[node distance=-0.1,
-        % font=\scriptsize,
         font=\footnotesize,
         % font=\fontsize{7pt}{10pt}\selectfont,
         every node/.style={text centered,
           text height=1.5ex,
-        text depth=.25ex,},
-        loc/.style={fill=orange!30, rounded rectangle,
-      label={[anchor=center,font=\tiny\bfseries\sffamily]above:####1-LOC}}]
-      \node[loc={B}](Washington_src){Washington};
-      \node[right=of Washington_src](is_src){is};
-      \node[right=of is_src](the_src){the};
-      \node[right=of the_src](capital_src){capital};
-      \node[right=of capital_src](of_src){of};
-      \node[right=of of_src](the_src){the};
-      \node[loc={B}, rounded rectangle east arc=none, right=of the_src](United_src){United};
-      \node[loc={I}, rounded rectangle west arc=none, right=of United_src](States_src){States};
-
-      \node[below=of Washington_src, yshift=-0.5cm, xshift=-0.5cm](Die_backtrans){Die};
-      \node[right=of Die_backtrans](Bundeshauptstadt_backtrans){Bundeshauptstadt};
-      \node[right=of Bundeshauptstadt_backtrans](der_backtrans){der};
-      \node[loc={B}, rounded rectangle east arc=none, right=of der_backtrans](Vereinigten_backtrans){Vereinigten};
-      \node[loc={I}, rounded rectangle west arc=none, right=of Vereinigten_backtrans](Staaten_backtrans){Staaten};
-      \node[right=of Staaten_backtrans](ist_backtrans){ist};
-      \node[loc={B}, right=of ist_backtrans](Washington_backtrans){Washington};
-
-      \node[below=of Washington_src, yshift=-1.5cm](Washington_tgt){Washington};
-      \node[right=of Washington_tgt](ist_tgt){ist};
-      \node[right=of ist_tgt](die_tgt){die};
-      \node[right=of die_tgt](Hauptstadt_tgt){Hauptstadt};
-      \node[right=of Hauptstadt_tgt](der_tgt){der};
-      \node[right=of der_tgt](Vereinigten_tgt){Vereinigten};
-      \node[right=of Vereinigten_tgt](Staaten_tgt){Staaten};
-
-      \node[text=gray, font=\scriptsize, above=of Vereinigten_backtrans, yshift=0.1cm](backtrans){Back-translated labeled sentence};
-      \node[text=gray, font=\scriptsize, above=of backtrans, yshift=0.5cm]{Source labeled sentence};
-      \node[text=gray, font=\scriptsize, below=of backtrans, yshift=-1.45cm]{Original sentence};
-
-      \node[rectangle,
-        text=\aligncolor,
-        % draw=\aligncolor %uncomment to add border
+        text depth=.25ex},
+        misc/.style={fill=red!30, rounded rectangle,
+          % label={[anchor=center,font=\tiny\bfseries\sffamily]above:####1-MISC}
+        },
       ]
-      % at (-0.25 cm, -1.5cm)
-      % {align:};
-      at (-0.25 cm, -1.4cm)
-      {alignments:};
 
-      \draw[<->, \aligncolor] (Washington_tgt.north east)++(-0.5, -0.1) -- (Washington_backtrans.south);
-      % \draw[<->, \aligncolor] (ist_tgt.north) -- (ist_backtrans.south);
-      % \draw[<->, \aligncolor] (die_tgt.north) -- (Die_backtrans.south);
-      % \draw[<->, \aligncolor] (Hauptstadt_tgt.north) -- (Bundeshauptstadt_backtrans.south);
-      % \draw[<->, \aligncolor] (der_tgt.north) -- (der_backtrans.south);
-      \draw[<->, \aligncolor] (Vereinigten_tgt.north) -- (Vereinigten_backtrans.south);
-      \draw[<->, \aligncolor] (Staaten_tgt.north) -- (Staaten_backtrans.south);
+      \node(w0_src){\dots};
+      \node[misc, right=of w0_src, rounded rectangle east arc=none](w1_src){Community};
+      \node[misc, right=of w1_src, rounded rectangle west arc=none, rounded rectangle east arc=none](w2_src){competition};
+      \node[misc, right=of w2_src, rounded rectangle west arc=none](w3_src){law};
+      \node[right=of w3_src](wn_src){\dots};
+
+      \node[below=of w0_src, yshift=-1.2cm] (w0_tgt){\dots};
+      \node[right=of w0_tgt](w1_tgt){Wettbewerbsrecht};
+      \node[right=of w1_tgt](w2_tgt){der};
+      \node[right=of w2_tgt](w3_tgt){Gemeinschaft};
+      \node[right=of w3_tgt](wn_tgt){\dots};
+
+      \node[below=of w0_tgt, yshift=-0.2cm](0){\textbf{ILP:}};
+      \node[below=of w1_tgt, yshift=-0.2cm](1){B-MISC};
+      \node[below=of w2_tgt, yshift=-0.2cm](2){O};
+      \node[below=of w3_tgt, yshift=-0.2cm](3){O};
+
+      \node[below=of 0, yshift=-0.2cm] (0){\textbf{Heuristic:}};
+      \node[below=of 1, yshift=-0.2cm](1){B-MISC};
+      \node[below=of 2, yshift=-0.2cm](1){I-MISC};
+      \node[below=of 3, yshift=-0.2cm](1){I-MISC};
+
+      \draw[->] (w1_src) -- (w3_tgt);
+      \draw[->] (w2_src) -- (w1_tgt);
+      \draw[->] (w3_src) -- (w1_tgt);
     \end{tikzpicture}
+    \caption{Example where ILP-based approach fails. Alignments are denoted with edges}
   \end{figure}
 \end{frame}
 
