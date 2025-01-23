@@ -632,28 +632,149 @@
 
 \begin{frame}
   \frametitle{Complexity}
-  \begin{figure}[ht]
-    \centering
-    \begin{tikzpicture}[every node/.style = {draw, circle}]
-      \node[fill=green!10] (1) {1};
-      \node[right=of 1] (2) {1};
-      \node[below right=of 2, fill=green!10] (3) {1};
-      \node[below=of 1, fill=green!10] (4) {3};
-      \node[left=of 4] (5) {2};
-      \node[below right=of 4] (6) {2};
 
-      \graph{
-        (1) -- (2) -- (4) -- (6) -- (5) -- (4),
-        (6) -- (2) -- (3)
-      };
-    \end{tikzpicture}
-    \caption{Maximum weight independent set problem (MaxWIS). Vertices that form an optimal solution are colored in green}
-    \label{fig:maxwis}
-  \end{figure}
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+      Current results:
+      \begin{itemize}
+        \item MaxIS is reducible to the generalized problem with target candidates
+          beyond intervals \( \implies \) NP-Hard
+        \item The ILP problem without constraint on number of
+          projections reduces to MaxWIS on \textbf{interval graphs}  \( \implies \) can be solved in polynomial time
+      \end{itemize}
+
+      \begin{alertblock}{}
+        Complexity of the original projection problem remains an open question.
+      \end{alertblock}
+    \end{column}
+    \begin{column}{.5\textwidth}
+      \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[every node/.style = {draw, circle}]
+          \node[fill=green!10] (1) {1};
+          \node[right=of 1] (2) {1};
+          \node[below right=of 2, fill=green!10] (3) {1};
+          \node[below=of 1, fill=green!10] (4) {3};
+          \node[left=of 4] (5) {2};
+          \node[below right=of 4] (6) {2};
+
+          \graph{
+            (1) -- (2) -- (4) -- (6) -- (5) -- (4),
+            (6) -- (2) -- (3)
+          };
+        \end{tikzpicture}
+        \caption{Maximum weight independent set problem (MaxWIS). Vertices that form an optimal solution are colored in green}
+        \label{fig:maxwis}
+      \end{figure}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}
   \frametitle{Reduction to the MaxWIS problem}
+  \begin{columns}
+    \begin{column}[t]{.5\textwidth}
+      \centering\textbf{Simplified projection problem}
+      \begin{align*}
+        & \max\limits_x \sum\limits_{(\src{p}, \tgt{p}) \in S \times T} c_{\src{p}, \tgt{p}} x_{\src{p}, \tgt{p}}                                             \\
+        & \text{subject to}                                                                                                                                   \\
+        & x_{\src{p_1}, \tgt{p_1}} + x_{\src{p_2}, \tgt{p_2}} \leq 1\\
+        & x_{\src{p}, \tgt{p}} \in \{ 0, 1 \}
+      \end{align*}
+    \end{column}
+    \begin{column}[t]{.5\textwidth}
+      \centering\textbf{MaxWIS problem}
+      \begin{align*}
+        & \max \sum\limits_{v \in V} w_v x_v                               \\
+        & \text{subject to} \\
+        & x_u + x_v \leq 1               \qquad \forall \{u, v\} \in E \\
+        & x_v \in \{0, 1\}
+      \end{align*}
+    \end{column}
+  \end{columns}
+
+  \centering\textbf{Reduction:}
+  \[
+    w_v = \max\limits_{s \in S} c_{s, t_v} \qquad s^*_v = \argmax\limits_{s \in S} x_{s, t_v}
+  \]
+  \[
+    x_v = 1 \implies
+    \begin{cases}
+      x_{s^*, t_v} = 1 \\
+      x_{s, t_v} = 0 \quad \forall s \in S \setminus \{ s^* \}
+    \end{cases}
+  \]
+  \[
+    \{ v, u \} \in E \Leftrightarrow t_u \cap t_v \neq \emptyset
+  \]
+\end{frame}
+
+\begin{frame}
+  \frametitle{Reduction to the MaxWIS problem}
+
+  \begin{columns}
+
+    \begin{column}[t]{.5\textwidth}
+      \begin{figure}
+        \begin{tikzpicture}[
+            node distance=0.1,
+            realstate/.style = {draw, circle, font=\scriptsize},
+            dummystate/.style = {draw, circle, minimum width=4, inner sep=6, fill=blue!10}
+          ]
+          \node[dummystate] (src_1) {};
+          \node[right=of src_1, xshift=10, dummystate] (src_2) {};
+          \node[right=of src_2, xshift=10, dummystate] (src_3) {};
+
+          \node[below=of src_1, fill=green!10, xshift=-20, yshift=-1.75cm, realstate] (1) {1};
+          \node[right=of 1, realstate] (2) {2};
+          \node[right=of 2, fill=green!10, realstate] (3) {3};
+          \node[right=of 3, fill=green!10, realstate] (4) {4};
+          \node[right=of 4, realstate] (5) {5};
+          \node[right=of 5, realstate] (6) {6};
+
+          \node[above=of src_2, text=gray, font=\scriptsize] {Source words};
+          \node[below=of src_2, yshift=-70, text=gray, font=\scriptsize] {Target words};
+
+          \draw[green] (src_1) -- node[above, xshift=3, rotate=70, black, font=\footnotesize]{c=10} (1);
+          \draw (src_1) -- (2);
+          \draw (src_1) -- (3);
+          \draw (src_1) -- (4);
+          \draw (src_1) -- (5);
+          \draw (src_1) -- (6);
+          \draw (src_2) -- (2);
+          \draw[green] (src_2) -- (3);
+          \draw (src_2) -- (4);
+          \draw (src_2) -- (5);
+          \draw (src_2) -- (6);
+          \draw (src_3) -- (2);
+          \draw (src_3) -- (3);
+          \draw[green] (src_3) -- (4);
+          \draw (src_3) -- (5);
+          \draw (src_3) -- (6);
+        \end{tikzpicture}
+        \caption{The simplified projeciton problem, maximum weight edges are colored in green}
+      \end{figure}
+    \end{column}
+    \begin{column}[t]{.5\textwidth}
+      \begin{figure}
+        \begin{tikzpicture}[every node/.style = {draw, circle}]
+          \node[fill=green!10] (1) {10};
+          \node[right=of 1] (2) {1};
+          \node[below right=of 2, fill=green!10] (3) {12};
+          \node[below=of 1, fill=green!10] (4) {15};
+          \node[left=of 4] (5) {1};
+          \node[below right=of 4] (6) {3};
+
+          \graph{
+            (1) -- (2) -- (4) -- (6) -- (5) -- (4),
+            (6) -- (2) -- (3)
+          };
+        \end{tikzpicture}
+        \caption{Induced maximum weight independent set problem on an interval graph}
+      \end{figure}
+    \end{column}
+  \end{columns}
+
 \end{frame}
 
 \begin{frame}
