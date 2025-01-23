@@ -1209,6 +1209,125 @@
 \begin{frame}
   \frametitle{Europarl-NER: Comparison of matching scores}
 
+  \begin{columns}
+    \begin{column}[b]{.5\textwidth}
+      \begin{figure}
+        \begin{tikzpicture}[node distance=-0.1,
+            font=\footnotesize,
+            % font=\fontsize{7pt}{10pt}\selectfont,
+            every node/.style={text centered,
+              text height=1.5ex,
+              text depth=.25ex,
+            font={\scriptsize}},
+            org/.style={fill=cyan!30, rounded rectangle,
+            },
+          ]
+
+          \node(w1_src){It};
+          \node[right=of w1_src](w2_src){is};
+          \node[right=of w2_src](w3_src){irresponsible};
+          \node[right=of w3_src](w4_src){of};
+          \node[org, right=of w4_src, rounded rectangle east arc=none](w5_src){EU};
+          \node[org, right=of w5_src,  rounded rectangle east arc=none,  rounded rectangle west arc=none](w6_src){Member};
+          \node[org, right=of w6_src,  rounded rectangle west arc=none](w7_src){States};
+          \node[below=of w1_src](w8_src){to};
+          \node[right=of w8_src](w9_src){refuse};
+          \node[right=of w9_src](w10_src){to};
+          \node[right=of w10_src](w11_src){renew};
+          \node[right=of w11_src](w12_src){the};
+          \node[right=of w12_src](w13_src){embargo};
+
+          \node[below=of w1_src, xshift=0.1cm, yshift=-1cm](w1_tgt){Die};
+          \node[right=of w1_tgt](w2_tgt){Ablehnung};
+          \node[right=of w2_tgt](w3_tgt){einer};
+          \node[right=of w3_tgt](w4_tgt){Verlängerung};
+          \node[right=of w4_tgt](w5_tgt){des};
+          \node[below=of w1_tgt, xshift=0.4cm](w6_tgt){Embargos};
+          \node[right=of w6_tgt](w7_tgt){seitens};
+          \node[right=of w7_tgt](w8_tgt){der};
+          \node[org, right=of w8_tgt](w9_tgt){EU-Mitgliedstaaten};
+          \node[right=of w9_tgt](w10_tgt){ist};
+          \node[below=of w6_tgt, xshift=0.4cm](w11_tgt){unverantwortlich};
+
+          \node[below=of w1_tgt, xshift=0.1cm, yshift=-1.4cm](w1_ilp){Die};
+          \node[right=of w1_ilp](w2_ilp){Ablehnung};
+          \node[right=of w2_ilp](w3_ilp){einer};
+          \node[right=of w3_ilp](w4_ilp){Verlängerung};
+          \node[right=of w4_ilp](w5_ilp){des};
+          \node[below=of w1_ilp, xshift=0.4cm](w6_ilp){Embargos};
+          \node[right=of w6_ilp](w7_ilp){seitens};
+          \node[right=of w7_ilp](w8_ilp){der};
+          \node[right=of w8_ilp](w9_ilp){EU-Mitgliedstaaten};
+          \node[right=of w9_ilp](w10_ilp){ist};
+          \node[below=of w6_ilp, xshift=0.4cm]{unverantwortlich};
+
+          \node[text=gray, font=\tiny, above=of w5_src](source){Source labeled sentence};
+          \node[text=gray, font=\tiny, below=of source, yshift=-1.1cm](mt){ILP with AlignScore};
+          \node[text=gray, font=\tiny, below=of mt, yshift=-1.4cm]{ILP with NERScore};
+        \end{tikzpicture}
+        \caption{Example where the alignment-based score outperforms NER model-based}
+      \end{figure}
+    \end{column}
+    \begin{column}[b]{.5\textwidth}
+      \begin{figure}
+        \begin{tikzpicture}[node distance=-0.1,
+            font=\footnotesize,
+            % font=\fontsize{7pt}{10pt}\selectfont,
+            every node/.style={text centered,
+              text height=1.5ex,
+              text depth=.25ex,
+            font={\scriptsize}},
+            per/.style={fill=green!30, rounded rectangle,
+              % label={[anchor=center,font=\tiny\bfseries\sffamily]above:####1-MISC}
+            },
+          ]
+
+          \node(w1_src){We};
+          \node[right=of w1_src](w2_src){shall};
+          \node[right=of w2_src](w3_src){now};
+          \node[right=of w3_src](w4_src){hear};
+          \node[right=of w4_src](w5_src){Mr};
+          \node[per, right=of w5_src](w6_src){Wurtz};
+          \node[below=of w1_src, xshift=0.4cm](w7_src){speaking};
+          \node[right=of w7_src](w8_src){against};
+          \node[right=of w8_src](w9_src){this};
+          \node[right=of w9_src](w10_src){request};
+
+          \node[below=of w1_src, xshift=0.1cm, yshift=-1cm](w1_tgt){Wir};
+          \node[right=of w1_tgt](w2_tgt){kommen};
+          \node[right=of w2_tgt](w3_tgt){nun};
+          \node[right=of w3_tgt](w4_tgt){zu};
+          \node[per, right=of w4_tgt, rounded rectangle east arc=none](w5_tgt){Herrn};
+          \node[per, right=of w5_tgt, rounded rectangle west arc=none](w6_tgt){Wurtz};
+          \node[right=of w6_tgt](w7_tgt){,};
+          \node[right=of w7_tgt](w8_tgt){der};
+          \node[below=of w1_tgt, xshift=0.1cm](w9_tgt){gegen};
+          \node[right=of w9_tgt](w10_tgt){den};
+          \node[right=of w10_tgt](w11_tgt){Antrag};
+          \node[right=of w11_tgt](w12_tgt){spricht};
+
+          \node[below=of w1_tgt, yshift=-1.4cm](w1_ilp){Wir};
+          \node[right=of w1_ilp](w2_ilp){kommen};
+          \node[right=of w2_ilp](w3_ilp){nun};
+          \node[right=of w3_ilp](w4_ilp){zu};
+          \node[right=of w4_ilp](w5_ilp){Herrn};
+          \node[per, right=of w5_ilp](w6_ilp){Wurtz};
+          \node[right=of w6_ilp](w7_ilp){,};
+          \node[right=of w7_ilp](w8_ilp){der};
+          \node[below=of w1_ilp, xshift=0.1cm](w9_ilp){gegen};
+          \node[right=of w9_ilp](w10_ilp){den};
+          \node[right=of w10_ilp](w11_ilp){Antrag};
+          \node[right=of w11_ilp]{spricht};
+
+          \node[text=gray, font=\tiny, above=of w4_src](source){Source labeled sentence};
+          \node[text=gray, font=\tiny, below=of source, yshift=-1.1cm](mt){ILP with AlignScore};
+          \node[text=gray, font=\tiny, below=of mt, yshift=-1.4cm]{ILP with NERScore};
+        \end{tikzpicture}
+        \vspace*{0.45cm}
+        \caption{Example where the NER model-based score outperforms alignment-based}
+      \end{figure}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}
