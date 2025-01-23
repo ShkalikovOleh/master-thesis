@@ -271,15 +271,104 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Translation-based projection}
+  \frametitle{Translation-based projection: CROP and EasyProject}
+  \begin{figure}
+    \includegraphics[height=0.4\textheight, clip, trim=0cm 10.7cm 24.5cm 1cm]{ClAP_marker_align.pdf}
+    \caption{Marker-based methods. Illustration is from the CLAP paper.}
+  \end{figure}
+  \begin{columns}
+    \begin{column}[t]{0.5\textwidth}
+      \centering \textbf{CROP} \\
+      \begin{flushleft}
+        \textit{Markers}: \_\_SLOT1\_\_, ..., \_\_SLOTn\_\_ \\
+        \textit{Idea}: save label for every slot
+        \textit{Projection}: string matching between backtranslated and original enclosed in slots substrings
+      \end{flushleft}
+    \end{column}
+    \begin{column}[t]{0.5\textwidth}
+      \centering \textbf{EasyProject} \\
+      \begin{flushleft}
+        \textit{Markers}: [, ] \\
+        \textit{Idea}: translate entities independently
+        \textit{Projection}: fuzzy string matching between translated entities and
+        enclosed in braces substrings
+      \end{flushleft}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Translation-based projection: T-Projection}
+  \begin{figure}
+    \includegraphics[width=\textwidth]{T-Projection.png}
+    \caption{T-Projection. Illustration is from the original paper.}
+  \end{figure}
+
+  \begin{alertblock}{The closest related work}
+    The idea is structurally similar to our method,
+    but the projection step has not been formalized explicitly.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Translation-based projection: CLAP and CODEC}
+  \begin{figure}
+    \includegraphics[width=0.95\textwidth, clip, trim=0cm 0cm 0cm 12.5cm]{ClAP_marker_align.pdf}
+    \caption{Contextual Label Projection for Cross-Lingual Structured Prediction. Illustration is from the original paper.}
+  \end{figure}
+  \begin{figure}
+    \includegraphics[height=0.3\textheight]{CODEC.pdf}
+    \caption{Constrained Decoding for Cross-lingual Label Projection. Illustration is from the original paper.}
+  \end{figure}
 \end{frame}
 
 \begin{frame}
   \frametitle{Model-based projection}
+
+  \begin{block}{Idea}
+    Use model to perform projection
+  \end{block}
+
+  TransFusion Decoder-only input/output format:
+  \[
+    [\text{GoLLIE Guidelines}, \text{src. sent}, \text{tgt. sent}, \text{Instructions}]
+    \stackrel{}{\rightarrow}
+    [\text{src. ent.}, \text{tgt. ent.}]
+  \]
+
+  TransFusion Encoder-only input format:\\
+  \[
+    \src{w_1},
+    \src{w_2},
+    \text{\textlangle PER\textrangle},
+    \src{w_3},
+    \text{\textlangle/PER\textrangle},
+    \src{w_4},
+    \text{\textlangle sep\textrangle},
+    \tgt{w_1},
+    \tgt{w_2},
+    \tgt{w_3}
+  \]
+
+  \begin{alertblock}{Fundamental problem}
+    TransFusion requires training, but if there are labelled parellel texts one can train a model in
+    the target language directly
+  \end{alertblock}
 \end{frame}
 
 \begin{frame}
   \frametitle{Word-to-word alignment-based projection}
+  \begin{figure}
+    \includegraphics[height=0.4\textheight, clip, trim=24.5cm 10.7cm 0cm 1cm]{ClAP_marker_align.pdf}
+    \caption{W2W alignment-based method. Illustration is from the CLAP paper.}
+  \end{figure}
+
+  \begin{flushleft}
+    Issues and heuristics to handle them: \\
+    \textit{Split annotations} \( \implies \) merge if only \( d \) non-aligned words are between \\
+    \textit{Annotation collisions} \( \implies \) project only to the top-k by length ranges \\
+    \textit{Incorrect alignments} \( \implies \) threshold by word length ratio
+  \end{flushleft}
 \end{frame}
 
 \section{Methodology}
@@ -693,7 +782,7 @@
     \end{column}
   \end{columns}
 
-  \centering\textbf{Reduction:}
+  \centering\textbf{Reduction}
   \[
     w_v = \max\limits_{s \in S} c_{s, t_v} \qquad s^*_v = \argmax\limits_{s \in S} x_{s, t_v}
   \]
