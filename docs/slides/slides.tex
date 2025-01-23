@@ -777,12 +777,74 @@
 
 \end{frame}
 
+\tikzstyle{startstop} = [rectangle, rounded corners, text width=2cm, minimum height=1cm,text centered, draw=black, fill=red!30]
+\tikzstyle{process} = [rectangle, text width=2.2cm, minimum height=1.5cm, text centered, draw=black, fill=orange!30, font={\small}]
+\tikzstyle{decision} = [diamond, text width=1.2cm, minimum height=1cm, text centered, draw=black, fill=green!30, font={\small}]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
 \begin{frame}
   \frametitle{Approximate algorithm}
+  \begin{figure}
+    \begin{tikzpicture}[node distance=1]
+      \node (start) [startstop] {Input: ILP Problem};
+      \node (dec1) [decision, below=of start] {\( \exists s, t \Big| \) \linebreak \( c_{s, t} > 0 \)};
+      \node (stop) [startstop, left=of dec1] {Output:  projections};
+      \node (proc1) [process, below=of stop, yshift=-25] {Take maximum score projecion};
+      \node (proc2) [process, below=of dec1, yshift=-2] {Remove all overlapping candidates};
+      \node (proc3) [process, right=of proc2, dashed, fill=orange!15] {Remove source entities that reach limit};
+
+      \node[fill=orange!30, draw=black] at (proc3.north east) {\( <, \leq, = \)};
+
+      \draw [arrow] (start) -- (dec1);
+      \draw [arrow] (dec1) -- node[anchor=south]{false} (stop);
+      \draw [arrow] (dec1) |- node[anchor=south east]{true} (0, -4.7) -| (proc1);
+      \draw [arrow] (proc1) -- (proc2);
+      \draw [arrow] (proc2) -- (proc3);
+      \draw [arrow] (proc3) |- (dec1);
+    \end{tikzpicture}
+  \end{figure}
 \end{frame}
 
 \begin{frame}
   \frametitle{Example of approximate algorithm failure}
+
+  Consider the ILP problem with \( n_{proj} = 2 \) and the \( \leq \)
+  type of constraints.
+  Let \( T = \{ \tgt{p_1} = (1, 2), \tgt{p_2} = (2, 3), \tgt{p_3} = (3, 5) \} \)
+  and \( S = \{ \src{p} \} \), and let the matching scores be as follows:
+  \begin{table}
+    \begin{tabular}{cccc}
+      & $ \tgt{p_1} $ & $ \tgt{p_2} $  & $\tgt{p_3}$ \\
+      \toprule
+      $ \src{p} $ & 0.2 & 0.3 & 0.2 \\
+    \end{tabular}
+  \end{table}
+  Note, that \( \tgt{p_1} \cap \tgt{p_2} \neq \emptyset \) and \( \tgt{p_2} \cap \tgt{p_3} \neq \emptyset \), but \( \tgt{p_2} \cap \tgt{p_3} = \emptyset \)
+  \vspace*{0.2cm}
+  \begin{columns}
+    \hspace*{0.1cm}
+    \begin{column}[t]{0.5\textwidth}
+      \textbf{The output of the Algorithm:} \\
+      \( x_{\src{p}, \tgt{p_1}} = 0 \) \\
+      \( x_{\src{p}, \tgt{p_2}} = 1 \) \\
+      \( x_{\src{p}, \tgt{p_3}} = 0 \) \\
+      \vspace*{0.2cm}
+      Objective value: \( 0.3 \)
+    \end{column}
+    \begin{column}[t]{0.5\textwidth}
+      \textbf{Optimal solution:} \\
+      \( x_{\src{p}, \tgt{p_1}} = 1 \) \\
+      \( x_{\src{p}, \tgt{p_2}} = 0 \) \\
+      \( x_{\src{p}, \tgt{p_3}} = 1 \) \\
+      \vspace*{0.2cm}
+      Objective value: \( 0.4 \)
+    \end{column}
+  \end{columns}
+  % \[
+  %   c_{\src{p}, \tgt{p_1}} = 0.2 \qquad
+  %   c_{\src{p}, \tgt{p_2}} = 0.3 \qquad
+  %   c_{\src{p}, \tgt{p_3}} = 0.2
+  % \]
 \end{frame}
 
 \section{Evaluation}
