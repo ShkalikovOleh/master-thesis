@@ -634,7 +634,7 @@
   Note, that \( \forall \src{p} \in S \):
   \[
     c_{\src{p}, \src{p_3}} = 0 \qquad
-    c_{\src{p}, \src{p_1}} > c_{\src{p}, \src{p_2}}
+    c_{\src{p}, \src{p_1}} \geq c_{\src{p}, \src{p_2}}
   \]
 \end{frame}
 
@@ -1086,7 +1086,7 @@
   \frametitle{Europarl-NER: Model transfer vs NER-based score}
 
   \begin{columns}
-    \begin{column}{.5\textwidth}
+    \begin{column}[b]{.5\textwidth}
       \begin{figure}
         \begin{tikzpicture}[node distance=-0.1,
             font=\footnotesize,
@@ -1162,7 +1162,7 @@
         \caption{Example of ignoring a incorrectly predicted entity}
       \end{figure}
     \end{column}
-    \begin{column}{.5\textwidth}
+    \begin{column}[b]{.5\textwidth}
       \begin{figure}
         \begin{tikzpicture}[node distance=-0.1,
             font=\footnotesize,
@@ -1200,6 +1200,7 @@
           \node[text=gray, font=\tiny, below=of source, yshift=-0.95cm](mt){Model transfer};
           \node[text=gray, font=\tiny, below=of mt, yshift=-0.65cm]{ILP with NERScore};
         \end{tikzpicture}
+        \vspace*{1.4cm}
         \caption{Example of restoring the target entity that was missed by the NER model}
       \end{figure}
     \end{column}
